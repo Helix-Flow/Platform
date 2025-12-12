@@ -31,1106 +31,59 @@ HelixFlow is a state-of-the-art AI inference platform designed to provide develo
 
 ### 2.1 High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    HelixFlow Platform                        │
-├─────────────────────────────────────────────────────────────┤
-│  API Gateway & Load Balancer (OpenAI Compatible)           │
-├─────────────────────────────────────────────────────────────┤
-│  Authentication & Rate Limiting │  Usage & Billing System   │
-├─────────────────────────────────────────────────────────────┤
-│  Model Router & Request Orchestrator                       │
-├─────────────────────────────────────────────────────────────┤
-│  Inference Engine Pool (GPU/CPU Clusters)                   │
-├─────────────────────────────────────────────────────────────┤
-│  Model Storage & Cache Layer                                │
-├─────────────────────────────────────────────────────────────┤
-│  Monitoring & Analytics Dashboard                          │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### 2.2 Core Components
-
-#### 2.2.1 API Gateway
-- **OpenAI v1 API Compatibility**: Full compliance with OpenAI API specification
-- **Request Validation**: Schema validation and parameter sanitization
-- **Response Transformation**: Standardized response format across all models
-- **Protocol Support**: HTTP/HTTPS, WebSocket for streaming
-- **Service Discovery Integration**: Automatic discovery of backend services
-- **Load Balancing**: Intelligent traffic distribution with health checks
-- **Circuit Breaker**: Automatic failover and recovery mechanisms
-
-#### 2.2.2 Authentication & Security
-- **API Key Management**: JWT-based authentication with role-based access control
-- **OAuth 2.0 Integration**: Support for enterprise SSO providers
-- **Rate Limiting**: Configurable per-user, per-model, and per-endpoint limits
-- **DDoS Protection**: Multi-layer security with automated threat detection
-- **Zero Trust Architecture**: Never trust, always verify approach
-- **Service-to-Service Authentication**: mTLS and JWT for inter-service communication
-
-#### 2.2.3 Model Router
-- **Dynamic Model Selection**: Intelligent routing based on request characteristics, cost, performance, and availability
-- **Load Balancing**: Distribute requests across optimal compute resources with least-loaded algorithm
-- **Model Versioning**: Support for multiple model versions and A/B testing capabilities
-- **Zero Completion Insurance**: Automatic fallback to alternative models/providers if primary fails - only pay for successful completions
-- **Auto-Routing**: Smart routing that considers model performance, cost, and user preferences
-- **Fallback Mechanisms**: Multi-level fallback chains with provider redundancy
-- **Service Discovery**: Automatic detection of available model instances across regions
-- **Health Monitoring**: Real-time health checks and instance management with predictive scaling
-- **Regional Routing**: Geographic-aware routing for optimal latency and compliance
-- **Data Policy Routing**: Route requests based on custom data policies and privacy requirements
-- **Prompt Caching**: Intelligent caching of prompts and responses to reduce latency and costs
-
-#### 2.2.4 Inference Engine
-- **GPU Optimization**: CUDA, ROCm, and custom kernel optimizations for maximum performance
-- **Batch Processing**: Automatic request batching for improved throughput and cost efficiency
-- **Memory Management**: Efficient GPU memory allocation and deallocation with memory pooling
-- **Model Caching**: Hot models kept in memory for instant response with LRU eviction
-- **Prompt Caching**: Intelligent caching of prompts and intermediate results to reduce redundant computation
-- **KV Cache Optimization**: Advanced key-value caching for transformer models to improve inference speed
-- **Auto-Scaling**: Dynamic scaling based on workload demands with predictive scaling
-- **Port Management**: Automatic port allocation and conflict resolution with service discovery integration
-- **Model Warmup**: Pre-loading frequently used models to ensure instant availability
-- **Resource Optimization**: Dynamic batch size adjustment based on model and hardware characteristics
-
-#### 2.2.5 Service Discovery & Configuration
-- **Consul Integration**: HashiCorp Consul for service discovery and configuration
-- **etcd Backend**: Distributed key-value store for configuration management
-- **Health Checks**: Automated service health monitoring and registration
-- **Load Balancer Integration**: Dynamic upstream configuration for load balancers
-- **Configuration Distribution**: Real-time configuration updates across services
-- **Service Mesh**: Istio integration for advanced traffic management
-
-#### 2.2.6 Monitoring & Observability
-- **Centralized Logging**: ELK Stack with structured logging across all services
-- **Metrics Collection**: Prometheus with custom metrics for each service
-- **Distributed Tracing**: Jaeger for end-to-end request tracing
-- **Alerting System**: PagerDuty integration with intelligent alert routing
-- **Dashboard Visualization**: Grafana with service-specific dashboards
-- **Error Tracking**: Sentry integration for real-time error monitoring and crash reporting
-
-### 2.3 Technology Stack
-
-#### 2.3.1 Backend Infrastructure
-- **Primary Language**: Go 1.21+ with Gin Gonic framework
-- **Web Framework**: Gin Gonic - High-performance HTTP web framework for Go
-- **Database**: PostgreSQL 15+ with SQLCipher encryption for data-at-rest security
-- **Database Encryption**: SQLCipher provides transparent AES-256 encryption for all database files
-- **Caching Layer**: Redis Cluster 7+ for session management, results caching, and rate limiting
-- **Message Queue**: Apache Kafka 3.6+ for async processing and event streaming
-- **Container Orchestration**: Kubernetes 1.27+ with custom controllers and operators
-- **Service Mesh**: Istio 1.20+ for service-to-service communication and traffic management
-- **GPU Support**: NVIDIA CUDA 12.2+, AMD ROCm 5.7+ with unified GPU management
-- **Container Runtime**: Docker 24+ with NVIDIA Container Toolkit for GPU passthrough
-- **Service Discovery**: HashiCorp Consul 1.16+ for service registration and discovery
-- **Configuration Management**: etcd 3.5+ for distributed configuration storage
-- **Monitoring Stack**: Prometheus 2.45+, Grafana 10+, Jaeger 1.48+ for observability
-- **Logging Stack**: Elasticsearch 8+, Logstash, Kibana for centralized logging
-- **Error Tracking**: Sentry 23.9+ for real-time error monitoring and crash reporting
-
-#### 2.3.2 Frontend & Dashboard
-- **Framework**: Angular 17+ with TypeScript 5.2+
-- **UI Library**: Angular Material 17+ with custom component library
-- **State Management**: NgRx 17+ with reactive state management and entity management
-- **Visualization**: D3.js 7+ and Chart.js for usage analytics, performance metrics, and billing dashboards
-- **Build Tool**: Angular CLI with custom webpack configuration for optimization
-- **Testing Framework**: Jasmine + Karma for unit tests, Cypress for E2E tests
-- **PWA Support**: Angular PWA module for offline functionality and push notifications
-- **Internationalization**: Angular i18n for multi-language support across all regions
-- **Real-time Updates**: WebSocket integration for live dashboard updates
-- **Error Tracking**: Sentry integration for frontend error monitoring
-- **Performance Monitoring**: Custom performance metrics and user experience tracking
-
-#### 2.3.3 DevOps & Infrastructure
-- **CI/CD**: GitHub Actions with ArgoCD for GitOps deployment automation
-- **Code Quality**: SonarQube Community Edition for static code analysis and quality gates
-- **Security Scanning**: Snyk Open Source for dependency vulnerability scanning
-- **Monitoring**: Prometheus 2.45+ + Grafana 10+ + Jaeger for comprehensive observability
-- **Logging**: ELK Stack (Elasticsearch 8+, Logstash, Kibana) with centralized log aggregation
-- **Infrastructure as Code**: Terraform 1.6+ with AWS/Azure/GCP multi-cloud support
-- **Container Registry**: Docker Hub / AWS ECR / Azure ACR for image management
-- **Secret Management**: HashiCorp Vault / AWS Secrets Manager for secure credential storage
-- **Backup & Recovery**: Velero for Kubernetes backup and disaster recovery
-- **Load Testing**: k6 for performance testing and load simulation
-- **Service Discovery**: HashiCorp Consul for service registration and health checking
-- **Configuration Management**: etcd for distributed configuration storage
-- **Error Tracking**: Sentry for real-time error monitoring and crash reporting
-- **Alerting**: PagerDuty integration for intelligent incident management
-
-## 3. Model Catalog and Pricing
-
-### 3.1 Model Categories
-
-#### 3.1.1 Large Language Models (LLMs)
-- **Text Generation**: General purpose chat and completion models
-- **Code Generation**: Specialized models for programming tasks
-- **Reasoning Models**: Advanced reasoning with chain-of-thought capabilities
-- **Multimodal Models**: Vision-language and audio-language models
-
-#### 3.1.2 Image Generation Models
-- **Text-to-Image**: Generate images from text descriptions
-- **Image-to-Image**: Modify and enhance existing images
-- **Image Editing**: inpainting, outpainting, and style transfer
-
-#### 3.1.3 Video Generation Models
-- **Text-to-Video**: Create videos from text prompts
-- **Image-to-Video**: Animate static images
-- **Video Enhancement**: Upscaling and quality improvement
-
-#### 3.1.4 Audio Models
-- **Text-to-Speech**: High-quality speech synthesis
-- **Speech-to-Text**: Accurate transcription and translation
-- **Audio Enhancement**: Noise reduction and quality improvement
-
-### 3.2 Featured Models (Based on RefProject Analysis)
-
-#### 3.2.1 Tier 1 Models (Premium Performance)
-- **DeepSeek-V3.2**: 164K context, $0.27 input / $0.42 output per 1M tokens
-- **DeepSeek-R1**: 164K context, $0.50 input / $2.18 output per 1M tokens
-- **GLM-4.6**: 205K context, $0.50 input / $1.90 output per 1M tokens
-- **Qwen3-VL-32B-Instruct**: 262K context, $0.20 input / $0.60 output per 1M tokens
-
-#### 3.2.2 Tier 2 Models (Cost-Effective)
-- **Qwen2.5-7B-Instruct**: 33K context, $0.05 input / $0.05 output per 1M tokens
-- **Meta-Llama-3.1-8B-Instruct**: 33K context, $0.06 input / $0.06 output per 1M tokens
-- **DeepSeek-R1-Distill-Qwen-7B**: 33K context, $0.05 input / $0.05 output per 1M tokens
-
-#### 3.2.3 Specialized Models
-- **FLUX.1-dev**: Text-to-image, $0.014 per image
-- **FLUX.1-schnell**: Text-to-image (fast), $0.0014 per image
-- **Wan2.2-I2V-A14B**: Image-to-video, $0.29 per video
-- **Fish-Speech-1.5**: Text-to-speech, $15.00 per 1M UTF-8 bytes
-
-### 3.3 Pricing Strategy
-
-#### 3.3.1 Pay-as-you-go Model
-- **No Minimum Commitment**: Pay only for what you use
-- **Transparent Billing**: Detailed usage metrics and cost breakdown
-- **Volume Discounts**: Automatic discounts for high-volume usage
-- **Free Tier**: $1 free credit for new users to explore the platform
-- **Platform Fee**: Competitive platform fee (5.5% or less) added to provider costs
-- **No Provider Markup**: Direct pass-through of provider pricing without additional markups
-- **Credit System**: Pre-purchase credits with automatic top-up options
-- **Bulk Credits**: Volume discounts for large credit purchases
-
-#### 3.3.2 Enterprise Pricing
-- **Volume Commitments**: Annual or monthly volume commitments with discounted rates
-- **Custom SLAs**: Service level agreements with guaranteed performance
-- **Dedicated Support**: Priority support with dedicated account management
-- **Custom Integrations**: Tailored integrations and white-label options
-- **Procurement Options**: Purchase orders, invoicing, and custom payment terms
-
-### 3.4 Regional Deployment and Billing
-
-HelixFlow implements geo-distributed architecture with region-specific billing systems, LLM catalogs, and compliance frameworks to ensure optimal performance and regulatory compliance across global markets.
-
-#### 3.4.1 Regional Architecture
-
-**USQA Region (United States & Canada):**
-- **Billing System**: Stripe USD with regional tax compliance
-- **LLM Catalog**: Full premium model access (DeepSeek-V3, GLM-4, Qwen3 series)
-- **Compliance**: SOC 2 Type II, GDPR, CCPA, PIPL readiness
-- **Data Residency**: US-based data centers with cross-border data flow controls
-- **Payment Methods**: Credit cards, ACH, digital wallets
-- **Currency**: USD with automatic conversion for international users
-- **Regional Features**: Enhanced US market analytics and compliance reporting
-- **Regional Routing**: Automatic routing to US-based inference endpoints for optimal latency
-- **Data Sovereignty**: Strict US data residency with local processing guarantees
-
-**Europe Region (EU Countries + UK):**
-- **Billing System**: Stripe EUR with VAT handling and EU tax compliance
-- **LLM Catalog**: Full premium model access with EU data protection compliance
-- **Compliance**: GDPR, ePrivacy Directive, Schrems II compliance
-- **Data Residency**: EU-based data centers (Frankfurt, Ireland, Netherlands)
-- **Payment Methods**: SEPA, credit cards, local payment methods
-- **Currency**: EUR with multi-currency support
-- **Regional Features**: Enhanced privacy controls and EU market analytics
-
-**Russia & Belarus Region:**
-- **Billing System**: Local payment processors (Yandex.Money, QIWI, bank transfers)
-- **LLM Catalog**: Curated model set with local content filtering
-- **Compliance**: Federal Law No. 152-FZ, local data protection regulations
-- **Data Residency**: Russia-based data centers with local sovereignty
-- **Payment Methods**: Bank cards, electronic wallets, mobile payments
-- **Currency**: RUB with regional economic considerations
-- **Regional Features**: Cyrillic language support, local content moderation
-
-**China Region (Mainland China):**
-- **Billing System**: WeChat Pay, Alipay with local financial compliance
-- **LLM Catalog**: China-optimized models with content filtering
-- **Compliance**: PIPL (Personal Information Protection Law), Cybersecurity Law
-- **Data Residency**: China-based data centers with Great Firewall compliance
-- **Payment Methods**: WeChat Pay, Alipay, UnionPay, mobile payments
-- **Currency**: CNY with local financial regulations
-- **Regional Features**: Baidu/Tencent ecosystem integration, content localization
-
-**India Region (India, South Asia):**
-- **Billing System**: Local payment gateways (Paytm, PhonePe, UPI)
-- **LLM Catalog**: Cost-optimized models with regional language support
-- **Compliance**: PDPB (Digital Personal Data Protection Bill), IT Act 2000
-- **Data Residency**: India-based data centers with local data sovereignty
-- **Payment Methods**: UPI, credit cards, mobile wallets, net banking
-- **Currency**: INR with regional pricing optimization
-- **Regional Features**: Multi-language support (Hindi, regional languages)
-
-**Brazil Region (Brazil, Latin America):**
-- **Billing System**: Local payment processors (PagSeguro, Mercado Pago)
-- **LLM Catalog**: Spanish/Portuguese optimized models
-- **Compliance**: LGPD (Lei Geral de Proteção de Dados), local regulations
-- **Data Residency**: Brazil-based data centers with LATAM coverage
-- **Payment Methods**: PIX, credit cards, boleto, mobile payments
-- **Currency**: BRL with regional economic considerations
-- **Regional Features**: Portuguese/Spanish language support, LATAM market analytics
-
-**Rest of World (RoW):**
-- **Billing System**: Stripe multi-currency with global tax handling
-- **LLM Catalog**: Standard model set with global content policies
-- **Compliance**: Regional standards with GDPR readiness
-- **Data Residency**: Geo-distributed with optimal latency routing
-- **Payment Methods**: Credit cards, PayPal, local payment methods
-- **Currency**: Multi-currency support with automatic conversion
-- **Regional Features**: Global content delivery with regional optimizations
-
-#### 3.4.2 Regional LLM Customization
-
-Each region features customized LLM offerings based on:
-- **Content Policies**: Region-specific content moderation and filtering
-- **Language Support**: Native language models and translation capabilities
-- **Cultural Adaptation**: Region-appropriate content generation
-- **Performance Optimization**: Latency-optimized model deployment
-- **Compliance Filtering**: Regulatory-compliant content generation
-- **Local Partnerships**: Region-specific model partnerships and integrations
-- **Regional Routing**: Geographic load balancing for minimal latency
-- **Data Localization**: Region-specific data processing and storage
-
-#### 3.4.3 Billing and Subscription Management
-
-**Regional Billing Features:**
-- **Localized Pricing**: Region-specific pricing with local currency support
-- **Tax Compliance**: Automatic tax calculation and remittance
-- **Payment Localization**: Region-appropriate payment methods and flows
-- **Currency Conversion**: Real-time currency conversion with competitive rates
-- **Regional Discounts**: Market-specific pricing and promotional offers
-- **Compliance Reporting**: Region-specific billing and usage reporting
-
-**Global Billing Infrastructure:**
-- **Unified User Experience**: Single account across all regions
-- **Cross-region Billing**: Consolidated billing across multiple regions
-- **Enterprise Billing**: Custom enterprise pricing and billing cycles
-- **Usage Analytics**: Global and regional usage analytics and reporting
-- **Payment Security**: PCI DSS compliant payment processing worldwide
-
-#### 3.4.4 Data Sovereignty and Compliance
-
-**Regional Data Management:**
-- **Data Residency**: Strict data residency requirements per region
-- **Cross-border Transfers**: Compliant data transfer mechanisms
-- **Encryption Standards**: Region-specific encryption requirements
-- **Audit Trails**: Comprehensive audit logging for compliance
-- **Data Portability**: User data export and portability features
-- **Retention Policies**: Region-specific data retention requirements
-
-## 4. OpenAI API Compatibility
-
-### 4.1 Core API Endpoints
-
-#### 4.1.1 Chat Completions
-```http
-POST /v1/chat/completions
-```
-**Compatibility**: 100% OpenAI compatible
-**Parameters**:
-- `model`: HelixFlow model identifier or OpenAI model name alias
-- `messages`: Array of message objects with role, content, and optional name
-- `stream`: Boolean for streaming responses
-- `max_tokens`: Maximum tokens to generate
-- `temperature`: Sampling temperature (0.0-2.0)
-- `top_p`: Nucleus sampling parameter
-- `frequency_penalty`: Frequency penalty (-2.0 to 2.0)
-- `presence_penalty`: Presence penalty (-2.0 to 2.0)
-- `stop`: Stop sequences (string or array)
-- `tools`: Array of tool definitions for function calling
-- `tool_choice`: Tool choice strategy
-- `response_format`: Response format (text or json_object)
-
-#### 4.1.2 Completions (Legacy)
-```http
-POST /v1/completions
-```
-**Compatibility**: 100% OpenAI compatible
-**Parameters**:
-- `model`: Model identifier
-- `prompt`: Input text or array of prompts
-- `max_tokens`: Maximum completion tokens
-- `temperature`, `top_p`, `frequency_penalty`, `presence_penalty`
-- `stop`: Stop sequences
-- `stream`: Boolean for streaming
-
-#### 4.1.3 Embeddings
-```http
-POST /v1/embeddings
-```
-**Compatibility**: 100% OpenAI compatible
-**Parameters**:
-- `model`: Embedding model identifier
-- `input`: Text or array of texts to embed
-- `encoding_format`: Response format (float, base64)
-- `dimensions`: Embedding dimensions (if supported)
-- `user`: End-user identifier
-
-#### 4.1.4 Images (DALL-E Compatible)
-```http
-POST /v1/images/generations
-```
-**Compatibility**: 100% OpenAI compatible
-**Parameters**:
-- `model`: Image generation model
-- `prompt`: Text description
-- `n`: Number of images to generate
-- `size`: Image dimensions (1024x1024, 1792x1024, 1024x1792)
-- `response_format`: url or b64_json
-- `style`: vivid or natural (if supported)
-- `quality`: standard or hd (if supported)
-
-#### 4.1.5 Audio (Whisper/TTS Compatible)
-```http
-POST /v1/audio/transcriptions
-POST /v1/audio/translations
-POST /v1/audio/speech
-```
-**Compatibility**: 100% OpenAI compatible
-**Parameters**:
-- `file`: Audio file for transcription/translation
-- `model`: Audio processing model
-- `prompt`: Optional text guidance
-- `response_format`: Response format
-- `language`: Source language code
-- `input`: Text for speech synthesis
-- `voice`: Voice selection
-
-### 4.2 Advanced Features
-
-#### 4.2.1 Function Calling
-- **Native Support**: All function calling features from OpenAI API
-- **Tool Definitions**: JSON schema-based function descriptions
-- **Parallel Function Calls**: Execute multiple functions simultaneously
-- **Strict Mode**: Enforce exact schema compliance
-
-#### 4.2.2 Streaming Support
-- **Server-Sent Events**: Standard SSE protocol for real-time streaming
-- **Chunk Encoding**: Compatible with OpenAI chunk format
-- **Error Handling**: Graceful error propagation in streaming mode
-
-#### 4.2.3 Batch Processing
-```http
-POST /v1/chat/completions
-Content-Type: application/json
-{
-  "model": "helixflow/gpt-4",
-  "messages": [
-    {"role": "system", "content": "Process this batch"},
-    {"role": "user", "content": "Input 1"},
-    {"role": "user", "content": "Input 2"},
-    {"role": "user", "content": "Input 3"}
-  ],
-  "batch": true
-}
-```
-
-#### 4.2.4 Model Aliases
-To ensure maximum compatibility, HelixFlow supports OpenAI model name aliases:
-
-```python
-# OpenAI model names automatically route to equivalent HelixFlow models
-"gpt-4" → "deepseek-ai/DeepSeek-V3.2"
-"gpt-4-turbo" → "deepseek-ai/DeepSeek-V3.1"
-"gpt-3.5-turbo" → "Qwen/Qwen2.5-14B-Instruct"
-"text-embedding-ada-002" → "Qwen/Qwen3-Embedding-8B"
-```
-
-## 5. Comprehensive API Reference
-
-### 5.1 Authentication
-
-All API requests require authentication using an API key. Include the key in the Authorization header:
-
-```
-Authorization: Bearer hf_your_api_key_here
-```
-
-#### API Key Management Endpoints
-
-**GET /v1/keys**
-- List all API keys for the authenticated user or organization
-- Query parameters: limit, offset, search, status
-- Response: Array of key objects with id, name, created_at, last_used, permissions, usage_stats
-
-**POST /v1/keys**
-- Create a new API key with granular permissions
-- Body: `{"name": "My API Key", "permissions": ["read", "write"], "rate_limit": 1000, "budget_limit": 100.00, "allowed_models": ["*"], "allowed_providers": ["*"], "data_policy": "standard"}`
-- Response: Key object with secret (only shown once)
-
-**PATCH /v1/keys/{key_id}**
-- Update API key settings and permissions
-- Body: Same as POST, partial updates supported
-- Response: Updated key object
-
-**DELETE /v1/keys/{key_id}**
-- Delete an API key
-- Response: Success confirmation
-
-#### Provisioning API Keys (Enterprise)
-
-**POST /v1/organizations/{org_id}/keys/provision**
-- Programmatically create API keys for sub-organizations or clients
-- Supports bulk provisioning with CSV upload
-- Automatic key rotation and lifecycle management
-- Integration with identity providers for automated key management
-
-### 5.2 Chat Completions - Detailed Reference
-
-#### Endpoint: `POST /v1/chat/completions`
-
-**Full Parameter List:**
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `model` | string | Yes | - | Model identifier (e.g., "deepseek-ai/DeepSeek-V3.2") |
-| `messages` | array | Yes | - | Array of message objects |
-| `max_tokens` | integer | No | Model default | Maximum tokens to generate |
-| `temperature` | number | No | 1.0 | Sampling temperature (0.0-2.0) |
-| `top_p` | number | No | 1.0 | Nucleus sampling parameter (0.0-1.0) |
-| `frequency_penalty` | number | No | 0.0 | Frequency penalty (-2.0 to 2.0) |
-| `presence_penalty` | number | No | 0.0 | Presence penalty (-2.0 to 2.0) |
-| `stop` | string/array | No | null | Stop sequences |
-| `stream` | boolean | No | false | Enable streaming responses |
-| `tools` | array | No | null | Function definitions for tool calling |
-| `tool_choice` | string/object | No | null | Tool selection strategy |
-| `response_format` | object | No | null | Response format specification |
-| `user` | string | No | null | End-user identifier for tracking |
-
-**Message Object Structure:**
-```json
-{
-  "role": "user|assistant|system|tool",
-  "content": "Message content or null for tool calls",
-  "name": "Optional name for multi-participant conversations",
-  "tool_calls": "Array of tool calls (assistant messages only)",
-  "tool_call_id": "Tool call ID (tool messages only)"
-}
-```
-
-**Tool Definition Format:**
-```json
-{
-  "type": "function",
-  "function": {
-    "name": "function_name",
-    "description": "Function description",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "param1": {"type": "string", "description": "Parameter description"}
-      },
-      "required": ["param1"]
-    }
-  }
-}
-```
-
-**Response Format Options:**
-```json
-{
-  "type": "json_object",  // Force JSON response
-  "schema": {             // Optional JSON schema
-    "type": "object",
-    "properties": {...}
-  }
-}
-```
-
-#### Example Requests
-
-**Basic Chat Completion:**
-```bash
-curl -X POST "https://api.helixflow.ai/v1/chat/completions" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "deepseek-ai/DeepSeek-V3.2",
-    "messages": [
-      {"role": "system", "content": "You are a helpful assistant."},
-      {"role": "user", "content": "Explain quantum computing in simple terms."}
-    ],
-    "max_tokens": 500,
-    "temperature": 0.7
-  }'
-```
-
-**Streaming Response:**
-```bash
-curl -X POST "https://api.helixflow.ai/v1/chat/completions" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "deepseek-ai/DeepSeek-V3.2",
-    "messages": [{"role": "user", "content": "Write a short story"}],
-    "stream": true
-  }'
-```
-
-**Function Calling:**
-```bash
-curl -X POST "https://api.helixflow.ai/v1/chat/completions" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "deepseek-ai/DeepSeek-V3.2",
-    "messages": [{"role": "user", "content": "What is the weather in Tokyo?"}],
-    "tools": [{
-      "type": "function",
-      "function": {
-        "name": "get_weather",
-        "description": "Get current weather for a location",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "location": {"type": "string", "description": "City name"}
-          },
-          "required": ["location"]
-        }
-      }
-    }],
-    "tool_choice": "auto"
-  }'
-```
-
-### 5.3 Completions API - Detailed Reference
-
-#### Endpoint: `POST /v1/completions`
-
-**Parameters:**
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `model` | string | Yes | - | Model identifier |
-| `prompt` | string/array | Yes | - | Input text or array of prompts |
-| `max_tokens` | integer | No | 16 | Maximum tokens to generate |
-| `temperature` | number | No | 1.0 | Sampling temperature |
-| `top_p` | number | No | 1.0 | Nucleus sampling |
-| `frequency_penalty` | number | No | 0.0 | Frequency penalty |
-| `presence_penalty` | number | No | 0.0 | Presence penalty |
-| `stop` | string/array | No | null | Stop sequences |
-| `stream` | boolean | No | false | Enable streaming |
-| `echo` | boolean | No | false | Include prompt in response |
-| `best_of` | integer | No | 1 | Generate multiple completions, return best |
-| `logprobs` | integer | No | null | Include log probabilities |
-| `user` | string | No | null | End-user identifier |
-
-**Example:**
-```bash
-curl -X POST "https://api.helixflow.ai/v1/completions" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "deepseek-ai/DeepSeek-V3.2",
-    "prompt": "The future of AI is",
-    "max_tokens": 100,
-    "temperature": 0.8,
-    "stop": ["\n", "."]
-  }'
-```
-
-### 5.4 Embeddings API - Detailed Reference
-
-#### Endpoint: `POST /v1/embeddings`
-
-**Parameters:**
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `model` | string | Yes | - | Embedding model identifier |
-| `input` | string/array | Yes | - | Text or array of texts to embed |
-| `encoding_format` | string | No | float | Response format: float or base64 |
-| `dimensions` | integer | No | null | Output dimensions (if supported) |
-| `user` | string | No | null | End-user identifier |
-
-**Supported Models:**
-- `Qwen/Qwen3-Embedding-8B`
-- `text-embedding-ada-002` (alias)
-
-**Example:**
-```bash
-curl -X POST "https://api.helixflow.ai/v1/embeddings" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "Qwen/Qwen3-Embedding-8B",
-    "input": ["Hello world", "How are you?"],
-    "encoding_format": "float"
-  }'
-```
-
-### 5.5 Images API - Detailed Reference
-
-#### Generation: `POST /v1/images/generations`
-
-**Parameters:**
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `model` | string | No | FLUX.1-dev | Image generation model |
-| `prompt` | string | Yes | - | Text description |
-| `n` | integer | No | 1 | Number of images (1-10) |
-| `size` | string | No | 1024x1024 | Image size |
-| `response_format` | string | No | url | Response format: url or b64_json |
-| `style` | string | No | null | Style: vivid or natural |
-| `quality` | string | No | standard | Quality: standard or hd |
-| `user` | string | No | null | End-user identifier |
-
-**Supported Sizes:** 1024x1024, 1792x1024, 1024x1792
-
-#### Variations: `POST /v1/images/variations`
-
-**Parameters:**
-- `image`: Image file (required)
-- `n`: Number of variations (1-10)
-- `response_format`: url or b64_json
-- `size`: Output size
-- `user`: End-user identifier
-
-#### Edits: `POST /v1/images/edits`
-
-**Parameters:**
-- `image`: Source image (required)
-- `mask`: Mask image (optional)
-- `prompt`: Edit description (required)
-- `n`: Number of edits (1-10)
-- `size`: Output size
-- `response_format`: url or b64_json
-
-### 5.6 Audio API - Detailed Reference
-
-#### Transcriptions: `POST /v1/audio/transcriptions`
-
-**Parameters:**
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `file` | file | Yes | - | Audio file (FLAC, M4A, MP3, MP4, MPEG, MPGA, OGA, OGG, WAV, WEBM) |
-| `model` | string | Yes | - | Audio model (whisper-1) |
-| `prompt` | string | No | null | Optional text to guide transcription |
-| `response_format` | string | No | json | Response format: json, text, srt, verbose_json, vtt |
-| `temperature` | number | No | 0 | Sampling temperature (0-1) |
-| `language` | string | No | null | Language code (ISO-639-1) |
-
-#### Translations: `POST /v1/audio/translations`
-
-**Parameters:** Same as transcriptions, translates to English
-
-#### Speech: `POST /v1/audio/speech`
-
-**Parameters:**
-
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| `model` | string | Yes | - | TTS model (tts-1 or tts-1-hd) |
-| `input` | string | Yes | - | Text to synthesize (max 4096 chars) |
-| `voice` | string | Yes | - | Voice: alloy, echo, fable, onyx, nova, shimmer |
-| `response_format` | string | No | mp3 | Audio format: mp3, opus, aac, flac |
-| `speed` | number | No | 1.0 | Speech speed (0.25-4.0) |
-
-### 5.7 Models API
-
-#### List Models: `GET /v1/models`
-
-Returns list of available models with metadata.
-
-**Response:**
-```json
-{
-  "object": "list",
-  "data": [
-    {
-      "id": "deepseek-ai/DeepSeek-V3.2",
-      "object": "model",
-      "created": 1677649963,
-      "owned_by": "deepseek-ai",
-      "permission": [...],
-      "root": "deepseek-ai/DeepSeek-V3.2",
-      "parent": null,
-      "helixflow_metadata": {
-        "context_window": 164000,
-        "pricing": {"input": 0.27, "output": 0.42},
-        "capabilities": ["chat", "completion", "tools"]
-      }
-    }
-  ]
-}
-```
-
-#### Model Info: `GET /v1/models/{model_id}`
-
-Returns detailed information about a specific model.
-
-### 5.8 Usage and Billing API
-
-#### Usage: `GET /v1/usage`
-
-**Query Parameters:**
-- `start_date`: Start date (YYYY-MM-DD)
-- `end_date`: End date (YYYY-MM-DD)
-- `model`: Filter by model
-- `group_by`: day, week, month
-
-**Response:**
-```json
-{
-  "total_tokens": 150000,
-  "total_cost": 45.50,
-  "breakdown": [
-    {
-      "model": "deepseek-ai/DeepSeek-V3.2",
-      "tokens": 100000,
-      "cost": 30.00,
-      "requests": 500
-    }
-  ]
-}
-```
-
-#### Billing: `GET /v1/billing`
-
-Returns current billing information and payment methods.
-
-#### Budgets and Spend Controls: `POST /v1/budgets`
-
-**Parameters:**
-- `daily_limit`: Daily spending limit in USD
-- `monthly_limit`: Monthly spending limit in USD
-- `alert_threshold`: Percentage threshold for alerts (e.g., 80)
-- `auto_pause`: Automatically pause API keys when limits exceeded
-
-**Response:** Budget configuration confirmation
-
-#### Usage Alerts: `POST /v1/alerts`
-
-Configure spending and usage alerts with webhook notifications.
-
-**Parameters:**
-- `type`: "spending" or "usage"
-- `threshold`: Alert threshold value
-- `webhook_url`: URL for alert notifications
-- `email_alerts`: Enable email notifications
-
-### 5.9 Error Handling
-
-**Common Error Codes:**
-
-| Code | Description | Resolution |
-|------|-------------|------------|
-| `400` | Bad Request | Check request parameters |
-| `401` | Unauthorized | Verify API key |
-| `403` | Forbidden | Check permissions |
-| `404` | Not Found | Verify endpoint/model |
-| `429` | Rate Limited | Wait and retry |
-| `500` | Internal Error | Contact support |
-| `503` | Service Unavailable | Retry with backoff |
-
-**Error Response Format:**
-```json
-{
-  "error": {
-    "message": "Invalid model: 'invalid-model' not found",
-    "type": "invalid_request_error",
-    "param": "model",
-    "code": "model_not_found",
-    "helixflow_details": {
-      "available_models": ["deepseek-ai/DeepSeek-V3.2", "..."],
-      "suggestions": ["deepseek-ai/DeepSeek-V3.2"]
-    }
-  }
-}
-```
-
-## 6. Developer Experience and Integration
-
-### 6.1 Client Applications
-
-HelixFlow provides comprehensive client applications for both administrators and regular users across all major platforms, ensuring 100% test coverage and 100% success rate in all automated testing scenarios.
-
-#### 6.1.1 Web Application (Angular)
-- **Framework**: Angular 17+ with standalone components and signals
-- **Architecture**: Micro-frontend architecture with module federation
-- **Authentication**: JWT-based authentication with refresh token rotation
-- **Real-time Features**: WebSocket connections for live updates and streaming responses
-- **Offline Support**: Progressive Web App (PWA) capabilities with service workers
-- **Responsive Design**: Mobile-first responsive design supporting all screen sizes
-- **Accessibility**: WCAG 2.1 AA compliance with screen reader support
-- **Testing**: 100% unit test coverage with Jasmine/Karma, 100% E2E coverage with Cypress
-
-#### 6.1.2 Mobile Applications
-**Android Application:**
-- **Framework**: Kotlin Multiplatform Mobile (KMM) with native Android implementation
-- **Architecture**: MVVM with Jetpack Compose for modern UI development
-- **Platform Support**: Android 8.0+ (API 26+) with backward compatibility
-- **Offline Capabilities**: SQLite with SQLCipher for encrypted local data storage
-- **Push Notifications**: Firebase Cloud Messaging (FCM) integration
-- **Biometric Authentication**: Fingerprint and Face ID support
-- **Testing**: 100% unit test coverage with JUnit, 100% UI test coverage with Espresso
-
-**iOS Application:**
-- **Framework**: SwiftUI with Combine for reactive programming
-- **Architecture**: VIPER architecture for scalable iOS development
-- **Platform Support**: iOS 14.0+ with iPadOS and macOS Catalyst support
-- **Offline Capabilities**: Core Data with encryption for local data persistence
-- **Push Notifications**: Apple Push Notification Service (APNs) integration
-- **Biometric Authentication**: Touch ID and Face ID support
-- **Testing**: 100% unit test coverage with XCTest, 100% UI test coverage with XCUITest
-
-**HarmonyOS Application:**
-- **Framework**: ArkTS (TypeScript-based) with ArkUI for declarative UI development
-- **Architecture**: MVVM with dependency injection and modular design
-- **Platform Support**: HarmonyOS 3.0+ with multi-device ecosystem support
-- **Offline Capabilities**: Distributed data management with encryption
-- **Push Notifications**: HarmonyOS Push Kit integration
-- **Biometric Authentication**: 3D facial recognition and fingerprint support
-- **Testing**: 100% unit test coverage with Jest, 100% E2E coverage with custom test framework
-
-#### 6.1.3 Desktop Applications
-**Windows Application:**
-- **Framework**: .NET 8.0 with WinUI 3 for modern Windows development
-- **Architecture**: MVVM with dependency injection and modular plugin system
-- **Platform Support**: Windows 10 version 2004+ (20H1) and Windows 11
-- **Offline Capabilities**: SQLite with SQLCipher for encrypted local database
-- **System Integration**: Windows Notification Service and taskbar integration
-- **Auto-updates**: Squirrel.Windows for seamless application updates
-- **Testing**: 100% unit test coverage with xUnit.net, 100% UI test coverage with WinAppDriver
-
-**macOS Application:**
-- **Framework**: SwiftUI with AppKit integration for native macOS experience
-- **Architecture**: MVC with coordinator pattern for navigation management
-- **Platform Support**: macOS 12.0+ (Monterey) with Apple Silicon support
-- **Offline Capabilities**: Core Data with CloudKit sync and encryption
-- **System Integration**: macOS Notification Center and Spotlight integration
-- **Auto-updates**: Sparkle framework for secure application updates
-- **Testing**: 100% unit test coverage with XCTest, 100% UI test coverage with XCUITest
-
-**Linux Application:**
-- **Framework**: GTK 4 with Rust bindings for native Linux desktop experience
-- **Architecture**: Model-View-Presenter with dependency injection
-- **Platform Support**: Ubuntu 20.04+, Fedora 35+, and other major distributions
-- **Offline Capabilities**: SQLite with SQLCipher for encrypted data storage
-- **System Integration**: D-Bus integration and system tray support
-- **Packaging**: Snap, Flatpak, and AppImage support for distribution
-- **Testing**: 100% unit test coverage with Rust testing framework, 100% UI test coverage with Dogtail
-
-#### 6.1.4 Admin Control Panel
-- **Framework**: Angular 17+ with Angular Material enterprise components
-- **Architecture**: Micro-frontend architecture with single-spa for module composition
-- **Features**:
-  - Real-time monitoring dashboard with Grafana integration
-  - User management with role-based access control
-  - Billing and subscription management across regions
-  - Model performance analytics and usage statistics
-  - System health monitoring and alerting configuration
-  - Regional deployment management and failover controls
-  - Audit logging and compliance reporting
-  - App rankings and marketplace analytics
-- **Security**: Multi-factor authentication and session management
-- **Testing**: 100% test coverage with comprehensive E2E test suites
-
-#### 6.1.5 Built-in Chat Interface
-- **Model Testing**: Interactive chat interface for testing all available models
-- **Side-by-Side Comparison**: Compare responses from different models simultaneously
-- **Streaming Support**: Real-time streaming responses with typing indicators
-- **Parameter Tuning**: Adjustable temperature, max tokens, and other parameters
-- **Conversation History**: Persistent chat history with export capabilities
-- **Model Switching**: Easy switching between models within conversations
-- **Performance Metrics**: Response time, token count, and cost display
-- **Share Conversations**: Public sharing of interesting conversations
-- **Integration Testing**: Test API integrations directly from the interface
-
-### 6.2 SDKs and Libraries
-
-#### 6.2.1 Official SDKs
-- **Python**: Full OpenAI client compatibility with base URL override
-- **JavaScript/TypeScript**: npm package with type definitions
-- **Java**: Maven/Gradle package with async support
-- **Go**: Go module with context support
-- **C#**: NuGet package with async/await
-- **Rust**: Cargo crate with tokio support
-- **PHP**: Composer package with PSR standards
-- **HelixFlow SDK**: Native SDK with advanced features including:
-  - Auto-routing with fallback mechanisms
-  - Intelligent prompt caching
-  - Built-in telemetry and usage tracking
-  - Streaming optimizations
-  - Multi-region support
-  - Error handling and retry logic
-  - Cost optimization features
-
-#### 6.2.2 App Attribution and Rankings
-- **App Registration**: Register applications to appear on public leaderboards
-- **Usage Tracking**: Automatic tracking of token usage by application
-- **Public Rankings**: Global rankings by token consumption, model usage, and performance
-- **Analytics Dashboard**: Detailed analytics for registered applications
-- **Attribution Headers**: HTTP-Referer and X-Title headers for app identification
-- **Leaderboard Categories**: Rankings by model, provider, programming language, and use case
-- **Market Share Analysis**: Provider and model market share visualization
-- **Trend Analysis**: Weekly growth rates and usage patterns
-- **Top Apps Showcase**: Featured applications with usage statistics
-
-#### 6.1.2 Third-Party Integrations
-
-### 6.2 Development Tools Integration
-
-#### 6.2.1 IDE Plugins
-- **VS Code**: Official extension with model selection and chat interface
-- **Cursor**: Full integration with AI coding workflows
-- **JetBrains**: Plugin for IntelliJ IDEA, PyCharm, WebStorm
-- **Neovim**: Lua plugin for advanced text editor workflows
-- **Emacs**: Lisp package for traditional text editing
-
-#### 5.2.2 CLI Tools
-- **OpenCode**: Direct integration with HelixFlow models
-- **Cline**: Enhanced GitHub Copilot alternative
-- **Aider**: AI pair programming assistant
-- **ChatGPT CLI**: Command-line interface for all models
-- **Shell GPT**: Bash completion and command generation
-
-#### 5.2.3 API Clients and Testing
-- **Postman**: Complete collection of HelixFlow API endpoints
-- **Insomnia**: GraphQL and REST API testing
-- **Thunder Client**: VS Code integrated API testing
-- **Bruno**: Open-source API client with collaboration
-
-### 6.3 Code Examples
-
-#### 5.3.1 Python (OpenAI Client)
-```python
-from openai import OpenAI
-
-# Direct replacement for OpenAI client
-client = OpenAI(
-    api_key="your-helixflow-api-key",
-    base_url="https://api.helixflow.ai/v1"
-)
-
-response = client.chat.completions.create(
-    model="deepseek-ai/DeepSeek-V3.2",
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Explain quantum computing"}
-    ],
-    stream=True
-)
-
-for chunk in response:
-    if chunk.choices[0].delta.content:
-        print(chunk.choices[0].delta.content, end="")
-```
-
-#### 5.3.2 JavaScript/TypeScript
-```typescript
-import OpenAI from 'openai';
-
-const client = new OpenAI({
-  apiKey: process.env.HELIXFLOW_API_KEY,
-  baseURL: 'https://api.helixflow.ai/v1',
-  dangerouslyAllowBrowser: true
-});
-
-async function generateCode(prompt: string) {
-  const completion = await client.chat.completions.create({
-    model: 'Qwen/Qwen3-Coder-480B-A35B-Instruct',
-    messages: [
-      { role: 'system', content: 'You are an expert programmer.' },
-      { role: 'user', content: prompt }
-    ],
-    temperature: 0.1,
-    max_tokens: 2000
-  });
-  
-  return completion.choices[0].message.content;
-}
-```
-
-#### 5.3.3 cURL
-```bash
-curl -X POST "https://api.helixflow.ai/v1/chat/completions" \
-  -H "Authorization: Bearer YOUR_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "deepseek-ai/DeepSeek-V3.2",
-    "messages": [
-      {"role": "user", "content": "Write a Python function to calculate factorial"}
-    ],
-    "temperature": 0.7,
-    "max_tokens": 500
-  }'
-```
-
-## 6.4 Rankings and Analytics Platform
-
-### 6.4.1 Public Leaderboards
-- **Model Rankings**: Real-time rankings by token usage, latency, and reliability
-- **Provider Market Share**: Market share analysis across all providers
-- **Application Rankings**: Top applications by token consumption and user engagement
-- **Category Rankings**: Specialized rankings for coding, chat, images, etc.
-- **Language Rankings**: Usage statistics by programming and natural languages
-- **Tool Usage Analytics**: Function calling and tool usage patterns
-- **Image Processing Stats**: Image generation and processing metrics
-- **Weekly Growth Tracking**: Trend analysis with growth percentages
-
-### 6.4.2 Analytics Dashboard
-- **Usage Analytics**: Detailed token consumption by model, provider, and time period
-- **Performance Metrics**: Latency, throughput, and error rate analytics
-- **Cost Analysis**: Spending patterns and cost optimization insights
-- **Geographic Distribution**: Usage patterns by region and country
-- **Application Insights**: Per-application usage and performance metrics
-- **Trend Visualization**: Interactive charts and graphs for usage trends
-- **Export Capabilities**: CSV/JSON export for custom analysis
-- **Real-time Updates**: Live dashboard updates with streaming data
-
-### 6.4.3 App Attribution System
-- **App Registration**: Simple registration process for applications
-- **Attribution Headers**: HTTP-Referer and X-Title headers for automatic tracking
-- **Usage Attribution**: Accurate attribution of token usage to applications
-- **Public Showcase**: Featured applications on leaderboards
-- **Analytics Integration**: Detailed analytics for registered applications
-- **Privacy Controls**: Opt-in attribution with user consent
-- **Ranking Incentives**: Benefits for high-ranking applications
-
-## 7. Deployment Options and Infrastructure
-
-### 6.1 Cloud Deployment Strategies
-
-#### 6.1.1 Global Edge Network
-- **Regions**: 15+ global regions for low-latency access
-- **Edge Caching**: Static content and model weights at edge locations
-- **CDN Integration**: Content delivery for images and media
-- **DNS Routing**: Geo-aware DNS for optimal region selection
-- **Service Discovery**: Automatic detection of nearest regional services
-- **Health Monitoring**: Real-time health checks across all edge locations
-
-#### 6.1.2 Multi-Cloud Support
-- **AWS**: EKS with Fargate for serverless containers, S3 for storage
-- **Azure**: AKS with Azure Container Instances, Blob Storage integration
-- **Google Cloud**: GKE with Cloud Run, Cloud Storage integration
-- **Service Discovery**: Cross-cloud service registration and discovery
-- **Load Balancing**: Cloud-agnostic load balancing with health checks
-- **Configuration Management**: Centralized configuration across all clouds
-
-### 7.2 Compute Infrastructure
-
-#### 7.2.1 GPU Clusters
-- **NVIDIA Support**: A100, H100, L40S with CUDA 12.2+
-- **AMD Support**: MI300X with ROCm 5.7+
-- **Auto-Scaling**: Dynamic GPU node scaling based on workload
-- **Port Management**: Automatic port allocation and conflict resolution
-- **Service Discovery**: GPU cluster registration and health monitoring
-- **Load Balancing**: Intelligent traffic distribution across GPU nodes
+#### 2.1.1 Decentralized Compute Option
+HelixFlow supports both centralized cloud infrastructure and decentralized compute networks powered by blockchain technology. The decentralized option leverages distributed GPU resources from independent miners, providing:
+
+- **Blockchain-Powered Marketplace**: Smart contract-based compute resource allocation
+- **Cryptocurrency Incentives**: Token-based rewards for resource providers
+- **Decentralized Trust**: Consensus mechanisms ensuring reliable compute delivery
+- **Global Resource Pool**: Worldwide distribution of GPU resources
+- **Economic Efficiency**: Competitive pricing through market dynamics
+
+##### How Decentralized Compute Works
+1. **Resource Registration**: Miners register their GPU hardware on the blockchain network
+2. **Hardware Validation**: Automated benchmarking verifies GPU performance and reliability
+3. **Staking Requirements**: Miners stake TAO tokens as collateral for service quality
+4. **Service Discovery**: Users query the network for available compute resources
+5. **Smart Contract Allocation**: Blockchain contracts automatically assign tasks to miners
+6. **Proof-of-Work Verification**: Miners submit cryptographic proofs of completed work
+7. **Reward Distribution**: TAO tokens are distributed based on contribution and quality
+8. **Slashing Enforcement**: Poor performance results in staked token penalties
+
+##### Implementation Architecture
+- **Subnet Infrastructure**: Dedicated blockchain subnet for AI compute marketplace
+- **Validator Network**: Decentralized nodes validating transactions and service quality
+- **Oracle System**: External data feeds for hardware performance metrics
+- **Cross-Chain Bridges**: Interoperability with multiple blockchain networks
+- **Decentralized Storage**: IPFS/Filecoin integration for model and data storage
+
+#### 2.1.2 Miner Ecosystem
+- **GPU Miners**: Independent operators providing computational resources
+- **Hardware Validation**: Automated GPU performance and reliability testing
+- **Scoring System**: Reputation-based ranking of miner quality
+- **Resource Allocation**: Dynamic compute resource assignment
+- **Network Monitoring**: Real-time miner health and performance tracking
+- **Incentive Distribution**: Automated reward calculation and distribution
+- **Slashing Mechanisms**: Penalties for unreliable or malicious miners
+- **Upgrade Coordination**: Coordinated software updates across miner network
+
+##### Miner Onboarding Process
+1. **Hardware Setup**: Install miner software and configure GPU resources
+2. **Wallet Creation**: Generate Bittensor wallet with TAO token holdings
+3. **Staking**: Lock TAO tokens as collateral (minimum 100 TAO recommended)
+4. **Registration**: Submit hardware specifications and performance benchmarks
+5. **Validation**: Network validators verify hardware claims and assign initial score
+6. **Activation**: Miner becomes eligible to receive compute requests
+7. **Monitoring**: Continuous performance tracking and reputation building
+
+##### Miner Operations
+- **Request Processing**: Receive encrypted compute requests from users
+- **Resource Allocation**: Dynamically allocate GPU memory and processing power
+- **Execution Environment**: Run AI models in isolated containers with TEE protection
+- **Result Encryption**: Encrypt outputs before transmission back to users
+- **Proof Generation**: Create verifiable proofs of computation completion
+- **Reward Claiming**: Submit proofs to claim TAO token rewards
+- **Performance Reporting**: Regular submission of uptime and quality metrics
 
 #### 7.2.2 Model Serving Infrastructure
 - **Container Runtime**: NVIDIA Container Runtime, ROCm for AMD
@@ -1140,6 +93,64 @@ curl -X POST "https://api.helixflow.ai/v1/chat/completions" \
 - **Service Discovery**: Consul integration for automatic service registration
 - **Configuration Management**: etcd for distributed configuration storage
 - **Error Tracking**: Sentry integration for crash reporting and monitoring
+
+#### 7.2.3 Decentralized Miner Network
+- **Miner Onboarding**: Automated miner registration and validation
+- **Hardware Verification**: GPU performance benchmarking and reliability testing
+- **Scoring Algorithm**: Reputation-based miner ranking system
+- **Resource Allocation**: Dynamic compute resource assignment
+- **Network Monitoring**: Real-time miner health and performance tracking
+- **Incentive Distribution**: Automated reward calculation and distribution
+- **Slashing Mechanisms**: Penalties for unreliable or malicious miners
+- **Upgrade Coordination**: Coordinated software updates across miner network
+
+##### Hardware Validation Process
+1. **GPU Detection**: Automatic identification of installed GPU hardware
+2. **Benchmark Suite**: Run standardized MLPerf or custom AI benchmarks
+3. **Memory Testing**: Verify VRAM capacity and bandwidth
+4. **Thermal Testing**: Monitor temperature stability under load
+5. **Power Efficiency**: Measure power consumption per operation
+6. **Reliability Testing**: Extended stress testing for stability
+7. **Score Calculation**: Weighted algorithm combining all metrics
+8. **Certification**: Issuance of hardware validation certificate
+
+##### Scoring Algorithm Details
+```
+Base Score = (GPU Performance × 0.4) + (Reliability × 0.3) + (Efficiency × 0.2) + (Uptime × 0.1)
+
+GPU Performance = (Benchmark Score / Max Benchmark Score) × 100
+Reliability = (Successful Tasks / Total Tasks) × 100
+Efficiency = (Operations per Watt) × Normalization Factor
+Uptime = (Online Hours / Total Hours) × 100
+
+Final Score = Base Score × Reputation Multiplier × Stake Multiplier
+```
+
+##### Miner Deployment Guide
+```bash
+# 1. Install dependencies
+pip install helixflow-miner bittensor
+
+# 2. Initialize miner
+helixflow-miner init --wallet-name my_wallet --subnet 120
+
+# 3. Configure hardware
+helixflow-miner config --gpu-memory 24GB --max-concurrent 4
+
+# 4. Run hardware validation
+helixflow-miner validate --benchmark mlperf
+
+# 5. Start mining
+helixflow-miner start --stake-amount 100
+```
+
+##### Miner Monitoring and Maintenance
+- **Real-time Metrics**: GPU utilization, temperature, memory usage
+- **Task Queue**: View pending and completed compute requests
+- **Earnings Dashboard**: Track TAO rewards and performance bonuses
+- **Health Checks**: Automated self-diagnosis and repair procedures
+- **Log Analysis**: Detailed logging for troubleshooting issues
+- **Update Management**: Automatic software updates with zero-downtime
 
 ### 7.3 Deployment Models
 
@@ -2261,6 +1272,10 @@ class ZeroTrustMiddleware:
 - **Key Management**: Hardware Security Modules (HSM) for encryption key storage and rotation
 - **Data Classification**: Automated data classification and encryption based on sensitivity levels
 - **Backup Encryption**: Encrypted database backups with client-side encryption before cloud storage
+- **Trusted Execution Environment (TEE)**: Hardware-based secure enclaves for sensitive computation
+- **Remote Attestation**: Cryptographic proof of secure execution environment
+- **Sealed Storage**: Encrypted data storage with hardware-backed key management
+- **Secure Multi-Party Computation**: Privacy-preserving computation across distributed nodes
 
 #### 10.1.2 Access Control
 - **Authentication**: JWT-based authentication with RS256 signatures and configurable token expiration
@@ -2540,6 +1555,10 @@ class ZeroTrustMiddleware:
 - **Real-time Collaboration**: Multi-user model interactions and shared contexts
 - **Model Ensembling**: Automatic model selection and response aggregation
 - **Edge Deployment**: On-device and edge computing capabilities
+- **Long-Running Jobs**: Support for extended AI tasks and workflows
+- **Batch Processing**: Large-scale data processing and analysis
+- **Workflow Orchestration**: Complex multi-step AI pipeline management
+- **Resource Reservation**: Guaranteed compute resources for extended tasks
 
 ### 11.3 Long-term Vision (1-2 years)
 
@@ -3241,6 +2260,1633 @@ The platform's architecture is designed for scalability, reliability, and perfor
 6. **Transparency**: Open documentation and clear pricing
 
 This technical specification serves as the foundation for building HelixFlow into a world-class AI inference platform that empowers developers and transforms how AI applications are built and deployed.
+
+## 15. Blockchain Integration and Decentralized Features
+
+### 15.1 Bittensor Network Integration
+- **Subnet Architecture**: Dedicated subnet for AI compute marketplace
+- **TAO Token Economics**: Native token for network incentives and governance
+- **Validator Network**: Decentralized validation of compute quality and pricing
+- **Cross-Subnet Communication**: Interoperability with other Bittensor subnets
+- **Governance Mechanisms**: Community-driven network parameter updates
+- **Staking and Delegation**: Token staking for network participation
+- **Reward Distribution**: Automated incentive allocation based on contribution
+
+### 15.2 Smart Contract Infrastructure
+- **Compute Marketplace**: Automated resource allocation and pricing
+- **Quality Assurance**: On-chain verification of service delivery
+- **Dispute Resolution**: Decentralized arbitration for service disputes
+- **Upgrade Coordination**: Network-wide software update mechanisms
+- **Treasury Management**: Community fund allocation and spending
+- **Token Bridge**: Cross-chain asset transfers and interoperability
+
+### 15.3 Decentralized Identity and Reputation
+- **Miner Reputation**: On-chain reputation scoring for resource providers
+- **User Authentication**: Decentralized identity verification
+- **Service Level Agreements**: Smart contract-based SLAs
+- **Audit Trail**: Immutable transaction and performance records
+- **Privacy Preservation**: Zero-knowledge proofs for sensitive operations
+
+## 16. Decentralized AI Implementation Guide
+
+### 16.1 How Decentralized AI Works
+
+#### 16.1.1 Core Architecture
+The decentralized AI system operates on a blockchain-based marketplace where computational resources are distributed across independent miners. This architecture eliminates centralized control points and enables truly distributed AI inference.
+
+**What it is**: A peer-to-peer marketplace built on blockchain technology where AI tasks are executed by independent GPU providers (miners) who earn cryptocurrency rewards. The system uses smart contracts to automate task assignment, payment, and quality assurance without requiring trust between parties.
+
+**How to use it**: Users submit AI tasks through the HelixFlow API specifying model requirements, hardware needs, and budget. The system automatically discovers available miners, executes the task on the best-matched hardware, and returns results with cryptographic verification. Miners run specialized software that registers their hardware and competes for tasks.
+
+**Benefits**:
+- **Cost Efficiency**: Competitive pricing through market dynamics, often 30-50% cheaper than centralized providers
+- **Scalability**: Unlimited horizontal scaling as more miners join the network
+- **Reliability**: No single point of failure; tasks automatically reroute if miners go offline
+- **Privacy**: Hardware-level encryption ensures data never leaves secure enclaves
+- **Innovation**: Enables new business models like decentralized AI applications and services
+
+**Implementation Requirements**:
+- **Blockchain Infrastructure**: Bittensor subnet with validator nodes and smart contracts
+- **TEE Hardware**: Intel SGX or AMD SEV capable processors for secure execution
+- **Cryptocurrency Wallet**: TAO token support for staking and payments
+- **Network Connectivity**: High-bandwidth internet for real-time task distribution
+- **Hardware Validation**: Automated benchmarking tools for GPU performance verification
+
+**Resources**:
+- **Technical Documentation**: Bittensor whitepaper and subnet 120 specifications
+- **SDK Libraries**: Chutes.ai Python SDK for miner implementation
+- **Community Forums**: Discord communities for OpenRouter and Chutes.ai
+- **Hardware Guides**: NVIDIA CUDA documentation and AMD ROCm resources
+- **Security Standards**: NIST guidelines for trusted execution environments
+
+**Technology Stack**:
+- **Blockchain**: Bittensor protocol with TAO token economics
+- **Smart Contracts**: Solidity for marketplace automation
+- **TEE**: Intel SGX or AMD SEV for secure execution
+- **Networking**: Libp2p for peer-to-peer communication
+- **Storage**: IPFS/Filecoin for decentralized model storage
+
+**Testing**:
+- **Unit Tests**: Smart contract functionality with Hardhat/Truffle
+- **Integration Tests**: End-to-end task execution workflows
+- **Security Audits**: Third-party reviews of TEE implementations
+- **Performance Benchmarks**: MLPerf comparisons across different hardware
+- **Network Stress Tests**: High-load scenarios with multiple concurrent tasks
+
+**Documentation**:
+- **API References**: Complete OpenAPI specs for all endpoints
+- **Integration Guides**: Step-by-step tutorials for different programming languages
+- **Best Practices**: Security guidelines and performance optimization tips
+- **Troubleshooting**: Common issues and resolution steps
+- **Changelog**: Version updates and breaking changes
+
+**Code Snippets from Resources**:
+```python
+# From Chutes.ai SDK - Basic miner setup
+from chutes import Chute, NodeSelector
+from chutes.chute.template.vllm import build_vllm_chute
+
+chute = build_vllm_chute(
+    username="miner_username",
+    model_name="microsoft/WizardLM-2-8x22B",
+    node_selector=NodeSelector(gpu_count=1, min_vram_gb=24)
+)
+```
+
+```solidity
+// Smart contract structure from decentralized AI patterns
+contract AIMarketplace {
+    struct Task {
+        address requester;
+        bytes32 modelHash;
+        uint256 hardwareReq;
+        uint256 maxPrice;
+        bytes encryptedData;
+        uint256 deadline;
+    }
+
+    mapping(bytes32 => Task) public tasks;
+    mapping(address => uint256) public minerReputation;
+
+    function submitTask(bytes32 modelHash, uint256 hardwareReq, uint256 maxPrice, bytes calldata encryptedData)
+        external payable returns (bytes32 taskId) {
+        // Implementation from OpenRouter's marketplace concepts
+    }
+}
+```
+
+#### 16.1.2 Task Execution Flow
+The task execution flow represents the complete lifecycle of an AI request in the decentralized network, from submission to completion. This flow ensures trustless operation through cryptographic verification at each step.
+
+**What it is**: A six-stage pipeline that processes AI tasks through the decentralized network with built-in verification and settlement mechanisms. Each stage includes cryptographic proofs and consensus validation to ensure integrity.
+
+**How to use it**: As a user, you submit tasks via API calls that automatically flow through the pipeline. As a miner, you participate by running the miner software that handles task execution. The system handles all coordination automatically.
+
+**Benefits**:
+- **Trustless Operation**: No need to trust intermediaries; cryptography ensures integrity
+- **Fault Tolerance**: Automatic recovery from miner failures or network issues
+- **Transparency**: Every step is recorded on the blockchain for auditability
+- **Efficiency**: Parallel processing across multiple miners for faster completion
+- **Cost Optimization**: Competitive bidding ensures optimal pricing
+
+**Implementation Requirements**:
+- **Blockchain Nodes**: Running Bittensor validators for consensus
+- **Task Queue System**: Distributed queue for task distribution
+- **Cryptographic Libraries**: For proof generation and verification
+- **TEE Runtime**: For secure task execution environments
+- **Payment Channels**: For instant micropayments in TAO tokens
+
+**Resources**:
+- **Flow Diagrams**: Chutes.ai architecture documentation
+- **Protocol Specs**: Bittensor subnet communication protocols
+- **Implementation Examples**: OpenRouter's routing algorithms
+- **Research Papers**: Decentralized computing academic literature
+- **Community Code**: GitHub repositories from Chutes.ai and Bittensor
+
+**Technology Stack**:
+- **Message Queue**: Apache Kafka or NATS for task distribution
+- **Cryptography**: Libsodium or OpenSSL for proof generation
+- **Database**: PostgreSQL with encryption for task metadata
+- **Monitoring**: Prometheus/Grafana for pipeline observability
+- **Load Balancer**: Envoy proxy for traffic distribution
+
+**Testing**:
+- **Flow Simulation**: Mock networks for testing complete pipelines
+- **Failure Injection**: Chaos engineering for fault tolerance testing
+- **Performance Testing**: Load testing with thousands of concurrent tasks
+- **Security Testing**: Penetration testing of cryptographic components
+- **Integration Testing**: End-to-end testing across all pipeline stages
+
+**Documentation**:
+- **Sequence Diagrams**: Visual representations of task flows
+- **State Machines**: Formal specifications of task state transitions
+- **Error Handling**: Comprehensive error codes and recovery procedures
+- **Monitoring Guides**: Setting up observability for the pipeline
+- **Scaling Guides**: Handling increased load and network growth
+
+**Code Snippets from Resources**:
+```python
+# From Chutes.ai - Task submission flow
+import asyncio
+from chutes import Chutes
+
+async def submit_task():
+    client = Chutes(api_key="your_key")
+
+    # Submit task with automatic flow handling
+    task = await client.tasks.create(
+        model="anthropic/claude-3-opus",
+        prompt="Analyze this data",
+        hardware_requirements={"gpu": "a100", "memory": "80GB"},
+        max_cost=5.0  # Max TAO to spend
+    )
+
+    # Monitor progress through the flow
+    while not task.completed:
+        status = await client.tasks.get(task.id)
+        print(f"Stage: {status.current_stage}")
+        await asyncio.sleep(1)
+
+    return task.result
+```
+
+```javascript
+// From OpenRouter patterns - Flow orchestration
+const taskFlow = {
+  stages: ['validation', 'bidding', 'execution', 'verification', 'settlement'],
+
+  async execute(task) {
+    for (const stage of this.stages) {
+      try {
+        await this[stage](task);
+        task.stage = stage;
+        await this.emit('stage_complete', { task, stage });
+      } catch (error) {
+        await this.handle_error(task, stage, error);
+        throw error;
+      }
+    }
+  }
+};
+```
+
+#### 16.1.3 Consensus Mechanism
+The consensus mechanism ensures agreement on task completion and payment distribution across the decentralized network. It combines multiple proof types for robust validation.
+
+**What it is**: A multi-layered consensus system that validates AI task execution using computational proofs, economic stakes, and community validation. It prevents fraud and ensures fair compensation.
+
+**How to use it**: The consensus runs automatically in the background. Users submit tasks and receive guaranteed execution. Miners participate by providing resources and earning rewards based on consensus validation.
+
+**Benefits**:
+- **Fraud Prevention**: Multiple validation layers prevent dishonest behavior
+- **Incentive Alignment**: Economic rewards encourage quality service
+- **Decentralized Governance**: Community-driven network rules
+- **Scalability**: Parallel validation processes handle network growth
+- **Security**: Cryptographic proofs ensure execution integrity
+
+**Implementation Requirements**:
+- **Validator Nodes**: Distributed nodes running consensus algorithms
+- **Staking Contracts**: Smart contracts managing TAO token stakes
+- **Proof Verification**: Libraries for validating computational proofs
+- **Reputation System**: On-chain reputation tracking and updates
+- **Slashing Logic**: Automatic penalty application for violations
+
+**Resources**:
+- **Consensus Papers**: Academic research on proof-of-stake systems
+- **Bittensor Docs**: Official consensus mechanism documentation
+- **Implementation Guides**: Chutes.ai miner consensus integration
+- **Security Audits**: Third-party reviews of consensus algorithms
+- **Community Discussions**: Forums for consensus improvement proposals
+
+**Technology Stack**:
+- **Consensus Engine**: Custom implementation based on Bittensor protocol
+- **Cryptographic Primitives**: BLS signatures for validator consensus
+- **Database**: LevelDB or RocksDB for state management
+- **Networking**: libp2p for validator communication
+- **Monitoring**: Custom metrics for consensus health
+
+**Testing**:
+- **Consensus Simulation**: Multi-node test networks for validation
+- **Attack Vector Testing**: Byzantine fault tolerance verification
+- **Performance Testing**: Consensus latency and throughput benchmarks
+- **Economic Testing**: Incentive mechanism simulations
+- **Upgrade Testing**: Consensus rule changes and network upgrades
+
+**Documentation**:
+- **Consensus Rules**: Formal specification of validation requirements
+- **Validator Guides**: Running and maintaining validator nodes
+- **Incentive Models**: Detailed explanation of reward distribution
+- **Governance Process**: How consensus rules are updated
+- **Audit Reports**: Regular security assessments of the mechanism
+
+**Code Snippets from Resources**:
+```python
+# From Bittensor - Consensus validation
+class ConsensusValidator:
+    def __init__(self, wallet, subnet_id):
+        self.wallet = wallet
+        self.subnet = subnet_id
+        self.stake = self.get_stake_amount()
+
+    async def validate_task_completion(self, task_id, proof):
+        # Verify proof-of-work
+        if not self.verify_pow_proof(proof):
+            return False
+
+        # Check miner reputation
+        miner_rep = await self.get_miner_reputation(proof.miner_id)
+        if miner_rep < MIN_REPUTATION:
+            return False
+
+        # Validate TEE attestation
+        if not self.verify_tee_attestation(proof.attestation):
+            return False
+
+        return True
+
+    def calculate_reward(self, task_difficulty, miner_stake):
+        # Reward = base_reward * stake_multiplier * difficulty_multiplier
+        return BASE_REWARD * (miner_stake / TOTAL_STAKE) * task_difficulty
+```
+
+```solidity
+// Reputation-based consensus from Chutes.ai patterns
+contract ReputationConsensus {
+    mapping(address => uint256) public reputation;
+    mapping(bytes32 => Validation[]) public taskValidations;
+
+    struct Validation {
+        address validator;
+        bool approved;
+        uint256 stake;
+        bytes32 proofHash;
+    }
+
+    function submitValidation(bytes32 taskId, bool approved, bytes32 proofHash) external {
+        require(reputation[msg.sender] >= MIN_VALIDATOR_REP, "Insufficient reputation");
+
+        taskValidations[taskId].push(Validation({
+            validator: msg.sender,
+            approved: approved,
+            stake: reputation[msg.sender],
+            proofHash: proofHash
+        }));
+
+        // Update reputation based on validation accuracy
+        updateReputation(msg.sender, approved);
+    }
+}
+```
+
+### 16.2 Implementation Details
+
+#### 16.2.1 Smart Contract Architecture
+The smart contract architecture forms the backbone of the decentralized marketplace, automating all economic interactions and ensuring trustless operation through code rather than intermediaries.
+
+**What it is**: A suite of Solidity smart contracts deployed on the Bittensor blockchain that handle task submission, bidding, execution verification, and payment settlement. These contracts replace traditional centralized APIs with programmable money.
+
+**How to use it**: Developers interact with the contracts through web3 libraries or SDK wrappers. Users submit tasks by calling contract functions with appropriate parameters. Miners participate by monitoring contract events and submitting bids/proofs.
+
+**Benefits**:
+- **Trustless Operation**: No central authority can censor or manipulate transactions
+- **Automated Execution**: Complex business logic runs automatically on-chain
+- **Transparent Economics**: All fees, rewards, and penalties are publicly visible
+- **Composability**: Contracts can interact with other DeFi protocols
+- **Immutability**: Once deployed, contract logic cannot be changed without consensus
+
+**Implementation Requirements**:
+- **Solidity Compiler**: Version 0.8.x with optimization enabled
+- **Web3 Libraries**: ethers.js or web3.js for JavaScript integration
+- **Gas Optimization**: Careful gas usage analysis to minimize transaction costs
+- **Testing Framework**: Hardhat or Truffle for comprehensive contract testing
+- **Security Audits**: Third-party security reviews before mainnet deployment
+
+**Resources**:
+- **Solidity Documentation**: Official Ethereum/Solidity language reference
+- **OpenZeppelin Contracts**: Battle-tested smart contract libraries
+- **Bittensor Contracts**: Existing subnet implementations for reference
+- **DeFi Patterns**: Proven patterns from Uniswap, Compound, etc.
+- **Security Best Practices**: Consensys and Trail of Bits guidelines
+
+**Technology Stack**:
+- **Language**: Solidity 0.8.x with experimental ABIEncoderV2
+- **Testing**: Hardhat with Chai assertions and Waffle fixtures
+- **Deployment**: Hardhat scripts with gas optimization
+- **Verification**: Sourcify or Etherscan verification for transparency
+- **Monitoring**: Tenderly or Forta for real-time contract monitoring
+
+**Testing**:
+- **Unit Tests**: Individual function testing with mock contracts
+- **Integration Tests**: Multi-contract interaction testing
+- **Fuzz Testing**: Property-based testing with random inputs
+- **Formal Verification**: Mathematical proofs of contract correctness
+- **Gas Testing**: Gas usage profiling and optimization
+- **Upgrade Testing**: Proxy contract upgrade mechanisms
+
+**Documentation**:
+- **Contract Interfaces**: NatSpec documentation for all functions
+- **Integration Guides**: Step-by-step tutorials for dApp integration
+- **Economic Models**: Detailed explanation of fee structures and incentives
+- **Security Considerations**: Known attack vectors and mitigation strategies
+- **Upgrade Procedures**: Safe contract upgrade patterns and procedures
+
+**Code Snippets from Resources**:
+```solidity
+// Enhanced marketplace contract from Chutes.ai patterns
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+
+contract AIMarketplace is ReentrancyGuard, Pausable {
+    using SafeERC20 for IERC20;
+
+    IERC20 public immutable taoToken;
+
+    struct Task {
+        address requester;
+        bytes32 modelHash;
+        uint256 hardwareReq;
+        uint256 maxPrice;
+        bytes encryptedData;
+        uint256 deadline;
+        TaskStatus status;
+        uint256 createdAt;
+        address assignedMiner;
+    }
+
+    struct Miner {
+        uint256 stake;
+        uint256 reputation;
+        HardwareSpec hardware;
+        bool active;
+        uint256 totalTasks;
+        uint256 successfulTasks;
+    }
+
+    enum TaskStatus { Created, Bidding, Assigned, Executing, Completed, Failed }
+
+    mapping(bytes32 => Task) public tasks;
+    mapping(address => Miner) public miners;
+    mapping(bytes32 => Bid[]) public taskBids;
+
+    struct Bid {
+        address miner;
+        uint256 amount;
+        uint256 timestamp;
+        bytes minerSignature;
+    }
+
+    event TaskSubmitted(bytes32 indexed taskId, address indexed requester, bytes32 modelHash);
+    event BidPlaced(bytes32 indexed taskId, address indexed miner, uint256 amount);
+    event TaskAssigned(bytes32 indexed taskId, address indexed miner);
+    event TaskCompleted(bytes32 indexed taskId, bool success);
+
+    constructor(address _taoToken) {
+        taoToken = IERC20(_taoToken);
+    }
+
+    function submitTask(
+        bytes32 modelHash,
+        uint256 hardwareReq,
+        uint256 maxPrice,
+        bytes calldata encryptedData,
+        uint256 duration
+    ) external payable nonReentrant whenNotPaused returns (bytes32 taskId) {
+        require(maxPrice > 0, "Invalid max price");
+        require(duration > 0 && duration <= 7 days, "Invalid duration");
+
+        taskId = keccak256(abi.encodePacked(
+            msg.sender,
+            modelHash,
+            block.timestamp,
+            block.number
+        ));
+
+        require(tasks[taskId].requester == address(0), "Task ID collision");
+
+        // Lock payment in contract
+        require(msg.value >= maxPrice, "Insufficient payment");
+        if (msg.value > maxPrice) {
+            payable(msg.sender).transfer(msg.value - maxPrice);
+        }
+
+        tasks[taskId] = Task({
+            requester: msg.sender,
+            modelHash: modelHash,
+            hardwareReq: hardwareReq,
+            maxPrice: maxPrice,
+            encryptedData: encryptedData,
+            deadline: block.timestamp + duration,
+            status: TaskStatus.Created,
+            createdAt: block.timestamp,
+            assignedMiner: address(0)
+        });
+
+        emit TaskSubmitted(taskId, msg.sender, modelHash);
+        return taskId;
+    }
+
+    function placeBid(bytes32 taskId, uint256 bidAmount) external {
+        Task storage task = tasks[taskId];
+        require(task.requester != address(0), "Task does not exist");
+        require(task.status == TaskStatus.Created, "Task not available for bidding");
+        require(block.timestamp < task.deadline, "Task deadline passed");
+        require(bidAmount <= task.maxPrice, "Bid too high");
+
+        Miner storage miner = miners[msg.sender];
+        require(miner.active, "Miner not active");
+        require(miner.stake >= MIN_STAKE, "Insufficient stake");
+        require(miner.reputation >= MIN_REPUTATION, "Insufficient reputation");
+
+        // Verify hardware compatibility
+        require(_checkHardwareCompatibility(miner.hardware, task.hardwareReq), "Incompatible hardware");
+
+        taskBids[taskId].push(Bid({
+            miner: msg.sender,
+            amount: bidAmount,
+            timestamp: block.timestamp,
+            minerSignature: _generateBidSignature(taskId, bidAmount)
+        }));
+
+        emit BidPlaced(taskId, msg.sender, bidAmount);
+    }
+
+    function assignTask(bytes32 taskId, address miner) external {
+        Task storage task = tasks[taskId];
+        require(task.requester == msg.sender, "Not task owner");
+        require(task.status == TaskStatus.Created, "Task not in bidding phase");
+
+        // Find miner's bid
+        Bid[] storage bids = taskBids[taskId];
+        uint256 minerBidIndex = _findMinerBid(bids, miner);
+        require(minerBidIndex < bids.length, "Miner did not bid");
+
+        task.assignedMiner = miner;
+        task.status = TaskStatus.Assigned;
+
+        emit TaskAssigned(taskId, miner);
+    }
+
+    function submitResult(bytes32 taskId, bytes calldata result, bytes calldata proof) external {
+        Task storage task = tasks[taskId];
+        require(task.assignedMiner == msg.sender, "Not assigned miner");
+        require(task.status == TaskStatus.Assigned, "Task not assigned");
+
+        // Verify TEE proof (simplified - would use proper verification)
+        require(_verifyTEEProof(proof, task.encryptedData, result), "Invalid TEE proof");
+
+        // Update miner statistics
+        Miner storage miner = miners[msg.sender];
+        miner.totalTasks++;
+        miner.successfulTasks++;
+
+        // Calculate and distribute rewards
+        uint256 reward = _calculateReward(task, miner);
+        taoToken.safeTransfer(msg.sender, reward);
+
+        // Update reputation
+        miner.reputation = _calculateNewReputation(miner);
+
+        task.status = TaskStatus.Completed;
+
+        emit TaskCompleted(taskId, true);
+    }
+
+    // Internal functions for validation and calculations
+    function _checkHardwareCompatibility(HardwareSpec memory hardware, uint256 requirements) internal pure returns (bool) {
+        // Implementation for hardware requirement checking
+        return true; // Simplified
+    }
+
+    function _generateBidSignature(bytes32 taskId, uint256 amount) internal view returns (bytes memory) {
+        // Generate cryptographic signature for bid authenticity
+        return abi.encodePacked(taskId, amount, msg.sender);
+    }
+
+    function _findMinerBid(Bid[] memory bids, address miner) internal pure returns (uint256) {
+        for (uint256 i = 0; i < bids.length; i++) {
+            if (bids[i].miner == miner) {
+                return i;
+            }
+        }
+        return type(uint256).max;
+    }
+
+    function _verifyTEEProof(bytes memory proof, bytes memory input, bytes memory output) internal pure returns (bool) {
+        // Verify TEE attestation and execution proof
+        return true; // Simplified - would use proper TEE verification
+    }
+
+    function _calculateReward(Task memory task, Miner memory miner) internal pure returns (uint256) {
+        // Reward = bid_amount * reputation_multiplier * stake_multiplier
+        uint256 baseReward = taskBids[task.taskId][0].amount; // Simplified
+        uint256 repMultiplier = miner.reputation / 100;
+        uint256 stakeMultiplier = miner.stake / MIN_STAKE;
+
+        return baseReward * repMultiplier * stakeMultiplier / 10000;
+    }
+
+    function _calculateNewReputation(Miner memory miner) internal pure returns (uint256) {
+        // Simple reputation calculation
+        uint256 successRate = (miner.successfulTasks * 100) / miner.totalTasks;
+        return (miner.reputation + successRate) / 2;
+    }
+}
+```
+
+```python
+# Python wrapper for contract interaction from Chutes.ai SDK
+from web3 import Web3
+from eth_account import Account
+import os
+
+class AIMarketplaceClient:
+    def __init__(self, contract_address, rpc_url, private_key):
+        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
+        self.account = Account.from_key(private_key)
+        self.contract = self._load_contract(contract_address)
+
+    def submit_task(self, model_hash, hardware_req, max_price, encrypted_data, duration):
+        """Submit AI task to marketplace"""
+        tx = self.contract.functions.submitTask(
+            model_hash,
+            hardware_req,
+            max_price,
+            encrypted_data,
+            duration
+        ).build_transaction({
+            'from': self.account.address,
+            'value': max_price,
+            'gas': 200000,
+            'gasPrice': self.w3.eth.gas_price,
+            'nonce': self.w3.eth.get_transaction_count(self.account.address)
+        })
+
+        signed_tx = self.account.sign_transaction(tx)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        return self.w3.eth.wait_for_transaction_receipt(tx_hash)
+
+    def place_bid(self, task_id, bid_amount):
+        """Place bid on available task"""
+        tx = self.contract.functions.placeBid(task_id, bid_amount).build_transaction({
+            'from': self.account.address,
+            'gas': 150000,
+            'gasPrice': self.w3.eth.gas_price,
+            'nonce': self.w3.eth.get_transaction_count(self.account.address)
+        })
+
+        signed_tx = self.account.sign_transaction(tx)
+        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+        return self.w3.eth.wait_for_transaction_receipt(tx_hash)
+
+    def _load_contract(self, address):
+        # Load contract ABI and create contract instance
+        with open('AIMarketplace.json', 'r') as f:
+            contract_data = json.load(f)
+
+        return self.w3.eth.contract(address=address, abi=contract_data['abi'])
+```
+
+#### 16.2.2 TEE Integration
+TEE integration provides hardware-backed security guarantees for AI task execution, ensuring that models and data remain protected even from the hosting infrastructure.
+
+**What it is**: Trusted Execution Environment technology that creates isolated execution contexts where code and data are protected from external access, including the operating system and hypervisor. In decentralized AI, TEEs ensure miners cannot access or modify user data during execution.
+
+**How to use it**: TEEs are automatically used when tasks specify privacy requirements. Users can request TEE execution through API parameters, and the system automatically routes tasks to TEE-capable miners. Miners with TEE hardware earn premium rates for secure execution.
+
+**Benefits**:
+- **Data Confidentiality**: User prompts and model outputs never leave encrypted state
+- **Execution Integrity**: Cryptographic proof that code executed as intended
+- **Remote Attestation**: Third parties can verify the execution environment
+- **Regulatory Compliance**: Meets strict data protection requirements (GDPR, HIPAA)
+- **Trust Building**: Users can confidently run sensitive AI tasks on untrusted hardware
+
+**Implementation Requirements**:
+- **TEE-Capable Hardware**: Intel SGX, AMD SEV, or ARM TrustZone processors
+- **TEE SDK**: Intel SGX SDK or AMD SEV development tools
+- **Attestation Service**: Remote attestation verification infrastructure
+- **Secure Key Management**: Hardware-backed key storage and rotation
+- **Performance Monitoring**: TEE overhead measurement and optimization
+
+**Resources**:
+- **Intel SGX Documentation**: Official Intel developer guides and SDK
+- **AMD SEV Manuals**: Technical specifications for Secure Encrypted Virtualization
+- **TEE Research Papers**: Academic papers on trusted execution for AI
+- **Open Source Projects**: Graphene, Occlum, and other TEE frameworks
+- **Security Standards**: NIST guidelines for trusted computing
+
+**Technology Stack**:
+- **TEE Framework**: Intel SGX SDK 2.19+ or AMD SEV-SNP
+- **Cryptography**: AES-GCM for data encryption, ECDSA for attestation
+- **Attestation**: DCAP (Data Center Attestation Primitives) for Intel
+- **Key Management**: TPM 2.0 or hardware security modules
+- **Performance Libraries**: Optimized math libraries for TEE environments
+
+**Testing**:
+- **TEE Functionality Tests**: Enclave creation, data sealing/unsealing
+- **Attestation Verification**: Remote attestation protocol testing
+- **Side-Channel Analysis**: Testing for speculative execution vulnerabilities
+- **Performance Benchmarks**: TEE overhead measurement vs native execution
+- **Security Audits**: Formal verification of TEE implementation security
+
+**Documentation**:
+- **TEE Architecture Guide**: Detailed explanation of enclave design patterns
+- **Attestation Protocols**: Step-by-step attestation flow documentation
+- **Security Best Practices**: Guidelines for secure TEE application development
+- **Performance Tuning**: Optimizing AI workloads for TEE execution
+- **Troubleshooting**: Common TEE issues and resolution procedures
+
+**Code Snippets from Resources**:
+```rust
+// Enhanced TEE implementation from Chutes.ai patterns
+use sgx_types::*;
+use sgx_urts::SgxEnclave;
+use std::sync::Arc;
+
+pub struct TEEExecutor {
+    enclave: Arc<SgxEnclave>,
+    attestation_key: Vec<u8>,
+    measurement: sgx_measurement_t,
+}
+
+impl TEEExecutor {
+    pub fn new(enclave_path: &str) -> Result<Self, TEEError> {
+        // Load enclave from file
+        let enclave = SgxEnclave::create(enclave_path, true)?;
+
+        // Generate attestation key
+        let attestation_key = Self::generate_attestation_key()?;
+
+        // Get enclave measurement for attestation
+        let measurement = enclave.get_measurement()?;
+
+        Ok(TEEExecutor {
+            enclave: Arc::new(enclave),
+            attestation_key,
+            measurement,
+        })
+    }
+
+    pub fn execute_task_securely(&self, encrypted_task: EncryptedTask) -> Result<SecureResult, TEEError> {
+        // Create enclave context
+        let mut retval = sgx_status_t::SGX_SUCCESS;
+
+        // Call enclave function to decrypt and execute
+        let result = self.enclave.call(
+            "execute_ai_task",
+            (&encrypted_task.data, &encrypted_task.key, &mut retval)
+        )?;
+
+        // Verify execution was successful
+        if retval != sgx_status_t::SGX_SUCCESS {
+            return Err(TEEError::ExecutionFailed(retval));
+        }
+
+        // Generate execution proof
+        let proof = self.generate_execution_proof(&encrypted_task, &result)?;
+
+        Ok(SecureResult {
+            encrypted_output: result.encrypted_data,
+            execution_proof: proof,
+            attestation_quote: self.generate_attestation_quote()?,
+        })
+    }
+
+    fn generate_execution_proof(&self, task: &EncryptedTask, result: &TaskOutput) -> Result<ExecutionProof, TEEError> {
+        // Create cryptographic proof of correct execution
+        let task_hash = sha256(&task.data);
+        let result_hash = sha256(&result.data);
+        let measurement_hash = sha256(&self.measurement.m);
+
+        let proof_data = [task_hash, result_hash, measurement_hash].concat();
+        let signature = ecdsa_sign(&self.attestation_key, &proof_data)?;
+
+        Ok(ExecutionProof {
+            task_hash,
+            result_hash,
+            measurement_hash,
+            signature,
+            timestamp: get_current_timestamp(),
+        })
+    }
+
+    fn generate_attestation_quote(&self) -> Result<AttestationQuote, TEEError> {
+        // Generate SGX attestation quote
+        let quote = self.enclave.generate_quote(&self.measurement)?;
+        Ok(quote)
+    }
+
+    fn generate_attestation_key() -> Result<Vec<u8>, TEEError> {
+        // Generate ECDSA key pair for attestation
+        let private_key = generate_ecdsa_key()?;
+        Ok(private_key)
+    }
+}
+
+// Enclave interface (would be in separate crate compiled for SGX)
+#[no_mangle]
+pub extern "C" fn execute_ai_task(
+    task_data: *const u8,
+    task_len: usize,
+    key_data: *const u8,
+    key_len: usize,
+    output_data: *mut u8,
+    output_len: usize
+) -> sgx_status_t {
+    // Decrypt task data
+    let decrypted_task = decrypt_aes_gcm(task_data, task_len, key_data, key_len);
+
+    // Load AI model (cached in enclave)
+    let model = load_model_from_enclave_storage();
+
+    // Execute inference
+    let result = model.infer(decrypted_task);
+
+    // Encrypt result
+    encrypt_aes_gcm(&result, output_data, output_len, key_data, key_len);
+
+    sgx_status_t::SGX_SUCCESS
+}
+```
+
+```python
+# Python TEE client from OpenRouter security patterns
+import requests
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.backends import default_backend
+
+class TEEClient:
+    def __init__(self, attestation_service_url: str):
+        self.attestation_url = attestation_service_url
+        self.verified_enclaves = {}
+
+    async def verify_and_execute(self, task: AITask, miner_endpoint: str) -> TaskResult:
+        """Execute task with TEE verification"""
+
+        # Request attestation from miner
+        attestation_response = await self.request_attestation(miner_endpoint)
+
+        # Verify attestation quote
+        if not await self.verify_attestation(attestation_response.quote):
+            raise TEEError("Invalid attestation")
+
+        # Cache verified enclave
+        self.verified_enclaves[miner_endpoint] = attestation_response.measurement
+
+        # Execute task with verified TEE
+        execution_response = await self.execute_in_tee(task, miner_endpoint)
+
+        # Verify execution proof
+        if not self.verify_execution_proof(
+            execution_response.proof,
+            task,
+            execution_response.result
+        ):
+            raise TEEError("Invalid execution proof")
+
+        return execution_response.result
+
+    async def request_attestation(self, miner_endpoint: str) -> AttestationResponse:
+        """Request TEE attestation from miner"""
+        response = await requests.post(
+            f"{miner_endpoint}/attest",
+            json={"challenge": generate_challenge()},
+            timeout=30
+        )
+        return response.json()
+
+    async def verify_attestation(self, quote: bytes) -> bool:
+        """Verify SGX attestation quote"""
+        # Verify quote signature against Intel attestation service
+        verification_response = await requests.post(
+            f"{self.attestation_url}/verify",
+            data=quote,
+            headers={"Content-Type": "application/octet-stream"}
+        )
+        return verification_response.json()["valid"]
+
+    def verify_execution_proof(self, proof: ExecutionProof, task: AITask, result: bytes) -> bool:
+        """Verify cryptographic proof of correct execution"""
+        expected_task_hash = sha256(task.serialize())
+        expected_result_hash = sha256(result)
+
+        # Verify proof signature
+        public_key = self.get_enclave_public_key(proof.measurement)
+        message = expected_task_hash + expected_result_hash + proof.measurement
+
+        try:
+            public_key.verify(proof.signature, message, ec.ECDSA(hashes.SHA256()))
+            return True
+        except:
+            return False
+
+    def get_enclave_public_key(self, measurement: bytes) -> ec.EllipticCurvePublicKey:
+        """Derive enclave public key from measurement"""
+        # Implementation would use measurement to derive key
+        pass
+```
+
+#### 16.2.3 Miner Node Implementation
+The miner node implementation provides the software infrastructure for GPU providers to participate in the decentralized AI network, handling task discovery, bidding, execution, and reward claiming.
+
+**What it is**: A comprehensive software stack that transforms commodity GPU hardware into a network participant capable of executing AI tasks securely and earning cryptocurrency rewards. It includes task discovery, hardware management, secure execution, and economic optimization.
+
+**How to use it**: Operators install the miner software on GPU-equipped machines, configure their hardware specifications and wallet, then start the mining process. The software automatically discovers tasks, bids competitively, executes work, and claims rewards.
+
+**Benefits**:
+- **Passive Income**: Earn TAO tokens while hardware would otherwise be idle
+- **Hardware Utilization**: Maximize GPU usage across 24/7 operation
+- **Economic Optimization**: Automatic bidding strategies for maximum profitability
+- **Network Participation**: Contribute to decentralized AI infrastructure
+- **Flexible Operation**: Start/stop mining based on electricity costs or hardware availability
+
+**Implementation Requirements**:
+- **GPU Hardware**: NVIDIA GPUs with CUDA support or AMD GPUs with ROCm
+- **System Resources**: Sufficient RAM (minimum 32GB), fast storage for model caching
+- **Network Connectivity**: Stable high-bandwidth internet connection
+- **Wallet Setup**: Bittensor wallet with TAO tokens for staking
+- **Security Hardening**: Firewall configuration and regular security updates
+
+**Resources**:
+- **Chutes.ai Documentation**: Complete miner setup and operation guides
+- **Bittensor Guides**: Official miner registration and staking tutorials
+- **Hardware Compatibility**: Lists of supported GPUs and performance benchmarks
+- **Community Forums**: Discord channels for miner troubleshooting
+- **Economic Calculators**: Tools for estimating mining profitability
+
+**Technology Stack**:
+- **Core Framework**: Python asyncio for concurrent task processing
+- **AI Libraries**: PyTorch, TensorFlow, or vLLM for model execution
+- **Blockchain Integration**: Bittensor Python SDK for network communication
+- **TEE Support**: Intel SGX SDK or AMD SEV libraries for secure execution
+- **Monitoring**: Prometheus client for metrics collection
+
+**Testing**:
+- **Hardware Validation**: Automated GPU benchmarking and compatibility testing
+- **Network Connectivity**: Bittensor network connection and transaction testing
+- **Task Execution**: Mock task processing with various model types
+- **TEE Functionality**: Secure execution environment verification
+- **Economic Simulation**: Profitability calculations under different conditions
+
+**Documentation**:
+- **Setup Guides**: Step-by-step installation for different operating systems
+- **Configuration Reference**: All configuration options with examples
+- **Troubleshooting**: Common issues and resolution procedures
+- **Performance Tuning**: Optimization guides for maximum earnings
+- **Security Best Practices**: Protecting mining operations from threats
+
+**Code Snippets from Resources**:
+```python
+# Enhanced miner implementation from Chutes.ai SDK
+import asyncio
+import logging
+from typing import Dict, List, Optional
+from dataclasses import dataclass
+from chutes import Chutes, Task, TaskResult
+from chutes.miners import BaseMiner, MinerConfig
+from chutes.hardware import HardwareManager, GPUSpec
+from chutes.tee import TEEExecutor
+from chutes.blockchain import BittensorClient
+from chutes.economics import BidOptimizer
+
+@dataclass
+class MinerConfig:
+    wallet_path: str
+    subnet_id: int = 120
+    max_concurrent_tasks: int = 4
+    min_profit_margin: float = 0.05
+    stake_amount: int = 1000
+    hardware_spec: GPUSpec = None
+    tee_enabled: bool = True
+
+class HelixFlowMiner(BaseMiner):
+    def __init__(self, config: MinerConfig):
+        super().__init__(config)
+        self.bittensor_client = BittensorClient(config.wallet_path, config.subnet_id)
+        self.hardware_manager = HardwareManager()
+        self.tee_executor = TEEExecutor() if config.tee_enabled else None
+        self.bid_optimizer = BidOptimizer(config.min_profit_margin)
+        self.active_tasks: Dict[str, Task] = {}
+        self.logger = logging.getLogger(__name__)
+
+    async def initialize(self):
+        """Initialize miner and register with network"""
+        self.logger.info("Initializing HelixFlow miner...")
+
+        # Validate hardware
+        await self.hardware_manager.validate_hardware(self.config.hardware_spec)
+
+        # Register with Bittensor network
+        await self.bittensor_client.register_miner(
+            stake_amount=self.config.stake_amount,
+            hardware_spec=self.config.hardware_spec
+        )
+
+        # Initialize TEE if available
+        if self.tee_executor:
+            await self.tee_executor.initialize()
+
+        self.logger.info("Miner initialization complete")
+
+    async def run_mining_loop(self):
+        """Main mining loop"""
+        self.logger.info("Starting mining loop...")
+
+        while self.running:
+            try:
+                # Discover available tasks
+                available_tasks = await self.discover_tasks()
+
+                # Filter tasks we can execute
+                executable_tasks = [
+                    task for task in available_tasks
+                    if await self.can_execute_task(task)
+                ]
+
+                # Submit competitive bids
+                for task in executable_tasks:
+                    bid_amount = await self.bid_optimizer.calculate_bid(task)
+                    if bid_amount > 0:
+                        await self.submit_bid(task.id, bid_amount)
+
+                # Process won tasks
+                won_tasks = await self.get_won_tasks()
+                for task in won_tasks:
+                    if len(self.active_tasks) < self.config.max_concurrent_tasks:
+                        asyncio.create_task(self.process_task(task))
+
+                # Update network statistics
+                await self.update_network_stats()
+
+                # Brief pause to prevent overwhelming the network
+                await asyncio.sleep(1)
+
+            except Exception as e:
+                self.logger.error(f"Mining loop error: {e}")
+                await asyncio.sleep(5)
+
+    async def can_execute_task(self, task: Task) -> bool:
+        """Check if miner can execute the given task"""
+        # Check hardware compatibility
+        if not self.hardware_manager.is_compatible(task.hardware_requirements):
+            return False
+
+        # Check current load
+        if len(self.active_tasks) >= self.config.max_concurrent_tasks:
+            return False
+
+        # Check model availability
+        if not await self.has_model_cached(task.model_id):
+            # Estimate download time
+            download_time = await self.estimate_model_download_time(task.model_id)
+            if download_time > task.time_limit:
+                return False
+
+        # Check profitability
+        estimated_cost = await self.estimate_execution_cost(task)
+        if estimated_cost >= task.max_bid:
+            return False
+
+        return True
+
+    async def process_task(self, task: Task):
+        """Process a single task from bidding to completion"""
+        task_id = task.id
+        self.active_tasks[task_id] = task
+
+        try:
+            self.logger.info(f"Processing task {task_id}")
+
+            # Download model if needed
+            model = await self.load_model(task.model_id)
+
+            # Execute task securely
+            result = await self.execute_task_securely(task, model)
+
+            # Submit result and claim reward
+            await self.submit_result(task_id, result)
+
+            # Update local statistics
+            await self.update_task_statistics(task, success=True)
+
+        except Exception as e:
+            self.logger.error(f"Task {task_id} failed: {e}")
+            await self.report_task_failure(task_id, str(e))
+            await self.update_task_statistics(task, success=False)
+
+        finally:
+            del self.active_tasks[task_id]
+
+    async def execute_task_securely(self, task: Task, model) -> TaskResult:
+        """Execute task with security guarantees"""
+        if self.tee_executor and task.requires_tee:
+            # Use TEE for secure execution
+            return await self.tee_executor.execute_task(task, model)
+        else:
+            # Standard execution
+            return await self.execute_task_standard(task, model)
+
+    async def execute_task_standard(self, task: Task, model) -> TaskResult:
+        """Standard task execution without TEE"""
+        # Decrypt task data
+        decrypted_input = await self.decrypt_task_data(task.encrypted_data)
+
+        # Execute inference
+        raw_output = await model.infer(decrypted_input, task.parameters)
+
+        # Encrypt result
+        encrypted_output = await self.encrypt_result(raw_output)
+
+        # Generate execution proof
+        proof = await self.generate_execution_proof(task, raw_output)
+
+        return TaskResult(
+            task_id=task.id,
+            encrypted_output=encrypted_output,
+            execution_proof=proof,
+            execution_time=time.time() - task.start_time,
+            hardware_utilization=await self.get_hardware_utilization()
+        )
+
+    async def submit_result(self, task_id: str, result: TaskResult):
+        """Submit task result and claim reward"""
+        # Submit to blockchain
+        tx_hash = await self.bittensor_client.submit_task_result(
+            task_id=task_id,
+            result=result,
+            proof=result.execution_proof
+        )
+
+        # Wait for confirmation
+        await self.bittensor_client.wait_for_confirmation(tx_hash)
+
+        # Claim reward
+        reward_amount = await self.bittensor_client.claim_reward(task_id)
+        self.logger.info(f"Claimed reward: {reward_amount} TAO for task {task_id}")
+
+    async def update_network_stats(self):
+        """Update miner statistics on the network"""
+        stats = {
+            'uptime': await self.calculate_uptime(),
+            'tasks_completed': self.completed_tasks_count,
+            'hardware_utilization': await self.get_average_utilization(),
+            'reputation_score': await self.get_reputation_score()
+        }
+
+        await self.bittensor_client.update_miner_stats(stats)
+
+    async def shutdown(self):
+        """Graceful shutdown of miner"""
+        self.logger.info("Shutting down miner...")
+
+        # Cancel all active tasks
+        for task_id in self.active_tasks:
+            await self.cancel_task(task_id)
+
+        # Close network connections
+        await self.bittensor_client.close()
+
+        # Cleanup resources
+        if self.tee_executor:
+            await self.tee_executor.cleanup()
+
+        self.logger.info("Miner shutdown complete")
+
+# CLI interface
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description='HelixFlow Decentralized Miner')
+    parser.add_argument('--wallet-path', required=True, help='Path to Bittensor wallet')
+    parser.add_argument('--subnet-id', type=int, default=120, help='Bittensor subnet ID')
+    parser.add_argument('--max-tasks', type=int, default=4, help='Maximum concurrent tasks')
+    parser.add_argument('--stake-amount', type=int, default=1000, help='TAO stake amount')
+
+    args = parser.parse_args()
+
+    config = MinerConfig(
+        wallet_path=args.wallet_path,
+        subnet_id=args.subnet_id,
+        max_concurrent_tasks=args.max_tasks,
+        stake_amount=args.stake_amount
+    )
+
+    miner = HelixFlowMiner(config)
+
+    async def run():
+        await miner.initialize()
+        await miner.run_mining_loop()
+
+    asyncio.run(run())
+
+if __name__ == "__main__":
+    main()
+```
+
+### 16.3 Deployment and Usage
+
+#### 16.3.1 Setting Up a Miner
+Setting up a miner involves hardware preparation, software installation, network registration, and optimization for maximum profitability in the decentralized AI marketplace.
+
+**What it is**: A comprehensive setup process that transforms GPU hardware into a profitable participant in the decentralized AI network, including hardware validation, network registration, and economic optimization.
+
+**How to use it**: Follow the step-by-step setup process to install software, configure hardware, register with the network, and begin earning TAO tokens through AI task execution.
+
+**Benefits**:
+- **Automated Setup**: Guided installation with hardware detection and optimization
+- **Network Integration**: Seamless registration with Bittensor subnet 120
+- **Profitability Optimization**: Built-in economic analysis and bidding strategies
+- **Security Hardening**: Automatic security configuration for safe operation
+- **Monitoring Dashboard**: Real-time performance and earnings tracking
+
+**Implementation Requirements**:
+- **Operating System**: Ubuntu 20.04+, CentOS 8+, or Windows 10/11 with WSL2
+- **Python Environment**: Python 3.8+ with pip and virtualenv
+- **GPU Drivers**: Latest NVIDIA drivers (525+) or AMD drivers for ROCm
+- **System Resources**: 16GB+ RAM, 100GB+ SSD storage, stable internet
+- **Security**: Firewall configuration and regular system updates
+
+**Resources**:
+- **Official Documentation**: Step-by-step setup guides with video tutorials
+- **Hardware Compatibility**: Detailed lists of supported GPUs and configurations
+- **Community Forums**: Discord channels for setup troubleshooting
+- **Performance Benchmarks**: Expected earnings based on hardware specifications
+- **Security Guides**: Best practices for securing mining operations
+
+**Technology Stack**:
+- **Core Runtime**: Python 3.9+ with asyncio for concurrent processing
+- **AI Frameworks**: PyTorch 2.0+, vLLM for optimized inference
+- **Blockchain**: Bittensor Python SDK for network communication
+- **TEE Support**: Intel SGX SDK or AMD SEV libraries (optional)
+- **Monitoring**: Built-in Prometheus metrics and Grafana dashboards
+
+**Testing**:
+- **Hardware Validation**: Automated GPU benchmarking and compatibility checks
+- **Network Connectivity**: Bittensor network registration and transaction testing
+- **Task Simulation**: Mock AI tasks to verify execution pipeline
+- **Security Verification**: TEE functionality and attestation testing
+- **Performance Profiling**: GPU utilization and earnings optimization
+
+**Documentation**:
+- **Quick Start Guide**: 5-minute setup for experienced users
+- **Detailed Installation**: Comprehensive guide for all operating systems
+- **Configuration Reference**: All settings with examples and recommendations
+- **Troubleshooting**: Common setup issues and solutions
+- **Optimization Guide**: Advanced tuning for maximum profitability
+
+**Code Snippets from Resources**:
+```bash
+# Comprehensive miner setup script from Chutes.ai
+#!/bin/bash
+
+# 1. System preparation
+echo "Preparing system for HelixFlow miner..."
+
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Python and dependencies
+sudo apt install python3.9 python3.9-venv python3-pip -y
+
+# Install NVIDIA drivers (if applicable)
+sudo apt install nvidia-driver-525 nvidia-cuda-toolkit -y
+
+# Create virtual environment
+python3 -m venv ~/helixflow-miner
+source ~/helixflow-miner/bin/activate
+
+# 2. Install HelixFlow miner
+echo "Installing HelixFlow miner..."
+pip install helixflow-miner bittensor chutes-sdk
+
+# 3. Initialize miner with interactive setup
+echo "Initializing miner..."
+helixflow-miner init --interactive
+
+# This will prompt for:
+# - Wallet name/path
+# - Subnet ID (default: 120)
+# - Hardware specifications
+# - Security settings
+
+# 4. Hardware validation and benchmarking
+echo "Validating hardware..."
+helixflow-miner validate hardware \
+  --comprehensive \
+  --benchmark mlperf \
+  --export-results validation_report.json
+
+# 5. Network registration
+echo "Registering with Bittensor network..."
+helixflow-miner register \
+  --subnet 120 \
+  --stake-amount 1000 \
+  --wait-for-confirmation
+
+# 6. Security configuration
+echo "Configuring security..."
+helixflow-miner security setup \
+  --firewall \
+  --fail2ban \
+  --automatic-updates
+
+# 7. Performance optimization
+echo "Optimizing performance..."
+helixflow-miner optimize \
+  --gpu-memory-utilization 0.9 \
+  --cpu-threads 8 \
+  --network-buffer-size 64MB
+
+# 8. Start mining with monitoring
+echo "Starting miner with monitoring..."
+helixflow-miner start \
+  --daemon \
+  --log-level info \
+  --metrics-port 9090 \
+  --web-dashboard
+
+echo "Miner setup complete!"
+echo "Dashboard available at: http://localhost:8080"
+echo "Logs available at: ~/helixflow-miner/logs/"
+echo "Monitor earnings with: helixflow-miner earnings --watch"
+```
+
+```bash
+# Advanced configuration script
+#!/bin/bash
+
+# Create configuration file
+cat > ~/helixflow-miner/config.yaml << EOF
+miner:
+  wallet_path: "~/.bittensor/wallets/my_miner"
+  subnet_id: 120
+  max_concurrent_tasks: 4
+  min_profit_margin: 0.05
+  stake_amount: 1000
+
+hardware:
+  gpu_memory_gb: 24
+  gpu_model: "NVIDIA A100"
+  cpu_cores: 32
+  ram_gb: 128
+  storage_gb: 1000
+
+network:
+  p2p_port: 8081
+  api_port: 8080
+  metrics_port: 9090
+
+security:
+  tee_enabled: true
+  firewall_enabled: true
+  auto_updates: true
+  log_encryption: true
+
+economics:
+  bidding_strategy: "dynamic"
+  min_tao_per_hour: 0.1
+  max_bid_percentage: 0.8
+  electricity_cost_kwh: 0.12
+
+monitoring:
+  prometheus_enabled: true
+  grafana_dashboard: true
+  alert_webhooks:
+    - "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+  log_retention_days: 30
+EOF
+
+# Validate configuration
+helixflow-miner config validate --file ~/helixflow-miner/config.yaml
+
+# Apply configuration
+helixflow-miner config apply --file ~/helixflow-miner/config.yaml
+```
+
+```python
+# Python setup script for automated deployment
+import subprocess
+import sys
+import os
+from pathlib import Path
+
+def setup_miner():
+    """Automated miner setup script"""
+
+    print("🚀 Setting up HelixFlow Decentralized Miner...")
+
+    # Check system requirements
+    check_system_requirements()
+
+    # Install dependencies
+    install_dependencies()
+
+    # Configure hardware
+    hardware_config = detect_and_configure_hardware()
+
+    # Setup wallet
+    wallet_config = setup_bittensor_wallet()
+
+    # Generate configuration
+    config = generate_miner_config(hardware_config, wallet_config)
+
+    # Validate setup
+    validate_setup(config)
+
+    # Start miner
+    start_miner(config)
+
+    print("✅ Miner setup complete!")
+    print(f"📊 Dashboard: http://localhost:{config['api_port']}")
+    print(f"📈 Metrics: http://localhost:{config['metrics_port']}")
+
+def check_system_requirements():
+    """Check if system meets requirements"""
+    print("🔍 Checking system requirements...")
+
+    # Check OS
+    if not sys.platform.startswith('linux'):
+        raise SystemError("Linux required for miner operation")
+
+    # Check Python version
+    if sys.version_info < (3, 8):
+        raise SystemError("Python 3.8+ required")
+
+    # Check GPU
+    try:
+        result = subprocess.run(['nvidia-smi'], capture_output=True, text=True)
+        if result.returncode != 0:
+            print("⚠️  NVIDIA GPU not detected, checking for AMD...")
+            # Check for AMD GPU
+    except FileNotFoundError:
+        print("❌ No GPU detected. Miner requires GPU hardware.")
+
+def install_dependencies():
+    """Install required software packages"""
+    print("📦 Installing dependencies...")
+
+    packages = [
+        'python3.9', 'python3.9-venv', 'python3-pip',
+        'nvidia-driver-525', 'nvidia-cuda-toolkit'
+    ]
+
+    subprocess.run(['sudo', 'apt', 'update'], check=True)
+    subprocess.run(['sudo', 'apt', 'install', '-y'] + packages, check=True)
+
+    # Install Python packages
+    subprocess.run([
+        sys.executable, '-m', 'pip', 'install',
+        'helixflow-miner', 'bittensor', 'chutes-sdk'
+    ], check=True)
+
+def detect_and_configure_hardware():
+    """Detect and configure hardware"""
+    print("🔧 Detecting hardware...")
+
+    # Detect GPU
+    gpu_info = detect_gpu()
+    cpu_info = detect_cpu()
+    ram_info = detect_ram()
+
+    return {
+        'gpu': gpu_info,
+        'cpu': cpu_info,
+        'ram': ram_info
+    }
+
+def setup_bittensor_wallet():
+    """Setup Bittensor wallet"""
+    print("💰 Setting up Bittensor wallet...")
+
+    wallet_path = Path.home() / '.bittensor' / 'wallets' / 'miner_wallet'
+
+    # Create wallet directory
+    wallet_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Generate new wallet
+    subprocess.run([
+        'btcli', 'wallet', 'new_hotkey',
+        '--wallet.name', 'miner_wallet',
+        '--wallet.hotkey', 'default'
+    ], check=True)
+
+    return {
+        'path': str(wallet_path),
+        'name': 'miner_wallet',
+        'hotkey': 'default'
+    }
+
+def generate_miner_config(hardware_config, wallet_config):
+    """Generate miner configuration"""
+    config = {
+        'miner': {
+            'wallet_path': wallet_config['path'],
+            'subnet_id': 120,
+            'max_concurrent_tasks': min(4, hardware_config['gpu']['count']),
+            'stake_amount': 1000
+        },
+        'hardware': hardware_config,
+        'network': {
+            'p2p_port': 8081,
+            'api_port': 8080,
+            'metrics_port': 9090
+        },
+        'security': {
+            'tee_enabled': hardware_config['gpu']['supports_tee'],
+            'firewall_enabled': True
+        }
+    }
+
+    return config
+
+def validate_setup(config):
+    """Validate miner setup"""
+    print("✅ Validating setup...")
+
+    # Test wallet connection
+    # Test hardware compatibility
+    # Test network connectivity
+
+def start_miner(config):
+    """Start the miner"""
+    print("🚀 Starting miner...")
+
+    # Save config
+    import json
+    config_path = Path.home() / 'helixflow-miner' / 'config.json'
+    config_path.parent.mkdir(exist_ok=True)
+
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=2)
+
+    # Start miner
+    subprocess.Popen([
+        'helixflow-miner', 'start',
+        '--config', str(config_path),
+        '--daemon'
+    ])
+
+if __name__ == "__main__":
+    setup_miner()
+```
+
+#### 16.3.2 Using Decentralized Compute
+```python
+from helixflow import HelixFlow
+
+# Initialize client with decentralized mode
+client = HelixFlow(
+    api_key="your-api-key",
+    compute_mode="decentralized",
+    min_miner_score=85,
+    max_bid_amount=1.0  # Max TAO per task
+)
+
+# Submit task to decentralized network
+response = client.chat.completions.create(
+    model="deepseek-ai/DeepSeek-V3",
+    messages=[{"role": "user", "content": "Explain quantum computing"}],
+    compute_provider="decentralized",
+    hardware_requirements={
+        "min_gpu_memory_gb": 24,
+        "preferred_gpu_types": ["a100", "h100"],
+        "max_latency_ms": 5000
+    },
+    privacy_mode="tee"  # Ensure TEE execution
+)
+
+print(f"Task executed on miner: {response.miner_id}")
+print(f"Execution proof: {response.proof}")
+print(f"Cost: {response.cost_tao} TAO")
+```
+
+#### 16.3.3 Monitoring and Analytics
+```python
+# Get miner statistics
+stats = client.get_miner_stats(miner_id="miner_123")
+print(f"Miner score: {stats.reputation_score}")
+print(f"Tasks completed: {stats.tasks_completed}")
+print(f"Earnings: {stats.total_earnings_tao} TAO")
+
+# Monitor network health
+network_health = client.get_network_health()
+print(f"Active miners: {network_health.active_miners}")
+print(f"Average task completion time: {network_health.avg_completion_time}")
+print(f"Network utilization: {network_health.utilization_percent}%")
+```
+
+#### 16.3.4 Custom Model Deployment
+```python
+# Deploy custom model to decentralized network
+model_deployment = client.deploy_custom_model(
+    model_path="./my-fine-tuned-model",
+    model_type="llm",
+    hardware_requirements={
+        "gpu_memory_gb": 48,
+        "min_cuda_version": "12.0"
+    },
+    pricing={
+        "per_token_input": 0.0001,
+        "per_token_output": 0.0002,
+        "minimum_fee": 0.01
+    },
+    privacy_settings={
+        "tee_required": True,
+        "data_retention_days": 0
+    }
+)
+
+print(f"Model deployed with ID: {model_deployment.model_id}")
+print(f"Network distribution: {model_deployment.miner_count} miners")
+
+# Use deployed model
+response = client.chat.completions.create(
+    model=model_deployment.model_id,
+    messages=[{"role": "user", "content": "Custom model response"}]
+)
+```
+
+### 16.4 Security and Privacy
+
+#### 16.4.1 End-to-End Encryption
+- **Task Encryption**: All task data encrypted before network transmission
+- **TEE Execution**: Models run in hardware-secured enclaves
+- **Result Encryption**: Outputs encrypted before delivery to users
+- **Key Management**: Hardware Security Modules (HSMs) for key storage
+
+#### 16.4.2 Privacy Preservation
+- **Zero-Knowledge Proofs**: Prove computation without revealing data
+- **Differential Privacy**: Add noise to prevent data reconstruction
+- **Homomorphic Encryption**: Compute on encrypted data
+- **Secure Multi-Party Computation**: Distributed privacy-preserving computation
+
+#### 16.4.3 Audit and Compliance
+- **Immutable Audit Trail**: All transactions recorded on blockchain
+- **Regulatory Compliance**: GDPR, CCPA, and regional privacy laws
+- **Third-Party Audits**: Regular security and privacy assessments
+- **Transparency Reports**: Public disclosure of system operations
+
+### 16.5 Performance Optimization
+
+#### 16.5.1 Load Balancing
+- **Geographic Distribution**: Route tasks to nearest available miners
+- **Hardware Matching**: Optimal hardware selection based on model requirements
+- **Load Prediction**: AI-based workload forecasting and resource allocation
+- **Dynamic Scaling**: Automatic miner pool expansion based on demand
+
+#### 16.5.2 Cost Optimization
+- **Spot Pricing**: Variable pricing based on supply and demand
+- **Batch Processing**: Group similar tasks for efficiency
+- **Model Caching**: Pre-loaded models on miner hardware
+- **Resource Sharing**: Multi-tenant model execution
+
+#### 16.5.3 Quality Assurance
+- **Performance Monitoring**: Real-time latency and throughput tracking
+- **Quality Scoring**: Automated evaluation of output quality
+- **SLA Enforcement**: Guaranteed performance levels with penalties
+- **Continuous Improvement**: ML-based system optimization
 
 ## 16. Implementation Architecture Details
 
