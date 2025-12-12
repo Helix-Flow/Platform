@@ -1,0 +1,80 @@
+graph TB
+    %% Client Layer
+    subgraph "Client Layer"
+        WC[Web Client<br/>Angular SPA]
+        MC[Mobile Clients<br/>Android, iOS, HarmonyOS]
+        DC[Desktop Clients<br/>Windows, macOS, Linux]
+        ACP[Admin Control Panel<br/>Angular]
+    end
+
+    %% API Gateway Layer
+    subgraph "API Gateway & Load Balancer"
+        NG[Nginx/Traefik Gateway<br/>Rate Limiting, SSL, DDoS Protection]
+        AS[Authentication Service<br/>JWT, OAuth2, RBAC]
+        RR[Request Router<br/>Model Selection, Load Balancing]
+        BS[Billing & Usage Service<br/>Stripe, Regional Billing]
+    end
+
+    %% Core Services Layer
+    subgraph "Core Services Layer"
+        HFAPI[HelixFlow API<br/>Go + Gin Framework<br/>OpenAI Compatible]
+        MRO[Model Router & Orchestrator<br/>Dynamic Model Selection<br/>Regional LLM Management]
+        IEP[Inference Engine Pool<br/>GPU Clusters (NVIDIA/AMD)<br/>CUDA/ROCm Support]
+        CSL[Cache & Storage Layer<br/>Redis, Model Cache, CDN]
+    end
+
+    %% Data Layer
+    subgraph "Data Layer"
+        PGSQL[PostgreSQL + SQLCipher<br/>Encrypted Database<br/>User Data, Metadata, Billing]
+        REDIS[Redis Cluster<br/>Session Cache, Results Cache<br/>Rate Limiting Data]
+        MSTOR[Model Storage<br/>S3/MinIO, Regional Replication<br/>Model Weights & Artifacts]
+    end
+
+    %% DevOps & Monitoring Layer
+    subgraph "DevOps & Monitoring Layer"
+        PROM[Prometheus<br/>Metrics Collection<br/>Performance Monitoring]
+        GRAF[Grafana<br/>Visualization Dashboard<br/>Real-time Monitoring]
+        SQ[SonarQube<br/>Code Quality Analysis<br/>Security Scanning]
+        SNYK[Snyk<br/>Dependency Scanning<br/>Vulnerability Detection]
+        TS[Testing Services<br/>Unit, Integration, E2E<br/>Performance & Security Tests]
+    end
+
+    %% Regional Deployment
+    subgraph "Regional Deployment"
+        REG[Geo-Distributed Instances<br/>USQA, Europe, Russia/Belarus<br/>China, India, Brazil, RoW<br/>Regional Billing & LLM Sets]
+    end
+
+    %% Connections
+    WC --> NG
+    MC --> NG
+    DC --> NG
+    ACP --> NG
+
+    NG --> HFAPI
+    AS --> HFAPI
+    RR --> MRO
+    BS --> PGSQL
+
+    HFAPI --> PGSQL
+    HFAPI --> REDIS
+    MRO --> IEP
+    IEP --> MSTOR
+    CSL --> REDIS
+
+    HFAPI --> PROM
+    PROM --> GRAF
+
+    %% Styling
+    classDef clientClass fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef apiClass fill:#e3f2fd,stroke:#000,stroke-width:2px
+    classDef coreClass fill:#f3e5f5,stroke:#000,stroke-width:2px
+    classDef dataClass fill:#e8f5e8,stroke:#000,stroke-width:2px
+    classDef monitoringClass fill:#fff8e1,stroke:#000,stroke-width:2px
+    classDef regionalClass fill:#f1f8e9,stroke:#33691e,stroke-width:2px
+
+    class WC,MC,DC,ACP clientClass
+    class NG,AS,RR,BS apiClass
+    class HFAPI,MRO,IEP,CSL coreClass
+    class PGSQL,REDIS,MSTOR dataClass
+    class PROM,GRAF,SQ,SNYK,TS monitoringClass
+    class REG regionalClass

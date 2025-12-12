@@ -1,0 +1,62 @@
+sequenceDiagram
+    participant Client as Client App<br/>(Web/Mobile/Desktop)
+    participant Gateway as API Gateway<br/>(Nginx/Traefik)
+    participant Auth as Auth Service<br/>(JWT/OAuth2)
+    participant API as HelixFlow API<br/>(Go + Gin)
+    participant Router as Model Router<br/>(Orchestrator)
+    participant Inference as Inference Engine<br/>(GPU Pool)
+    participant Cache as Cache Layer<br/>(Redis/CDN)
+    participant DB as PostgreSQL<br/>+ SQLCipher
+    participant Billing as Billing Service<br/>(Stripe/Regional)
+    participant Monitoring as Monitoring Stack<br/>(Prometheus/Grafana)
+
+    %% Authentication Flow
+    Client->>Gateway: API Request with JWT
+    Gateway->>Auth: Validate Token
+    Auth-->>Gateway: Token Valid
+    Gateway->>API: Forward Request
+
+    %% Request Processing
+    API->>Router: Route to Model
+    Router->>Cache: Check Cache
+    Cache-->>Router: Cache Miss
+    Router->>Inference: Execute Inference
+    Inference->>DB: Log Usage
+    Inference-->>Router: Model Response
+    Router->>Cache: Store Result
+    Router-->>API: Formatted Response
+
+    %% Billing Integration
+    API->>Billing: Update Usage
+    Billing->>DB: Store Billing Data
+    Billing-->>API: Billing Confirmation
+
+    %% Monitoring
+    API->>Monitoring: Send Metrics
+    Inference->>Monitoring: Performance Metrics
+    Gateway->>Monitoring: Request Metrics
+
+    %% Error Handling
+    Inference-->>Router: Error Response
+    Router-->>API: Error Handling
+    API-->>Client: Error Response with Details
+
+    %% Streaming Response
+    Client->>Gateway: Streaming Request
+    Gateway->>API: WebSocket/ SSE Setup
+    API->>Router: Streaming Inference
+    Router->>Inference: Start Streaming
+    loop Streaming Chunks
+        Inference-->>Router: Response Chunk
+        Router-->>API: Stream Chunk
+        API-->>Client: Real-time Chunk
+    end
+
+    %% Admin Operations
+    Client->>Gateway: Admin Request
+    Gateway->>Auth: Check Admin Permissions
+    Auth-->>Gateway: Admin Access Granted
+    Gateway->>API: Admin API Call
+    API->>DB: Admin Data Operations
+    DB-->>API: Operation Result
+    API-->>Client: Admin Response

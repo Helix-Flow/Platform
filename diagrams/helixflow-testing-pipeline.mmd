@@ -1,0 +1,82 @@
+graph LR
+    %% Code Commit
+    DEV[Developer<br/>Code Commit] --> CI[CI Pipeline Trigger]
+
+    %% CI Pipeline
+    subgraph "Continuous Integration Pipeline"
+        LINT[Code Linting<br/>gofmt, golangci-lint]
+        TEST_UNIT[Unit Tests<br/>100% Coverage<br/>Go test -cover]
+        TEST_INT[Integration Tests<br/>API Endpoints<br/>Database Tests]
+        BUILD[Build Artifacts<br/>Go build<br/>Docker images]
+        SCAN_SEC[Security Scanning<br/>Snyk, SonarQube<br/>Dependency checks]
+    end
+
+    %% Quality Gates
+    LINT --> TEST_UNIT
+    TEST_UNIT --> TEST_INT
+    TEST_INT --> BUILD
+    BUILD --> SCAN_SEC
+    SCAN_SEC --> DEPLOY_STAGING[Deploy to Staging]
+
+    %% Staging Environment
+    subgraph "Staging Environment"
+        E2E_TESTS[E2E Tests<br/>Cypress, Playwright<br/>Full user workflows]
+        PERF_TESTS[Performance Tests<br/>k6, JMeter<br/>Load testing<br/>100 RPS target]
+        SEC_TESTS[Security Tests<br/>OWASP ZAP<br/>Penetration Testing<br/>DDoS Simulation]
+        COMP_TESTS[Compatibility Tests<br/>Multi-browser<br/>Mobile devices<br/>API versions]
+    end
+
+    %% Production Deployment
+    DEPLOY_STAGING --> E2E_TESTS
+    E2E_TESTS --> PERF_TESTS
+    PERF_TESTS --> SEC_TESTS
+    SEC_TESTS --> COMP_TESTS
+    COMP_TESTS --> APPROVAL[Manual Approval<br/>QA Sign-off]
+
+    APPROVAL --> DEPLOY_PROD[Deploy to Production]
+
+    %% Production Monitoring
+    subgraph "Production Monitoring"
+        HEALTH_CHECKS[Health Checks<br/>Kubernetes probes<br/>Service mesh checks]
+        MONITORING[Real-time Monitoring<br/>Prometheus metrics<br/>Grafana dashboards]
+        ALERTS[Automated Alerts<br/>Slack, PagerDuty<br/>Incident response]
+        LOG_ANALYSIS[Log Analysis<br/>ELK Stack<br/>Error tracking]
+    end
+
+    DEPLOY_PROD --> HEALTH_CHECKS
+    HEALTH_CHECKS --> MONITORING
+    MONITORING --> ALERTS
+    ALERTS --> LOG_ANALYSIS
+
+    %% Feedback Loop
+    LOG_ANALYSIS --> FEEDBACK[Feedback to Dev<br/>Bug reports<br/>Performance data]
+    FEEDBACK --> DEV
+
+    %% Test Coverage Requirements
+    subgraph "Quality Metrics"
+        COV_UNIT[Unit Test Coverage<br/>100% target<br/>SonarQube tracking]
+        COV_E2E[E2E Coverage<br/>Critical paths 100%<br/>User journeys]
+        PERF_TARGET[Performance Targets<br/>P95 < 200ms<br/>99.9% uptime]
+        SEC_SCORE[Security Score<br/>A+ rating<br/>Zero critical vulns]
+        SUCCESS_RATE[Test Success Rate<br/>100% pass rate<br/>Zero flakes]
+    end
+
+    TEST_UNIT -.-> COV_UNIT
+    E2E_TESTS -.-> COV_E2E
+    PERF_TESTS -.-> PERF_TARGET
+    SEC_TESTS -.-> SEC_SCORE
+    ALL_TESTS -.-> SUCCESS_RATE
+
+    %% Styling
+    classDef devClass fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef ciClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef stagingClass fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef prodClass fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef monitoringClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef qualityClass fill:#f1f8e9,stroke:#689f38,stroke-width:2px
+
+    class DEV,APPROVAL devClass
+    class LINT,TEST_UNIT,TEST_INT,BUILD,SCAN_SEC ciClass
+    class E2E_TESTS,PERF_TESTS,SEC_TESTS,COMP_TESTS stagingClass
+    class DEPLOY_PROD,HEALTH_CHECKS,MONITORING,ALERTS,LOG_ANALYSIS prodClass
+    class COV_UNIT,COV_E2E,PERF_TARGET,SEC_SCORE,SUCCESS_RATE qualityClass

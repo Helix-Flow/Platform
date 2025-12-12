@@ -1,0 +1,65 @@
+graph TD
+    %% Global Distribution
+    subgraph "North America"
+        USQA[USQA Region<br/>United States & Canada<br/>Billing: Stripe USD<br/>LLMs: Full Set<br/>Timezone: EST/PST<br/>Compliance: SOC2, GDPR]
+    end
+
+    subgraph "Europe"
+        EU[Europe Region<br/>EU Countries + UK<br/>Billing: Stripe EUR<br/>LLMs: Full Set<br/>Timezone: CET/CEST<br/>Compliance: GDPR, ePrivacy]
+    end
+
+    subgraph "Eastern Europe & Central Asia"
+        RU_BY[Russia & Belarus Region<br/>Russia, Belarus, Kazakhstan<br/>Billing: Local Payment Systems<br/>LLMs: Curated Set<br/>Timezone: MSK<br/>Compliance: Local Regulations]
+    end
+
+    subgraph "Asia Pacific"
+        CN[China Region<br/>Mainland China<br/>Billing: WeChat Pay, Alipay<br/>LLMs: China-optimized Set<br/>Timezone: CST<br/>Compliance: PIPL, Cybersecurity Law]
+
+        IN[India Region<br/>India, South Asia<br/>Billing: Local UPI, Cards<br/>LLMs: Cost-optimized Set<br/>Timezone: IST<br/>Compliance: PDPB, IT Act]
+    end
+
+    subgraph "South America"
+        BR[Brazil Region<br/>Brazil, Latin America<br/>Billing: Local Payment Methods<br/>LLMs: Spanish/Portuguese Set<br/>Timezone: BRT<br/>Compliance: LGPD, Local Laws]
+    end
+
+    subgraph "Rest of World"
+        ROW[Rest of World<br/>Africa, Middle East, Oceania<br/>Billing: Stripe Multi-currency<br/>LLMs: Standard Set<br/>Timezone: Multiple<br/>Compliance: Regional Standards]
+    end
+
+    %% Global Control Plane
+    GCP[Global Control Plane<br/>User Management<br/>Cross-region Orchestration<br/>Global Analytics]
+
+    %% Connections
+    GCP --> USQA
+    GCP --> EU
+    GCP --> RU_BY
+    GCP --> CN
+    GCP --> IN
+    GCP --> BR
+    GCP --> ROW
+
+    %% Data Replication
+    USQA -.->|Data Sync| EU
+    EU -.->|Data Sync| RU_BY
+    RU_BY -.->|Data Sync| CN
+    CN -.->|Data Sync| IN
+    IN -.->|Data Sync| BR
+    BR -.->|Data Sync| ROW
+    ROW -.->|Data Sync| USQA
+
+    %% Styling
+    classDef northAmerica fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    classDef europe fill:#f3e5f5,stroke:#7b1fa2,stroke-width:3px
+    classDef easternEurope fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+    classDef asia fill:#e8f5e8,stroke:#388e3c,stroke-width:3px
+    classDef southAmerica fill:#fce4ec,stroke:#c2185b,stroke-width:3px
+    classDef restOfWorld fill:#f1f8e9,stroke:#689f38,stroke-width:3px
+    classDef global fill:#fff8e1,stroke:#ffa000,stroke-width:4px
+
+    class USQA northAmerica
+    class EU europe
+    class RU_BY easternEurope
+    class CN,IN asia
+    class BR southAmerica
+    class ROW restOfWorld
+    class GCP global

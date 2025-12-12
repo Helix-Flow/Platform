@@ -1,0 +1,102 @@
+flowchart TD
+    %% Input Sources
+    subgraph "Input Sources"
+        API_REQ[API Requests<br/>Chat, Images, Audio]
+        WEB_REQ[Web Client Requests<br/>Angular SPA]
+        MOBILE_REQ[Mobile Requests<br/>Android/iOS/HarmonyOS]
+        DESKTOP_REQ[Desktop Requests<br/>Windows/macOS/Linux]
+        ADMIN_REQ[Admin Panel Requests<br/>Angular Dashboard]
+    end
+
+    %% API Gateway Processing
+    subgraph "API Gateway Layer"
+        RATE_LIMIT[Rate Limiting<br/>Per User/IP/Endpoint]
+        AUTH[Authentication<br/>JWT Validation<br/>RBAC Checks]
+        VALIDATION[Request Validation<br/>Schema Validation<br/>Sanitization]
+        ROUTING[Request Routing<br/>Load Balancing<br/>Geo-routing]
+    end
+
+    %% Core Processing
+    subgraph "Core Processing Layer"
+        MODEL_SELECT[Model Selection<br/>Dynamic Routing<br/>Regional LLM Selection]
+        INFERENCE_PROC[Inference Processing<br/>GPU Acceleration<br/>Batch Processing]
+        RESPONSE_FORMAT[Response Formatting<br/>OpenAI Compatible<br/>Streaming Support]
+    end
+
+    %% Data Storage Layer
+    subgraph "Data Storage Layer"
+        USER_DATA[(User Data<br/>PostgreSQL + SQLCipher<br/>Profiles, Settings)]
+        USAGE_DATA[(Usage Data<br/>Time-series Metrics<br/>Billing Records)]
+        MODEL_CACHE[(Model Cache<br/>Redis Cluster<br/>Hot Models)]
+        RESULT_CACHE[(Result Cache<br/>CDN/Redis<br/>TTL-based)]
+        AUDIT_LOGS[(Audit Logs<br/>Encrypted Logs<br/>Security Events)]
+    end
+
+    %% External Services
+    subgraph "External Services"
+        PAYMENT_PROC[Payment Processing<br/>Stripe/Regional<br/>Subscription Management]
+        EMAIL_SVC[Email Service<br/>Transactional Emails<br/>Notifications]
+        CDN_DIST[CDN Distribution<br/>Global Edge<br/>Static Assets]
+        LOG_AGG[Log Aggregation<br/>ELK Stack<br/>Centralized Logging]
+    end
+
+    %% Monitoring & Analytics
+    subgraph "Monitoring & Analytics"
+        METRICS_COLL[Metrics Collection<br/>Prometheus<br/>System Metrics]
+        LOG_ANALYSIS[Log Analysis<br/>Real-time Processing<br/>Anomaly Detection]
+        ALERT_SYSTEM[Alert System<br/>Automated Alerts<br/>Incident Response]
+        ANALYTICS[Business Analytics<br/>Usage Patterns<br/>Performance Insights]
+    end
+
+    %% Data Flow Connections
+    API_REQ --> RATE_LIMIT
+    WEB_REQ --> RATE_LIMIT
+    MOBILE_REQ --> RATE_LIMIT
+    DESKTOP_REQ --> RATE_LIMIT
+    ADMIN_REQ --> RATE_LIMIT
+
+    RATE_LIMIT --> AUTH
+    AUTH --> VALIDATION
+    VALIDATION --> ROUTING
+    ROUTING --> MODEL_SELECT
+
+    MODEL_SELECT --> INFERENCE_PROC
+    INFERENCE_PROC --> RESPONSE_FORMAT
+
+    %% Data Storage Flows
+    AUTH --> USER_DATA
+    VALIDATION --> AUDIT_LOGS
+    INFERENCE_PROC --> USAGE_DATA
+    INFERENCE_PROC --> MODEL_CACHE
+    RESPONSE_FORMAT --> RESULT_CACHE
+
+    USAGE_DATA --> PAYMENT_PROC
+    USER_DATA --> EMAIL_SVC
+    RESULT_CACHE --> CDN_DIST
+    AUDIT_LOGS --> LOG_AGG
+
+    %% Monitoring Flows
+    RATE_LIMIT --> METRICS_COLL
+    AUTH --> METRICS_COLL
+    INFERENCE_PROC --> METRICS_COLL
+    RESPONSE_FORMAT --> LOG_ANALYSIS
+
+    METRICS_COLL --> ALERT_SYSTEM
+    LOG_ANALYSIS --> ALERT_SYSTEM
+    METRICS_COLL --> ANALYTICS
+    USAGE_DATA --> ANALYTICS
+
+    %% Styling
+    classDef inputClass fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef gatewayClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef processingClass fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef storageClass fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef externalClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef monitoringClass fill:#f1f8e9,stroke:#689f38,stroke-width:2px
+
+    class API_REQ,WEB_REQ,MOBILE_REQ,DESKTOP_REQ,ADMIN_REQ inputClass
+    class RATE_LIMIT,AUTH,VALIDATION,ROUTING gatewayClass
+    class MODEL_SELECT,INFERENCE_PROC,RESPONSE_FORMAT processingClass
+    class USER_DATA,USAGE_DATA,MODEL_CACHE,RESULT_CACHE,AUDIT_LOGS storageClass
+    class PAYMENT_PROC,EMAIL_SVC,CDN_DIST,LOG_AGG externalClass
+    class METRICS_COLL,LOG_ANALYSIS,ALERT_SYSTEM,ANALYTICS monitoringClass
