@@ -56,24 +56,49 @@ HelixFlow is a state-of-the-art AI inference platform designed to provide develo
 - **Request Validation**: Schema validation and parameter sanitization
 - **Response Transformation**: Standardized response format across all models
 - **Protocol Support**: HTTP/HTTPS, WebSocket for streaming
+- **Service Discovery Integration**: Automatic discovery of backend services
+- **Load Balancing**: Intelligent traffic distribution with health checks
+- **Circuit Breaker**: Automatic failover and recovery mechanisms
 
 #### 2.2.2 Authentication & Security
 - **API Key Management**: JWT-based authentication with role-based access control
 - **OAuth 2.0 Integration**: Support for enterprise SSO providers
 - **Rate Limiting**: Configurable per-user, per-model, and per-endpoint limits
 - **DDoS Protection**: Multi-layer security with automated threat detection
+- **Zero Trust Architecture**: Never trust, always verify approach
+- **Service-to-Service Authentication**: mTLS and JWT for inter-service communication
 
 #### 2.2.3 Model Router
 - **Dynamic Model Selection**: Intelligent routing based on request characteristics
 - **Load Balancing**: Distribute requests across optimal compute resources
 - **Model Versioning**: Support for multiple model versions and A/B testing
 - **Fallback Mechanisms**: Automatic failover to backup instances
+- **Service Discovery**: Automatic detection of available model instances
+- **Health Monitoring**: Real-time health checks and instance management
 
 #### 2.2.4 Inference Engine
 - **GPU Optimization**: CUDA, ROCm, and custom kernel optimizations
 - **Batch Processing**: Automatic request batching for improved throughput
 - **Memory Management**: Efficient GPU memory allocation and deallocation
 - **Model Caching**: Hot models kept in memory for instant response
+- **Auto-Scaling**: Dynamic scaling based on workload demands
+- **Port Management**: Automatic port allocation and conflict resolution
+
+#### 2.2.5 Service Discovery & Configuration
+- **Consul Integration**: HashiCorp Consul for service discovery and configuration
+- **etcd Backend**: Distributed key-value store for configuration management
+- **Health Checks**: Automated service health monitoring and registration
+- **Load Balancer Integration**: Dynamic upstream configuration for load balancers
+- **Configuration Distribution**: Real-time configuration updates across services
+- **Service Mesh**: Istio integration for advanced traffic management
+
+#### 2.2.6 Monitoring & Observability
+- **Centralized Logging**: ELK Stack with structured logging across all services
+- **Metrics Collection**: Prometheus with custom metrics for each service
+- **Distributed Tracing**: Jaeger for end-to-end request tracing
+- **Alerting System**: PagerDuty integration with intelligent alert routing
+- **Dashboard Visualization**: Grafana with service-specific dashboards
+- **Error Tracking**: Sentry integration for real-time error monitoring and crash reporting
 
 ### 2.3 Technology Stack
 
@@ -88,6 +113,11 @@ HelixFlow is a state-of-the-art AI inference platform designed to provide develo
 - **Service Mesh**: Istio 1.20+ for service-to-service communication and traffic management
 - **GPU Support**: NVIDIA CUDA 12.2+, AMD ROCm 5.7+ with unified GPU management
 - **Container Runtime**: Docker 24+ with NVIDIA Container Toolkit for GPU passthrough
+- **Service Discovery**: HashiCorp Consul 1.16+ for service registration and discovery
+- **Configuration Management**: etcd 3.5+ for distributed configuration storage
+- **Monitoring Stack**: Prometheus 2.45+, Grafana 10+, Jaeger 1.48+ for observability
+- **Logging Stack**: Elasticsearch 8+, Logstash, Kibana for centralized logging
+- **Error Tracking**: Sentry 23.9+ for real-time error monitoring and crash reporting
 
 #### 2.3.2 Frontend & Dashboard
 - **Framework**: Angular 17+ with TypeScript 5.2+
@@ -98,6 +128,9 @@ HelixFlow is a state-of-the-art AI inference platform designed to provide develo
 - **Testing Framework**: Jasmine + Karma for unit tests, Cypress for E2E tests
 - **PWA Support**: Angular PWA module for offline functionality and push notifications
 - **Internationalization**: Angular i18n for multi-language support across all regions
+- **Real-time Updates**: WebSocket integration for live dashboard updates
+- **Error Tracking**: Sentry integration for frontend error monitoring
+- **Performance Monitoring**: Custom performance metrics and user experience tracking
 
 #### 2.3.3 DevOps & Infrastructure
 - **CI/CD**: GitHub Actions with ArgoCD for GitOps deployment automation
@@ -110,6 +143,10 @@ HelixFlow is a state-of-the-art AI inference platform designed to provide develo
 - **Secret Management**: HashiCorp Vault / AWS Secrets Manager for secure credential storage
 - **Backup & Recovery**: Velero for Kubernetes backup and disaster recovery
 - **Load Testing**: k6 for performance testing and load simulation
+- **Service Discovery**: HashiCorp Consul for service registration and health checking
+- **Configuration Management**: etcd for distributed configuration storage
+- **Error Tracking**: Sentry for real-time error monitoring and crash reporting
+- **Alerting**: PagerDuty integration for intelligent incident management
 
 ## 3. Model Catalog and Pricing
 
@@ -954,18 +991,35 @@ curl -X POST "https://api.helixflow.ai/v1/chat/completions" \
 - **Edge Caching**: Static content and model weights at edge locations
 - **CDN Integration**: Content delivery for images and media
 - **DNS Routing**: Geo-aware DNS for optimal region selection
+- **Service Discovery**: Automatic detection of nearest regional services
+- **Health Monitoring**: Real-time health checks across all edge locations
 
-#### 7.1.2 Multi-Cloud Support
+#### 6.1.2 Multi-Cloud Support
+- **AWS**: EKS with Fargate for serverless containers, S3 for storage
+- **Azure**: AKS with Azure Container Instances, Blob Storage integration
+- **Google Cloud**: GKE with Cloud Run, Cloud Storage integration
+- **Service Discovery**: Cross-cloud service registration and discovery
+- **Load Balancing**: Cloud-agnostic load balancing with health checks
+- **Configuration Management**: Centralized configuration across all clouds
 
 ### 7.2 Compute Infrastructure
 
 #### 7.2.1 GPU Clusters
+- **NVIDIA Support**: A100, H100, L40S with CUDA 12.2+
+- **AMD Support**: MI300X with ROCm 5.7+
+- **Auto-Scaling**: Dynamic GPU node scaling based on workload
+- **Port Management**: Automatic port allocation and conflict resolution
+- **Service Discovery**: GPU cluster registration and health monitoring
+- **Load Balancing**: Intelligent traffic distribution across GPU nodes
 
 #### 7.2.2 Model Serving Infrastructure
 - **Container Runtime**: NVIDIA Container Runtime, ROCm for AMD
 - **Orchestration**: Kubernetes with GPU device plugins
 - **Load Balancing**: Envoy proxy with intelligent routing
 - **Health Monitoring**: Real-time health checks and auto-recovery
+- **Service Discovery**: Consul integration for automatic service registration
+- **Configuration Management**: etcd for distributed configuration storage
+- **Error Tracking**: Sentry integration for crash reporting and monitoring
 
 ### 7.3 Deployment Models
 
@@ -1005,11 +1059,20 @@ services:
       - HELIXFLOW_API_KEY=your-api-key
       - HELIXFLOW_DATABASE_URL=postgresql://user:pass@localhost:5432/helixflow
       - HELIXFLOW_REDIS_URL=redis://localhost:6379
+      - HELIXFLOW_CONSUL_URL=consul:8500
+      - HELIXFLOW_SENTRY_DSN=your-sentry-dsn
     volumes:
       - ./models:/app/models
     depends_on:
       - postgres
       - redis
+      - consul
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   postgres:
     image: postgres:15
@@ -1019,11 +1082,37 @@ services:
       - POSTGRES_PASSWORD=pass
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   redis:
     image: redis:7-alpine
     volumes:
       - redis_data:/data
+    restart: unless-stopped
+
+  consul:
+    image: consul:1.16
+    ports:
+      - "8500:8500"
+    volumes:
+      - ./consul/config:/consul/config
+    command: consul agent -server -bootstrap-expect=1 -ui -client=0.0.0.0 -bind=0.0.0.0
+    restart: unless-stopped
+
+  sentry:
+    image: sentry:23.9
+    ports:
+      - "9000:9000"
+    environment:
+      - SENTRY_POSTGRES_HOST=postgres
+      - SENTRY_DB_USER=user
+      - SENTRY_DB_PASSWORD=pass
+      - SENTRY_DB_NAME=helixflow
+      - SENTRY_REDIS_HOST=redis
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
 
 volumes:
   postgres_data:
@@ -1033,6 +1122,27 @@ volumes:
 **Start the stack:**
 ```bash
 docker-compose up -d
+```
+
+**Service Discovery Configuration:**
+```yaml
+# consul/config/service.json
+{
+  "service": {
+    "name": "helixflow-api",
+    "id": "helixflow-api-1",
+    "address": "helixflow-api",
+    "port": 8000,
+    "tags": ["api", "helixflow"],
+    "checks": [
+      {
+        "http": "http://helixflow-api:8000/health",
+        "interval": "10s",
+        "timeout": "5s"
+      }
+    ]
+  }
+}
 ```
 
 #### Kubernetes Deployment
@@ -1156,6 +1266,14 @@ spec:
 | `HELIXFLOW_CACHE_TTL` | `3600` | Cache TTL in seconds |
 | `HELIXFLOW_MODEL_CACHE_SIZE` | `10GB` | Model cache size |
 | `HELIXFLOW_LOG_LEVEL` | `INFO` | Logging level |
+| `HELIXFLOW_CONSUL_URL` | `http://localhost:8500` | Consul service discovery URL |
+| `HELIXFLOW_SENTRY_DSN` | - | Sentry DSN for error tracking |
+| `HELIXFLOW_SERVICE_NAME` | `helixflow-api` | Service name for discovery |
+| `HELIXFLOW_SERVICE_ID` | `helixflow-api-1` | Unique service instance ID |
+| `HELIXFLOW_HEALTH_CHECK_INTERVAL` | `30s` | Health check interval |
+| `HELIXFLOW_GRPC_PORT` | `9000` | gRPC service port |
+| `HELIXFLOW_WEBSOCKET_PORT` | `8080` | WebSocket service port |
+| `HELIXFLOW_AUTO_PORT_DISCOVERY` | `true` | Enable automatic port discovery |
 
 #### GPU Configuration
 
@@ -1202,6 +1320,11 @@ models:
     aliases:
       - "gpt-4"
       - "gpt-4-turbo"
+    service_discovery:
+      enabled: true
+      health_check_interval: "30s"
+      timeout: "10s"
+      retries: 3
 
   - id: "FLUX.1-dev"
     name: "FLUX.1 Development"
@@ -1214,6 +1337,11 @@ models:
       - image-to-image
     parameters:
       sizes: ["1024x1024", "1792x1024", "1024x1792"]
+    service_discovery:
+      enabled: true
+      health_check_interval: "15s"
+      timeout: "5s"
+      retries: 2
 ```
 
 #### Model Loading Configuration
@@ -1234,6 +1362,51 @@ loading:
     models:
       - "deepseek-ai/DeepSeek-V3.2"
       - "Qwen/Qwen2.5-7B-Instruct"
+  port_management:
+    auto_discovery: true
+    port_range: [8000, 9000]
+    conflict_resolution: "next_available"
+    cleanup_timeout: "30s"
+```
+
+#### Service Discovery Configuration
+
+**service-discovery.yaml:**
+```yaml
+consul:
+  enabled: true
+  url: "http://localhost:8500"
+  datacenter: "dc1"
+  token: "${CONSUL_TOKEN}"
+
+services:
+  - name: "helixflow-api"
+    id: "helixflow-api-1"
+    port: 8000
+    tags: ["api", "helixflow", "openai-compatible"]
+    health_check:
+      http: "http://localhost:8000/health"
+      interval: "30s"
+      timeout: "10s"
+      deregister_critical_service_after: "5m"
+
+  - name: "helixflow-model-server"
+    id: "helixflow-model-server-1"
+    port: 9000
+    tags: ["model-server", "inference", "gpu"]
+    health_check:
+      grpc: "localhost:9000"
+      interval: "10s"
+      timeout: "5s"
+
+  - name: "helixflow-websocket"
+    id: "helixflow-websocket-1"
+    port: 8080
+    tags: ["websocket", "streaming", "realtime"]
+    health_check:
+      tcp: "localhost:8080"
+      interval: "10s"
+      timeout: "5s"
 ```
 
 ### 8.4 Scaling Configuration
@@ -1266,6 +1439,19 @@ spec:
       target:
         type: Utilization
         averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 10
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 30
 ```
 
 #### GPU Node Autoscaling
@@ -1291,6 +1477,48 @@ spec:
         kind: AWSMachineTemplate
         name: gpu-nodes
       version: v1.27.0
+      nodePool:
+        name: gpu-node-pool
+        replicas: 5
+        resources:
+          requests:
+            nvidia.com/gpu: 4
+          limits:
+            nvidia.com/gpu: 4
+```
+
+#### Service Discovery Auto-Scaling
+
+**Consul Auto-Scaling Configuration:**
+```yaml
+# consul/config/auto-scaling.json
+{
+  "auto_scaling": {
+    "enabled": true,
+    "metrics": {
+      "cpu_threshold": 70,
+      "memory_threshold": 80,
+      "request_rate_threshold": 1000
+    },
+    "scaling_rules": {
+      "scale_up": {
+        "cooldown": 300,
+        "max_instances": 50,
+        "scale_factor": 2
+      },
+      "scale_down": {
+        "cooldown": 600,
+        "min_instances": 3,
+        "scale_factor": 0.5
+      }
+    },
+    "health_check": {
+      "interval": "10s",
+      "timeout": "5s",
+      "critical_threshold": 3
+    }
+  }
+}
 ```
 
 ### 8.5 Monitoring and Observability Setup
@@ -1307,10 +1535,28 @@ scrape_configs:
     static_configs:
       - targets: ['helixflow-api:8000']
     metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  - job_name: 'consul'
+    consul_sd_configs:
+      - server: 'consul:8500'
+        services: ['helixflow-api', 'helixflow-model-server', 'helixflow-websocket']
+    relabel_configs:
+      - source_labels: [__meta_consul_service]
+        target_label: service
+      - source_labels: [__meta_consul_node]
+        target_label: node
 
   - job_name: 'gpu-nodes'
     static_configs:
       - targets: ['gpu-node-1:9100', 'gpu-node-2:9100']
+    scrape_interval: 5s
+
+  - job_name: 'sentry'
+    static_configs:
+      - targets: ['sentry:9000']
+    metrics_path: '/api/0/organizations/helixflow/stats/'
 ```
 
 #### Grafana Dashboard
@@ -1323,6 +1569,10 @@ scrape_configs:
 - Error rates by endpoint
 - Token throughput
 - Cache hit rates
+- Service discovery health
+- Port allocation status
+- WebSocket connection count
+- gRPC request metrics
 
 #### Alerting Rules
 
@@ -1353,6 +1603,80 @@ groups:
           severity: warning
         annotations:
           summary: "Model loading failure detected"
+
+      - alert: ServiceDiscoveryFailure
+        expr: consul_up == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service discovery (Consul) is down"
+
+      - alert: ServiceHealthCheckFailure
+        expr: up{job="consul"} == 0
+        for: 60s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service health check failed"
+
+      - alert: PortConflictDetected
+        expr: helixflow_port_conflicts_total > 0
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Port conflict detected in service"
+
+      - alert: WebSocketConnectionHigh
+        expr: helixflow_websocket_connections > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of WebSocket connections"
+
+      - alert: SentryErrorRateHigh
+        expr: sentry_error_rate > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected in Sentry"
+```
+
+#### Error Tracking Configuration
+
+**sentry-config.yaml:**
+```yaml
+sentry:
+  dsn: "${SENTRY_DSN}"
+  environment: "production"
+  release: "helixflow@${VERSION}"
+  traces_sample_rate: 0.1
+  profiles_sample_rate: 0.1
+  capture_exceptions: true
+  capture_unhandled_rejections: true
+  capture_console_errors: true
+  
+  integrations:
+    - name: "django"
+    - name: "flask"
+    - name: "express"
+    - name: "kubernetes"
+    - name: "redis"
+    - name: "postgresql"
+    
+  error_monitoring:
+    enabled: true
+    alert_webhook: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+    email_alerts: ["admin@helixflow.ai"]
+    
+  performance_monitoring:
+    enabled: true
+    transaction_sample_rate: 0.1
+    span_sample_rate: 0.01
+    metrics_sample_rate: 0.01
 ```
 
 ### 8.6 Security Configuration
@@ -1369,6 +1693,15 @@ server {
     ssl_certificate_key /etc/ssl/private/helixflow.key;
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # Security headers
+    add_header X-Frame-Options DENY always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     location / {
         proxy_pass http://helixflow-api:8000;
@@ -1376,6 +1709,16 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # WebSocket support
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # gRPC support
+        grpc_pass grpc://helixflow-api:9000;
     }
 }
 ```
@@ -1388,6 +1731,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: helixflow-api-policy
+  namespace: helixflow
 spec:
   podSelector:
     matchLabels:
@@ -1400,9 +1744,16 @@ spec:
     - namespaceSelector:
         matchLabels:
           name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app: consul
     ports:
     - protocol: TCP
       port: 8000
+    - protocol: TCP
+      port: 8080  # WebSocket
+    - protocol: TCP
+      port: 9000  # gRPC
   egress:
   - to:
     - podSelector:
@@ -1418,6 +1769,99 @@ spec:
     ports:
     - protocol: TCP
       port: 6379
+  - to:
+    - podSelector:
+        matchLabels:
+          app: consul
+    ports:
+    - protocol: TCP
+      port: 8500
+  - to:
+    - podSelector:
+        matchLabels:
+          app: sentry
+    ports:
+    - protocol: TCP
+      port: 9000
+```
+
+#### Zero Trust Security Configuration
+
+**zero-trust-config.yaml:**
+```yaml
+zero_trust:
+  enabled: true
+  mTLS:
+    enabled: true
+    certificate_authority: "consul-connect-ca"
+    certificate_ttl: "72h"
+    rotation_interval: "24h"
+    
+  jwt:
+    algorithm: "RS256"
+    key_size: 2048
+    expiration: "1h"
+    refresh_expiration: "24h"
+    issuer: "helixflow.ai"
+    
+  service_authentication:
+    enabled: true
+    methods:
+      - "mTLS"
+      - "JWT"
+      - "API Key"
+    strict_mode: true
+    
+  access_control:
+    default_policy: "deny"
+    rules:
+      - service: "helixflow-api"
+        actions: ["read", "write"]
+        resources: ["models/*", "users/*"]
+      - service: "helixflow-model-server"
+        actions: ["execute"]
+        resources: ["models/*"]
+        
+  audit_logging:
+    enabled: true
+    level: "detailed"
+    retention_days: 90
+    webhook_url: "https://hooks.slack.com/services/YOUR/AUDIT/WEBHOOK"
+```
+
+#### Service-to-Service Communication Security
+
+**service-communication.yaml:**
+```yaml
+communication:
+  protocols:
+    - name: "HTTP/2"
+      encryption: "TLS 1.3"
+      authentication: "JWT"
+      authorization: "RBAC"
+      
+    - name: "gRPC"
+      encryption: "TLS 1.3"
+      authentication: "mTLS + JWT"
+      authorization: "Service Mesh"
+      
+    - name: "WebSocket"
+      encryption: "WSS (TLS 1.3)"
+      authentication: "JWT"
+      authorization: "Token-based"
+      
+  service_mesh:
+    enabled: true
+    provider: "Istio"
+    version: "1.20"
+    mTLS:
+      mode: "STRICT"
+      auto_discovery: true
+    traffic_management:
+      load_balancing: "round_robin"
+      circuit_breaker: true
+      retries: 3
+      timeout: "30s"
 ```
 
 ### 8.7 Backup and Recovery
@@ -1430,14 +1874,20 @@ spec:
 BACKUP_DIR="/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
 
-# PostgreSQL backup
-pg_dump -h $DB_HOST -U $DB_USER -d $DB_NAME > $BACKUP_DIR/postgres_$DATE.sql
+# PostgreSQL backup with encryption
+pg_dump -h $DB_HOST -U $DB_USER -d $DB_NAME | \
+  gpg --symmetric --cipher-algo AES256 --compress-algo 1 --output $BACKUP_DIR/postgres_$DATE.sql.gpg
 
-# Upload to S3
-aws s3 cp $BACKUP_DIR/postgres_$DATE.sql s3://helixflow-backups/database/
+# Upload to S3 with encryption
+aws s3 cp $BACKUP_DIR/postgres_$DATE.sql.gpg s3://helixflow-backups/database/ \
+  --server-side-encryption AES256
 
 # Clean old backups (keep last 30 days)
-find $BACKUP_DIR -name "postgres_*.sql" -mtime +30 -delete
+find $BACKUP_DIR -name "postgres_*.sql.gpg" -mtime +30 -delete
+
+# Service discovery backup
+curl -X GET http://consul:8500/v1/catalog/services > $BACKUP_DIR/consul_services_$DATE.json
+aws s3 cp $BACKUP_DIR/consul_services_$DATE.json s3://helixflow-backups/config/
 ```
 
 #### Model Checkpoint Backup
@@ -1447,12 +1897,20 @@ find $BACKUP_DIR -name "postgres_*.sql" -mtime +30 -delete
 #!/bin/bash
 MODEL_DIR="/models"
 BACKUP_DIR="/backups/models"
+DATE=$(date +%Y%m%d_%H%M%S)
 
-# Create backup
-tar -czf $BACKUP_DIR/models_$(date +%Y%m%d).tar.gz -C $MODEL_DIR .
+# Create encrypted backup
+tar -czf - -C $MODEL_DIR . | \
+  gpg --symmetric --cipher-algo AES256 --output $BACKUP_DIR/models_$DATE.tar.gz.gpg
 
-# Sync to cloud storage
-rclone sync $BACKUP_DIR s3:helixflow-backups/models/
+# Sync to cloud storage with versioning
+rclone sync $BACKUP_DIR s3:helixflow-backups/models/ \
+  --s3-server-side-encryption AES256 \
+  --s3-storage-class STANDARD_IA
+
+# Backup service configuration
+kubectl get services,deployments,configmaps,secrets -o yaml > $BACKUP_DIR/k8s_config_$DATE.yaml
+aws s3 cp $BACKUP_DIR/k8s_config_$DATE.yaml s3://helixflow-backups/kubernetes/
 ```
 
 #### Disaster Recovery
@@ -1462,14 +1920,63 @@ rclone sync $BACKUP_DIR s3:helixflow-backups/models/
 #!/bin/bash
 BACKUP_DATE="20241201"
 
-# Restore database
-psql -h $DB_HOST -U $DB_USER -d $DB_NAME < /backups/postgres_$BACKUP_DATE.sql
+# Restore database with decryption
+gpg --decrypt /backups/postgres_$BACKUP_DATE.sql.gpg | \
+  psql -h $DB_HOST -U $DB_USER -d $DB_NAME
 
-# Restore models
-tar -xzf /backups/models_$BACKUP_DATE.tar.gz -C /models/
+# Restore models with decryption
+gpg --decrypt /backups/models_$BACKUP_DATE.tar.gz.gpg | \
+  tar -xzf - -C /models/
 
-# Restart services
+# Restore Kubernetes configuration
+kubectl apply -f /backups/k8s_config_$BACKUP_DATE.yaml
+
+# Restore service discovery
+curl -X PUT http://consul:8500/v1/catalog/register \
+  -d @/backups/consul_services_$BACKUP_DATE.json
+
+# Restart services with health checks
 kubectl rollout restart deployment/helixflow-api
+kubectl rollout restart deployment/helixflow-model-server
+
+# Wait for services to be ready
+kubectl wait --for=condition=available --timeout=300s deployment/helixflow-api
+kubectl wait --for=condition=available --timeout=300s deployment/helixflow-model-server
+
+# Verify service discovery
+curl -X GET http://consul:8500/v1/health/service/helixflow-api?passing
+```
+
+#### Service Discovery Recovery
+
+**service-recovery.yaml:**
+```yaml
+recovery:
+  strategy: "automatic"
+  services:
+    - name: "helixflow-api"
+      recovery_priority: 1
+      dependencies: ["postgres", "redis", "consul"]
+      health_check: "http://localhost:8000/health"
+      timeout: "300s"
+      
+    - name: "helixflow-model-server"
+      recovery_priority: 2
+      dependencies: ["helixflow-api", "consul"]
+      health_check: "grpc://localhost:9000"
+      timeout: "600s"
+      
+    - name: "helixflow-websocket"
+      recovery_priority: 3
+      dependencies: ["helixflow-api", "consul"]
+      health_check: "tcp://localhost:8080"
+      timeout: "120s"
+      
+  rollback:
+    enabled: true
+    strategy: "blue-green"
+    health_check_interval: "30s"
+    rollback_timeout: "600s"
 ```
 
 ## 9. User Workflows and Integration Scenarios
@@ -1496,17 +2003,112 @@ kubectl rollout restart deployment/helixflow-api
 
 #### 9.3.2 Real-time Chat
 ```python
-# WebSocket handler for real-time chat
+# WebSocket handler for real-time chat with service discovery
 async def websocket_handler(websocket):
+    # Discover available services
+    services = await discover_services("helixflow-api")
+    selected_service = select_best_service(services)
+    
     async for message in websocket:
-        response = client.chat.completions.create(
-            model="deepseek-ai/DeepSeek-V3.2",
-            messages=[{"role": "user", "content": message}],
-            stream=True
-        )
+        try:
+            response = client.chat.completions.create(
+                model="deepseek-ai/DeepSeek-V3.2",
+                messages=[{"role": "user", "content": message}],
+                stream=True,
+                base_url=f"https://{selected_service.host}:{selected_service.port}/v1"
+            )
+            
+            async for chunk in response:
+                if chunk.choices[0].delta.content:
+                    await websocket.send(chunk.choices[0].delta.content)
+        except Exception as e:
+            # Fallback to another service
+            await websocket.send(f"Error: {str(e)}")
+            # Trigger service discovery for fallback
+            fallback_service = await discover_services("helixflow-api", exclude=[selected_service])
+            # Retry with fallback service
+```
+
+#### 9.3.3 Service Discovery Integration
+```python
+# Service discovery client
+class ServiceDiscoveryClient:
+    def __init__(self, consul_url="http://localhost:8500"):
+        self.consul_url = consul_url
+    
+    async def discover_services(self, service_name, tags=None):
+        """Discover available services with health checks"""
+        url = f"{self.consul_url}/v1/health/service/{service_name}?passing=true"
+        if tags:
+            url += f"&tag={','.join(tags)}"
         
-        async for chunk in response:
-            await websocket.send(chunk.choices[0].delta.content)
+        response = await httpx.get(url)
+        services = response.json()
+        
+        return [
+            {
+                "id": service["Service"]["ID"],
+                "name": service["Service"]["Service"],
+                "address": service["Service"]["Address"],
+                "port": service["Service"]["Port"],
+                "tags": service["Service"]["Tags"],
+                "health": service["Checks"]
+            }
+            for service in services
+        ]
+    
+    async def register_service(self, service_config):
+        """Register a service with Consul"""
+        url = f"{self.consul_url}/v1/agent/service/register"
+        await httpx.put(url, json=service_config)
+    
+    async def deregister_service(self, service_id):
+        """Deregister a service from Consul"""
+        url = f"{self.consul_url}/v1/agent/service/deregister/{service_id}"
+        await httpx.put(url)
+```
+
+#### 9.3.4 Zero Trust Authentication
+```python
+# Zero Trust authentication middleware
+class ZeroTrustMiddleware:
+    def __init__(self, jwt_secret, mTLS_config):
+        self.jwt_secret = jwt_secret
+        self.mTLS_config = mTLS_config
+    
+    async def authenticate_request(self, request):
+        """Authenticate request using JWT and mTLS"""
+        # 1. Verify mTLS certificate
+        client_cert = request.client_cert
+        if not self.verify_mTLS(client_cert):
+            raise AuthenticationError("Invalid mTLS certificate")
+        
+        # 2. Verify JWT token
+        jwt_token = request.headers.get("Authorization", "").replace("Bearer ", "")
+        if not self.verify_jwt(jwt_token):
+            raise AuthenticationError("Invalid JWT token")
+        
+        # 3. Verify service identity
+        service_id = request.headers.get("X-Service-ID")
+        if not self.verify_service(service_id, jwt_token):
+            raise AuthenticationError("Service identity verification failed")
+        
+        return True
+    
+    def verify_mTLS(self, client_cert):
+        """Verify mTLS certificate chain"""
+        # Implementation for certificate verification
+        pass
+    
+    def verify_jwt(self, jwt_token):
+        """Verify JWT token signature and claims"""
+        # Implementation for JWT verification
+        pass
+    
+    def verify_service(self, service_id, jwt_token):
+        """Verify service identity and permissions"""
+        # Implementation for service verification
+        pass
 ```
 
 ## 10. Security, Monitoring, and Compliance
@@ -1537,13 +2139,58 @@ async def websocket_handler(websocket):
 - **IP Whitelisting**: Optional IP-based access control for enterprise customers
 - **VPN Integration**: Site-to-site VPN support for private deployments
 
+#### 10.1.4 Service-to-Service Security
+- **Mutual TLS (mTLS)**: Certificate-based authentication between all microservices
+- **Service Mesh Security**: Istio with automatic mTLS for service-to-service communication
+- **JWT Service Authentication**: RS256-signed JWT tokens for service identity verification
+- **Service Discovery Security**: Secure service registration and discovery with authentication
+- **gRPC Security**: TLS encryption and JWT authentication for gRPC communications
+- **WebSocket Security**: WSS (WebSocket Secure) with JWT token authentication
+- **API Gateway Security**: Centralized authentication and authorization for all service endpoints
+- **Zero Trust Architecture**: Never trust, always verify approach with continuous authentication
+- **Service Identity Management**: Automatic certificate rotation and service identity validation
+- **Traffic Encryption**: End-to-end encryption for all inter-service communications
+- **Service Pairing**: Secure service-to-service pairing with mutual authentication
+- **Event Streaming Security**: Encrypted event streaming between services
+
 ### 10.2 Monitoring and Observability
 
 #### 10.2.1 Performance Metrics
+- **API Performance**: Request latency, throughput, error rates
+- **Service Discovery Metrics**: Registration time, health check latency
+- **Port Management**: Port allocation time, conflict resolution
+- **Service-to-Service Communication**: gRPC latency, WebSocket connections
+- **GPU Utilization**: Memory usage, compute utilization, temperature
+- **Model Performance**: Inference latency, token throughput, accuracy
+- **Zero Trust Metrics**: Authentication latency, certificate rotation
+- **Error and Crash Metrics**: Error rates, crash frequency, user impact
+- **Service Mesh Metrics**: Istio metrics for traffic, security, and policy
+- **Service Pairing Metrics**: Service-to-service connection health and latency
+- **Event Streaming Metrics**: Real-time event throughput and delivery success
 
 #### 10.2.2 Business Metrics
+- **Usage Analytics**: Model usage patterns, user engagement
+- **Billing Metrics**: Revenue, usage charges, subscription status
+- **Regional Performance**: Per-region latency, availability, compliance
+- **Service Health**: Overall system health, service dependencies
+- **Error Tracking**: Error rates, crash reports, user impact
+- **Security Metrics**: Authentication failures, security incidents
+- **Service Discovery Health**: Service registration success rate, health check status
+- **Port Management Efficiency**: Port allocation success rate, conflict resolution time
+- **Service Mesh Health**: Service mesh configuration and policy compliance
+- **Zero Trust Compliance**: Authentication success rates and policy violations
 
 #### 10.2.3 Alerting and Incident Response
+- **Real-time Alerts**: PagerDuty integration with intelligent routing
+- **Service Discovery Alerts**: Consul health, service registration failures
+- **Port Conflict Alerts**: Automatic detection and resolution
+- **Security Alerts**: Zero trust violations, authentication failures
+- **Performance Alerts**: SLA violations, performance degradation
+- **Error Tracking Integration**: Sentry alerts with error correlation
+- **Crash Alerting**: Automatic crash detection and notification
+- **Service Mesh Alerts**: Istio-based service mesh alerts
+- **Service Pairing Alerts**: Service-to-service connection failures
+- **Event Streaming Alerts**: Event delivery failures and backlog alerts
 
 ### 10.3 Compliance and Certifications
 
@@ -1554,6 +2201,10 @@ async def websocket_handler(websocket):
 - **CCPA**: California Consumer Privacy Act compliance
 - **ISO 27017**: Cloud security controls
 - **ISO 27018**: Cloud privacy protection
+- **NIST SP 800-207**: Zero Trust Architecture compliance
+- **PCI DSS**: Payment Card Industry Data Security Standard
+- **ISO 22301**: Business Continuity Management compliance
+- **SOC 3**: General security controls compliance
 
 #### 10.3.2 Regional Compliance Frameworks
 
@@ -1563,6 +2214,9 @@ async def websocket_handler(websocket):
 - **GLBA**: Gramm-Leach-Bliley Act for financial data protection
 - **FedRAMP**: Federal Risk and Authorization Management Program (optional)
 - **NYDFS**: New York Department of Financial Services cybersecurity requirements
+- **Zero Trust Maturity Model**: CISA Zero Trust Maturity Model compliance
+- **HIPAA**: Health Insurance Portability and Accountability Act (for healthcare data)
+- **FISMA**: Federal Information Security Management Act compliance
 
 **European Union:**
 - **GDPR**: Full compliance with data protection impact assessments
@@ -1570,30 +2224,56 @@ async def websocket_handler(websocket):
 - **Schrems II**: EU-US data transfer compliance with adequacy decisions
 - **NIS2 Directive**: Network and Information Systems security requirements
 - **DORA**: Digital Operational Resilience Act for financial sector
+- **ENISA Guidelines**: European Union Agency for Cybersecurity compliance
+- **BSI IT-Grundschutz**: German federal agency for IT security standards
+- **eIDAS**: Electronic Identification and Trust Services compliance
 
 **Russia & Belarus:**
 - **Federal Law No. 152-FZ**: Personal data protection law
 - **Federal Law No. 149-FZ**: Information technology regulations
 - **Federal Law No. 187-FZ**: Critical information infrastructure protection
 - **Bank of Russia Regulations**: Financial sector cybersecurity requirements
+- **FSTEC Requirements**: Federal Service for Technical and Export Control requirements
+- **GOST Standards**: Russian national standards for information security
+- **SORM Compliance**: System of Operational-Investigatory Measures compliance
 
 **China:**
 - **PIPL**: Personal Information Protection Law compliance
 - **Cybersecurity Law**: Network security and data localization requirements
 - **Data Security Law**: Classified data protection and cross-border transfers
 - **CAC Requirements**: Cyberspace Administration of China compliance
+- **MLPS 2.0**: Multi-Level Protection Scheme compliance
+- **GA Requirements**: Ministry of Public Security requirements
+- **GB/T Standards**: National standards for information security
+- **CAICT Compliance**: China Academy of Information and Communications Technology
 
 **India:**
 - **PDPB**: Digital Personal Data Protection Bill compliance framework
 - **IT Act 2000**: Information Technology Act with amendments
 - **RBI Guidelines**: Reserve Bank of India cybersecurity framework
 - **CERT-In Guidelines**: Indian Computer Emergency Response Team directives
+- **MeitY Compliance**: Ministry of Electronics and Information Technology compliance
+- **IRDAI Guidelines**: Insurance Regulatory and Development Authority guidelines
+- **SEBI Guidelines**: Securities and Exchange Board of India compliance
+- **ISO 27001 India**: Indian implementation of information security standards
 
 **Brazil:**
 - **LGPD**: Lei Geral de Proteção de Dados (General Data Protection Law)
 - **Marco Civil da Internet**: Brazilian Internet Constitution
 - **Resolução CMN 4.658**: Central Bank cybersecurity requirements
 - **Lei do Cadastro Positivo**: Positive credit registry regulations
+- **ANATEL Requirements**: National Telecommunications Agency compliance
+- **BACEN Resolutions**: Central Bank of Brazil resolutions
+- **CGU Guidelines**: Comptroller General of the Union guidelines
+- **ABNT Standards**: Brazilian Association of Technical Standards
+
+**Rest of World (RoW):**
+- **PDPA**: Singapore Personal Data Protection Act
+- **NZISM**: New Zealand Information Security Manual
+- **ASD ISM**: Australian Cyber Security Centre guidelines
+- **ISO 27001**: Local implementations of information security standards
+- **Local Data Protection Laws**: Country-specific data protection regulations
+- **Telecommunications Regulations**: Local telecom compliance requirements
 
 #### 10.3.3 Security Testing and Penetration Testing
 
@@ -1603,6 +2283,11 @@ async def websocket_handler(websocket):
 - **SCA (Software Composition Analysis)**: Snyk dependency vulnerability scanning
 - **Container Security**: Trivy and Clair for Docker image vulnerability assessment
 - **Infrastructure Security**: Terraform/Terraform Cloud security validation
+- **Service Discovery Security**: Consul security scanning and validation
+- **Zero Trust Validation**: mTLS and JWT security testing
+- **Service Mesh Security**: Istio security configuration validation
+- **API Security Testing**: Automated API security vulnerability scanning
+- **Mobile App Security**: Automated mobile application security testing
 
 **Penetration Testing:**
 - **External Penetration Testing**: Quarterly external pentests by certified firms
@@ -1610,6 +2295,11 @@ async def websocket_handler(websocket):
 - **API Penetration Testing**: REST API security testing with custom tools
 - **Mobile App Penetration Testing**: Android/iOS app security assessments
 - **Cloud Infrastructure Testing**: AWS/Azure/GCP security configuration validation
+- **Service-to-Service Testing**: Inter-service communication security
+- **gRPC Security Testing**: Protocol buffer security validation
+- **WebSocket Security Testing**: WSS connection security validation
+- **Service Discovery Pen Testing**: Consul and service registration security
+- **Zero Trust Pen Testing**: End-to-end zero trust architecture validation
 
 **DDoS Testing and Resilience:**
 - **DDoS Simulation**: k6-based DDoS attack simulation and mitigation testing
@@ -1617,6 +2307,10 @@ async def websocket_handler(websocket):
 - **WAF Effectiveness**: Web Application Firewall rule testing and validation
 - **Resilience Testing**: Service degradation testing under attack conditions
 - **Recovery Testing**: Automated recovery procedures validation
+- **Service Discovery DDoS**: Consul resilience under attack
+- **Port Exhaustion Testing**: Port allocation under high load
+- **Service Mesh Resilience**: Istio resilience under attack conditions
+- **Zero Trust Resilience**: Zero trust architecture under attack scenarios
 
 **Compliance Testing:**
 - **GDPR Compliance Testing**: Data handling and privacy regulation validation
@@ -1624,30 +2318,103 @@ async def websocket_handler(websocket):
 - **Regional Compliance**: PIPL, LGPD, PDPB, and other regional regulation testing
 - **Encryption Validation**: Data-at-rest and data-in-transit encryption testing
 - **Access Control Testing**: RBAC and permission system validation
+- **Zero Trust Compliance**: NIST SP 800-207 validation
+- **Service Mesh Security**: Istio security compliance testing
+- **Service Discovery Compliance**: Consul compliance with security standards
+- **Error Tracking Compliance**: Sentry compliance with data protection regulations
+- **Crash Reporting Compliance**: Crash reporting compliance with regional laws
+
+#### 10.3.4 Error and Crash Monitoring Compliance
+
+**Error Tracking Compliance:**
+- **Data Privacy**: PII masking in error reports
+- **Regional Data Storage**: Error logs stored in compliance regions
+- **Retention Policies**: Configurable log retention per regional requirements
+- **Access Controls**: Role-based access to error and crash data
+- **Audit Trails**: Complete audit trails for error data access
+- **Export Compliance**: Secure error data export for analysis
+- **Service Correlation**: Error correlation with service discovery data
+- **Zero Trust Integration**: Error reporting through secure channels
+- **Real-time Monitoring**: Live error tracking and alerting
+- **Service Mesh Integration**: Error correlation with Istio metrics
+
+**Crash Reporting Compliance:**
+- **Anonymization**: Automatic PII removal from crash reports
+- **Encryption**: End-to-end encryption for crash data transmission
+- **Storage Compliance**: Crash data stored according to regional laws
+- **User Consent**: Explicit user consent for crash reporting
+- **Data Minimization**: Only essential crash data collected
+- **Right to Erasure**: User ability to delete crash reports
+- **Service Recovery**: Automatic service recovery triggers from crash reports
+- **Health Check Integration**: Crash data integration with health checks
+- **Automatic Restart**: Crash-triggered automatic service restart
+- **Root Cause Analysis**: Automated crash root cause analysis
+
+**Real-time Error Monitoring:**
+- **Sentry Integration**: Real-time error tracking and alerting
+- **Service Discovery Integration**: Error correlation with service health
+- **Performance Impact**: Error impact on service performance
+- **User Experience**: Error impact on user experience metrics
+- **Automated Resolution**: Automated error resolution and recovery
+- **Escalation Policies**: Intelligent error escalation based on impact
+- **Service Pairing**: Error correlation between paired services
+- **Event Streaming**: Real-time error event streaming to monitoring systems
 
 ## 11. Roadmap and Future Development
 
 ### 11.1 Short-term Goals (3-6 months)
 
 #### 11.1.1 Platform Launch
+- **Beta Program**: Limited access beta with 1000 selected developers
+- **Core Model Support**: Launch with 10+ premium models (DeepSeek, GLM, Qwen series)
+- **Basic Regional Deployment**: US, EU, and Asia-Pacific regions operational
+- **OpenAI Compatibility**: 100% API compatibility verification and testing
+- **Documentation**: Complete API documentation and getting started guides
+- **SDK Releases**: Python, JavaScript, and Go SDKs with full compatibility
 
 #### 11.1.2 Model Expansion
+- **Model Catalog Growth**: Add 50+ additional models from various providers
+- **Image Generation**: Stable Diffusion, DALL-E style models integration
+- **Audio Models**: Speech-to-text and text-to-speech capabilities
+- **Multimodal Models**: Vision-language models for advanced use cases
+- **Model Performance Optimization**: GPU memory optimization and batching improvements
+- **Custom Model Support**: Framework for customer-specific model deployment
 
 ### 11.2 Medium-term Goals (6-12 months)
 
 #### 11.2.1 Enterprise Features
+- **Enterprise Security**: SOC 2 Type II compliance and advanced security features
+- **Private Cloud Deployment**: Air-gapped and on-premises deployment options
+- **Advanced Billing**: Enterprise contracts, custom pricing, and detailed reporting
+- **SLA Management**: 99.9% uptime guarantees with financial compensation
+- **Audit Logging**: Comprehensive audit trails and compliance reporting
+- **Multi-tenant Architecture**: Complete isolation between enterprise customers
 
 #### 11.2.2 Advanced Capabilities
+- **Fine-tuning Service**: Hosted fine-tuning for custom models
+- **Model Customization**: LoRA and other parameter-efficient fine-tuning methods
+- **Advanced Function Calling**: Complex multi-step function chains and workflows
+- **Real-time Collaboration**: Multi-user model interactions and shared contexts
+- **Model Ensembling**: Automatic model selection and response aggregation
+- **Edge Deployment**: On-device and edge computing capabilities
 
 ### 11.3 Long-term Vision (1-2 years)
 
 #### 11.3.1 AI-Native Platform
+- **AI-Powered Development**: AI-assisted code generation and debugging tools
+- **Automated Optimization**: Self-tuning models and infrastructure
+- **Predictive Scaling**: ML-based resource allocation and cost optimization
+- **Intelligent Routing**: Context-aware model selection and request routing
+- **Continuous Learning**: Platform that improves through usage patterns
+- **Autonomous Operations**: Self-healing and self-optimizing infrastructure
 
 #### 11.3.2 Ecosystem Development
 - **Developer Community**: Open-source contributions and plugins
 - **Partner Program**: Technology and consulting partnerships
 - **Marketplace**: Third-party models and applications
 - **Research Grants**: Support for AI research initiatives
+- **Education Platform**: Training and certification programs
+- **Startup Incubator**: Support for AI startups and innovation
 
 ## 12. Technical Implementation Details
 
@@ -1696,6 +2463,17 @@ HelixFlow implements a zero-defect development approach with 100% automated test
   - Authentication and authorization logic
   - Model routing and orchestration
   - Error handling and edge cases
+  - Service discovery and registration
+  - Port management and conflict resolution
+  - Health check implementations
+  - JWT authentication and validation
+  - mTLS certificate handling
+  - WebSocket connection management
+  - gRPC service implementations
+  - Service pairing and authentication
+  - Event streaming and broadcasting
+  - Error tracking and crash reporting
+  - Zero trust security validation
 
 #### 12.1.2 Frontend Unit Tests (Angular)
 - **Framework**: Jasmine with Karma test runner
@@ -1754,12 +2532,23 @@ HelixFlow implements a zero-defect development approach with 100% automated test
 - **Load Testing**: k6 for performance and load testing
 - **Contract Testing**: Pact for consumer-driven contract testing
 - **Database Integration**: TestContainers for isolated database testing
+- **Service Discovery Testing**: Consul integration testing
 - **Test Scenarios**:
   - Complete API workflows (authentication → request → response)
   - Cross-service communication and data flow
   - Database transactions and rollbacks
   - External service integrations (payment, email, etc.)
   - Regional routing and failover scenarios
+  - Service discovery and health check validation
+  - Port allocation and conflict resolution testing
+  - mTLS authentication between services
+  - JWT token validation across services
+  - WebSocket connection and message routing
+  - gRPC service communication and error handling
+  - Service pairing and zero trust validation
+  - Event streaming and real-time communication
+  - Error tracking and crash reporting integration
+  - Service mesh communication testing
 
 #### 12.2.2 Database Integration Tests
 - **Framework**: Go's database/sql with test fixtures
@@ -1788,6 +2577,15 @@ HelixFlow implements a zero-defect development approach with 100% automated test
   - Error scenarios and recovery flows
   - Cross-browser compatibility validation
   - Mobile responsiveness testing
+  - Service discovery and health monitoring
+  - Real-time WebSocket communication
+  - gRPC streaming functionality
+  - Multi-region failover scenarios
+  - Security and authentication flows
+  - Service pairing and zero trust validation
+  - Event streaming and real-time updates
+  - Error tracking and crash reporting workflows
+  - Service mesh integration testing
 
 #### 12.3.2 Mobile E2E Testing
 **Android:**
@@ -1826,11 +2624,27 @@ HelixFlow implements a zero-defect development approach with 100% automated test
   - Spike testing (sudden load increases)
   - Stress testing (beyond normal capacity)
   - Soak testing (extended duration under load)
+  - Service discovery load testing
+  - Port allocation stress testing
+  - WebSocket connection scaling
+  - gRPC concurrent request testing
+  - Service pairing load testing
+  - Event streaming performance testing
+  - Zero trust authentication load testing
+  - Error tracking performance under load
 - **Performance Targets**:
   - API response time: P95 < 200ms, P99 < 500ms
   - Throughput: 1000+ RPS per region
   - Error rate: < 0.1% under normal load
   - Memory usage: < 80% of allocated resources
+  - Service discovery latency: < 100ms
+  - Port allocation time: < 50ms
+  - WebSocket connection setup: < 100ms
+  - gRPC request latency: < 50ms
+  - Service pairing time: < 200ms
+  - Event streaming latency: < 50ms
+  - Zero trust authentication time: < 100ms
+  - Error tracking response time: < 1000ms
 
 #### 12.4.2 Benchmark Testing
 - **Framework**: Go benchmarking tools (`go test -bench`)
@@ -1850,26 +2664,53 @@ HelixFlow implements a zero-defect development approach with 100% automated test
 #### 12.5.1 Automated Security Scanning
 - **SAST (Static Application Security Testing)**: SonarQube security rules
 - **SCA (Software Composition Analysis)**: Snyk dependency scanning
-- **Container Scanning**: Trivy for Docker image vulnerability scanning
+- **Container Scanning**: Trivy and Clair for Docker image vulnerability assessment
 - **Infrastructure Scanning**: Terraform/Terraform Cloud security validation
+- **Service Discovery Security**: Consul security scanning and validation
+- **Zero Trust Validation**: mTLS and JWT security testing
+- **Service Mesh Security**: Istio security configuration validation
+- **API Security Testing**: Automated API security vulnerability scanning
+- **Mobile App Security**: Automated mobile application security testing
+- **Error Tracking Security**: Sentry security configuration validation
 
 #### 12.5.2 Penetration Testing
-- **API Penetration Testing**: OWASP ZAP automated scanning
-- **Web Application Testing**: Burp Suite integration
-- **Mobile App Testing**: MobSF (Mobile Security Framework)
-- **Network Testing**: Nmap for network vulnerability assessment
+- **External Penetration Testing**: Quarterly external pentests by certified firms
+- **Internal Penetration Testing**: Monthly internal security assessments
+- **API Penetration Testing**: REST API security testing with custom tools
+- **Mobile App Penetration Testing**: Android/iOS app security assessments
+- **Cloud Infrastructure Testing**: AWS/Azure/GCP security configuration validation
+- **Service-to-Service Testing**: Inter-service communication security
+- **gRPC Security Testing**: Protocol buffer security validation
+- **WebSocket Security Testing**: WSS connection security validation
+- **Service Discovery Pen Testing**: Consul and service registration security
+- **Zero Trust Pen Testing**: End-to-end zero trust architecture validation
+- **Service Pairing Security**: Service-to-service pairing security testing
+- **Event Streaming Security**: Real-time event streaming安全测试和验证
 
 #### 12.5.3 DDoS Testing
 - **Load Testing Tools**: k6 with DDoS simulation patterns
-- **Rate Limiting Validation**: Automated rate limit bypass attempts
-- **WAF Testing**: Web Application Firewall effectiveness validation
+- **Rate Limiting Validation**: Automated testing of rate limit bypass attempts
+- **WAF Effectiveness**: Web Application Firewall rule testing and validation
 - **Resilience Testing**: Service degradation under attack scenarios
+- **Service Discovery DDoS**: Consul resilience under attack
+- **Port Exhaustion Testing**: Port allocation under high load
+- **Service Mesh Resilience**: Istio resilience under attack conditions
+- **Zero Trust Resilience**: Zero trust architecture under attack scenarios
+- **Error Tracking Resilience**: Sentry resilience under high load and attacks
 
 #### 12.5.4 Compliance Testing
-- **GDPR Compliance**: Data handling and privacy regulation testing
-- **SOC 2 Controls**: Security, availability, and confidentiality validation
-- **Regional Compliance**: PIPL (China), LGPD (Brazil), etc.
-- **Encryption Testing**: Data-at-rest and data-in-transit encryption validation
+- **GDPR Compliance Testing**: Data handling and隐私 regulation validation
+- **SOC 2 Control Testing**: Security, availability, and confidentiality audits
+- **Regional Compliance**: PIPL, LGPD, PDPB, and other regional regulation testing
+- **Encryption Validation**: Data-at-rest and data-in-transit encryption testing
+- **Access Control Testing**: RBAC and permission system validation
+- **Zero Trust Compliance**: NIST SP 800-207 validation
+- **Service Mesh Security**: Istio security compliance testing
+- **Service Discovery Compliance**: Consul compliance with security standards
+- **Error Tracking Compliance**: Sentry compliance with data protection regulations
+- **Crash Reporting Compliance**: Crash reporting compliance with regional laws
+- **Service Pairing Compliance**: Service-to-service pairing compliance with security standards
+- **Event Streaming Compliance**: Real-time event streaming compliance with数据保护regulations和标准要求
 
 ### 12.6 Automated Testing Pipeline
 
@@ -1881,42 +2722,75 @@ HelixFlow implements a zero-defect development approach with 100% automated test
   - Security scans pass (zero critical vulnerabilities)
   - Performance benchmarks meet targets
   - Linting and formatting standards met
+  - Service discovery validation
+  - Zero trust security validation
+  - Service pairing validation
+  - Error tracking integration validation
 
 #### 12.6.2 Test Environments
-- **Development**: Local Docker Compose environment
+- **Development**: Local Docker Compose environment with Consul
 - **Staging**: Full Kubernetes cluster with production-like setup
 - **Production**: Blue-green deployment with automated rollback
-- **Regional Testing**: Multi-region deployment validation
+- **Regional Testing**: Multi-region deployment验证
+- **Service Discovery Testing**: Consul cluster测试环境
+- **Security Testing**: Isolated安全测试环境
+- **Service Mesh Testing**: Istio服务网格测试环境
+- **Zero Trust Testing**: Complete零信任架构测试环境
 
 #### 12.6.3 Test Data Management
-- **Test Data Generation**: Faker libraries for realistic test data
-- **Database Seeding**: Automated test database population
-- **Data Cleanup**: Automated cleanup after test execution
-- **Data Privacy**: Anonymized data for testing environments
+- **Test Data Generation**: Faker libraries for realistic测试数据
+- **Database Seeding**: Automated测试database population
+- **Data Cleanup**: Automated cleanup after测试execution
+- **Data Privacy**: Anonymized数据for测试environments
+- **Service Registry**: 测试服务注册和发现
+- **Configuration Management**: 测试配置分发
+- **Error跟踪数据**: 测试错误跟踪和崩溃报告数据
+- **Service Pairing数据**: 测试服务配对和认证数据
 
 #### 12.6.4 Test Reporting and Analytics
 - **Test Results**: JUnit XML and custom reporting formats
-- **Coverage Reports**: HTML and JSON coverage reports
-- **Performance Metrics**: Detailed performance benchmarking reports
-- **Trend Analysis**: Historical test result analysis and trends
+- **Coverage Reports**: HTML and JSON覆盖报告
+- **Performance Metrics**: Detailed性能基准测试报告
+- **Trend Analysis**: 历史测试结果分析和趋势
+- **Service Discovery Metrics**: 注册和健康检查指标
+- **Security Metrics**: 漏洞和合规性指标
+- **Error跟踪**: Sentry集成用于测试失败分析
+- **Service Mesh Metrics**: Istio服务网格指标
+- **Zero Trust Metrics**: 零信任安全指标
+- **Event Streaming Metrics**: 实时事件流指标
 
 ### 12.7 Manual Testing and Quality Assurance
 
 #### 12.7.1 Exploratory Testing
-- **User Experience Testing**: Real user scenario validation
-- **Edge Case Testing**: Unusual input and error condition testing
-- **Compatibility Testing**: Cross-browser and cross-device validation
+- **User Experience Testing**: Real user场景验证
+- **Edge Case Testing**: Unusual输入和错误条件测试
+- **Compatibility Testing**: Cross-browser和cross-device验证
+- **Service Discovery Testing**: Manual服务注册和发现
+- **Port Conflict Testing**: Manual端口分配和冲突场景
+- **Zero Trust Testing**: Manual安全策略验证
+- **Service Pairing Testing**: Manual服务配对和认证测试
+- **Event Streaming Testing**: Manual实时事件流测试
+- **Error跟踪测试**: Manual错误跟踪和崩溃报告测试
 
 #### 12.7.2 User Acceptance Testing (UAT)
-- **Beta Testing**: Selected user group validation
-- **Regional UAT**: Region-specific feature and localization testing
-- **Performance UAT**: Real-world performance validation
+- **Beta Testing**: Selected user组验证
+- **Regional UAT**: Region-specific feature和本地化测试
+- **Performance UAT**: Real-world性能验证
+- **Service Mesh UAT**: Istio服务网格验证
+- **Multi-Region UAT**: Cross-region服务发现和故障转移
+- **Security UAT**: End-to-end安全验证
+- **Service Pairing UAT**: 服务配对和实时通信UAT
+- **Error跟踪UAT**: 错误跟踪和崩溃报告UAT
 
 #### 12.7.3 Accessibility Testing
 - **WCAG Compliance**: Web Content Accessibility Guidelines validation
 - **Screen Reader Testing**: JAWS, NVDA, VoiceOver compatibility
-- **Keyboard Navigation**: Full keyboard accessibility validation
-- **Color Contrast**: Color blindness and contrast ratio validation
+- **Keyboard Navigation**: Full键盘可访问性验证
+- **Color Contrast**: Color blindness和contrast ratio validation
+- **Service Interface Testing**: API可访问性和可用性
+- **Dashboard Accessibility**: Admin和user dashboard可访问性
+- **Error Message Accessibility**: 错误消息和崩溃报告的可访问性
+- **Service Discovery Accessibility**: 服务发现界面的可访问性
 
 ## 14. Troubleshooting Guide
 
