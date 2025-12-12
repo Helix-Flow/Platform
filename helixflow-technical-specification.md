@@ -1,3 +1,5 @@
+![AI infrastructure for the free world!](Assets/Wide_Black.png)
+
 # HelixFlow AI Inference Platform - Comprehensive Technical Specification
 
 ## Executive Summary
