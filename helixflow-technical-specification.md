@@ -449,6 +449,488 @@ sudo apt-get install -y amdgpu-dkms rocm-dev
 
 ### 8.3 Model Configuration
 
+#### Cognee AI Memory Engine Integration
+**What it is**: Cognee is an advanced AI memory engine that transforms raw data into persistent and dynamic memory for AI agents, combining vector search with graph databases to make documents both searchable by meaning and connected by relationships. It implements ECL (Extract, Cognify, Load) pipelines to create living knowledge graphs that improve over time through feedback.
+
+**How to use it**: Users can purchase Cognee as a premium add-on to their HelixFlow subscription, which enables enhanced cognitive capabilities across all supported LLMs. The integration is automatic once purchased and provides superior reasoning, memory retention, and contextual understanding through persistent knowledge graphs and vector-based semantic search.
+
+**Benefits**:
+- **Persistent Memory**: AI agents maintain context across conversations and sessions, eliminating repetitive explanations
+- **Enhanced Reasoning**: Advanced cognitive capabilities for complex problem-solving and multi-step reasoning
+- **Contextual Understanding**: Deep semantic understanding of user queries and data relationships
+- **Dynamic Learning**: Continuous improvement from user interactions and feedback loops
+- **Graph-Based Knowledge**: Relationships and connections between concepts and data points
+- **Vector Search**: Semantic search capabilities for precise information retrieval
+- **Self-Improvement**: Auto-tuning through feedback to deliver better answers over time
+- **Multi-Modal Support**: Handles 30+ data types including text, images, audio, and documents
+
+**Implementation Requirements**:
+- **Cognee API Integration**: REST API endpoints for memory operations and knowledge graph management
+- **Data Ingestion Pipeline**: Processing user data into cognitive memory structures using ECL pipelines
+- **Graph Database**: Neo4j or similar for relationship storage and graph traversal
+- **Vector Database**: Qdrant, Pinecone, or similar for semantic search and embeddings
+- **Authentication**: Secure access control for premium feature users with subscription validation
+- **Feedback Loop**: Mechanisms for collecting user feedback to improve memory performance
+
+**Resources**:
+- **Cognee Documentation**: Official documentation at docs.cognee.ai with integration guides
+- **GitHub Repository**: topoteretes/cognee for open-source implementation and community plugins
+- **API Reference**: Complete REST API specifications for memory operations
+- **Research Papers**: Published work on optimizing knowledge graphs for LLM reasoning
+- **Community Support**: Discord community and Reddit forum for Cognee users
+- **Case Studies**: Real-world implementations at universities and financial institutions
+
+**Technology Stack**:
+- **Backend Engine**: Python-based Cognee with asyncio support for concurrent processing
+- **Database Layer**: Neo4j graph database and vector database integration (Qdrant, LanceDB, etc.)
+- **API Layer**: RESTful API with OpenAPI specification for memory operations
+- **Authentication**: JWT-based secure access with subscription tier validation
+- **Monitoring**: Prometheus metrics and Grafana dashboards for memory performance
+- **Feedback System**: Machine learning algorithms for continuous improvement
+
+**Testing**:
+- **Memory Accuracy Testing**: Validation of knowledge graph correctness and retrieval precision
+- **Performance Benchmarking**: Latency and throughput testing for memory operations
+- **Integration Testing**: End-to-end testing with various LLM providers and data types
+- **Feedback Loop Testing**: Validation of self-improvement algorithms and learning curves
+- **Scalability Testing**: Performance under high load with large knowledge graphs
+- **Security Testing**: Data privacy and access control validation for memory operations
+
+**Documentation**:
+- **Integration Guide**: Step-by-step Cognee integration for different programming languages
+- **API Documentation**: Complete API reference with examples and use cases
+- **User Guide**: Premium feature usage and best practices for memory-enhanced AI
+- **Troubleshooting**: Common issues and resolution procedures for memory operations
+- **Performance Tuning**: Optimization guides for knowledge graph size and query performance
+- **Research Papers**: Academic references for knowledge graph optimization techniques
+
+**Code Snippets from Resources**:
+```python
+# Cognee integration example from HelixFlow SDK
+from helixflow import HelixFlow
+from helixflow.cognee import CogneeMemoryEngine
+import asyncio
+
+class EnhancedHelixFlowClient(HelixFlow):
+    def __init__(self, api_key: str, cognee_enabled: bool = False):
+        super().__init__(api_key)
+
+        if cognee_enabled:
+            self.cognee = CogneeMemoryEngine(
+                api_key=api_key,
+                graph_db_url="bolt://localhost:7687",  # Neo4j
+                vector_db_url="http://localhost:6333",  # Qdrant
+                feedback_enabled=True
+            )
+        else:
+            self.cognee = None
+
+    async def chat_completion_with_memory(self, model: str, messages: list, **kwargs):
+        """Enhanced chat completion with Cognee memory"""
+        if self.cognee:
+            # Enrich conversation with memory context
+            context = await self.cognee.get_conversation_context(messages)
+
+            # Add relevant knowledge from memory
+            knowledge = await self.cognee.search_knowledge(
+                query=messages[-1]['content'],
+                limit=3,
+                min_relevance=0.7
+            )
+
+            # Combine context and knowledge
+            enhanced_context = self._combine_contexts(context, knowledge)
+            enriched_messages = messages + [{"role": "system", "content": enhanced_context}]
+
+            # Get response from LLM
+            response = await super().chat_completion(model, enriched_messages, **kwargs)
+
+            # Store conversation in memory for future use
+            await self.cognee.store_conversation(messages, response)
+
+            # Collect feedback for self-improvement
+            await self.cognee.collect_feedback(response, user_feedback=None)
+
+            return response
+        else:
+            # Standard response without memory
+            return await super().chat_completion(model, messages, **kwargs)
+
+    def _combine_contexts(self, conversation_context: str, knowledge_results: list) -> str:
+        """Combine conversation context with knowledge graph results"""
+        context_parts = []
+
+        if conversation_context:
+            context_parts.append(f"Previous conversation context: {conversation_context}")
+
+        if knowledge_results:
+            knowledge_text = "\n".join([
+                f"- {result['content']} (confidence: {result['score']:.2f})"
+                for result in knowledge_results
+            ])
+            context_parts.append(f"Relevant knowledge: {knowledge_text}")
+
+        return "\n\n".join(context_parts)
+
+    async def enable_cognee(self, subscription_tier: str = "premium"):
+        """Enable Cognee memory engine"""
+        if await self.verify_premium_feature("cognee", subscription_tier):
+            self.cognee = CogneeMemoryEngine(
+                api_key=self.api_key,
+                graph_db_url=os.getenv('NEO4J_URI'),
+                vector_db_url=os.getenv('VECTOR_DB_URI'),
+                feedback_enabled=True
+            )
+
+            # Initialize memory with user's data
+            await self.cognee.initialize_memory()
+
+            return True
+        return False
+
+    async def add_to_memory(self, data: str, data_type: str = "text"):
+        """Add data to Cognee memory"""
+        if self.cognee:
+            await self.cognee.add_data(data, data_type)
+            await self.cognee.cognify()  # Process into knowledge graph
+            await self.cognee.memify()   # Apply memory algorithms
+
+    async def search_memory(self, query: str, limit: int = 5):
+        """Search Cognee memory"""
+        if self.cognee:
+            return await self.cognee.search(query, limit=limit)
+        return []
+
+# Usage example with memory enhancement
+async def main():
+    async with EnhancedHelixFlowClient("your-api-key", cognee_enabled=True) as client:
+        # Enable Cognee premium feature
+        await client.enable_cognee("premium")
+
+        # Add some knowledge to memory
+        await client.add_to_memory("HelixFlow is an AI inference platform")
+        await client.add_to_memory("Cognee provides persistent memory for AI agents")
+
+        # Chat with memory-enhanced responses
+        response1 = await client.chat_completion_with_memory(
+            model="gpt-4",
+            messages=[{"role": "user", "content": "What is HelixFlow?"}]
+        )
+        print(f"Response 1: {response1['choices'][0]['message']['content']}")
+
+        # Follow-up question uses memory context
+        response2 = await client.chat_completion_with_memory(
+            model="gpt-4",
+            messages=[
+                {"role": "user", "content": "What is HelixFlow?"},
+                {"role": "assistant", "content": response1['choices'][0]['message']['content']},
+                {"role": "user", "content": "How does it integrate with Cognee?"}
+            ]
+        )
+        print(f"Response 2: {response2['choices'][0]['message']['content']}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+```python
+# Cognee memory engine implementation
+import asyncio
+from typing import List, Dict, Any, Optional
+from cognee import Cognee
+from neo4j import AsyncGraphDatabase
+from qdrant_client import AsyncQdrantClient
+import numpy as np
+
+class CogneeMemoryEngine:
+    def __init__(self, api_key: str, graph_db_url: str, vector_db_url: str, feedback_enabled: bool = True):
+        self.api_key = api_key
+        self.graph_db = AsyncGraphDatabase.driver(graph_db_url)
+        self.vector_db = AsyncQdrantClient(url=vector_db_url)
+        self.cognee = Cognee()
+        self.feedback_enabled = feedback_enabled
+        self.memory_initialized = False
+
+    async def initialize_memory(self):
+        """Initialize Cognee memory engine"""
+        await self.cognee.initialize(
+            graph_db=self.graph_db,
+            vector_db=self.vector_db
+        )
+        self.memory_initialized = True
+
+    async def add_data(self, data: str, data_type: str = "text"):
+        """Add data to Cognee memory using ECL pipeline"""
+        if not self.memory_initialized:
+            await self.initialize_memory()
+
+        # Extract phase - process raw data
+        processed_data = await self._extract_data(data, data_type)
+
+        # Cognify phase - create knowledge graph
+        await self.cognee.add(processed_data)
+
+    async def cognify(self):
+        """Generate knowledge graph from added data"""
+        await self.cognee.cognify()
+
+    async def memify(self):
+        """Apply memory algorithms to knowledge graph"""
+        await self.cognee.memify()
+
+    async def get_conversation_context(self, messages: List[Dict[str, Any]]) -> str:
+        """Get relevant context from memory for conversation"""
+        if not messages:
+            return ""
+
+        # Extract key concepts from recent messages
+        current_query = messages[-1]['content']
+        concepts = await self._extract_concepts(current_query)
+
+        # Search memory for relevant information
+        context_results = await self.cognee.search(
+            query=concepts,
+            limit=3,
+            threshold=0.6
+        )
+
+        # Format context for LLM
+        context_parts = []
+        for result in context_results:
+            context_parts.append(f"From memory: {result['content']}")
+
+        return "\n".join(context_parts)
+
+    async def search_knowledge(self, query: str, limit: int = 5, min_relevance: float = 0.5):
+        """Search knowledge graph for relevant information"""
+        results = await self.cognee.search(
+            query=query,
+            limit=limit,
+            threshold=min_relevance
+        )
+
+        # Enhance results with relevance scores
+        enhanced_results = []
+        for result in results:
+            enhanced_result = result.copy()
+            enhanced_result['score'] = await self._calculate_relevance(query, result)
+            enhanced_results.append(enhanced_result)
+
+        return sorted(enhanced_results, key=lambda x: x['score'], reverse=True)
+
+    async def store_conversation(self, messages: List[Dict[str, Any]], response: Dict[str, Any]):
+        """Store conversation in memory for future reference"""
+        conversation_text = self._format_conversation(messages, response)
+        await self.add_data(conversation_text, "conversation")
+        await self.cognify()
+        await self.memify()
+
+    async def collect_feedback(self, response: Dict[str, Any], user_feedback: Optional[Dict[str, Any]] = None):
+        """Collect feedback for memory improvement"""
+        if not self.feedback_enabled:
+            return
+
+        # Analyze response quality
+        quality_metrics = await self._analyze_response_quality(response)
+
+        # Store feedback for learning
+        feedback_data = {
+            "response": response,
+            "quality_metrics": quality_metrics,
+            "user_feedback": user_feedback,
+            "timestamp": asyncio.get_event_loop().time()
+        }
+
+        await self._store_feedback(feedback_data)
+
+        # Trigger memory optimization if needed
+        if quality_metrics['needs_improvement']:
+            await self._optimize_memory()
+
+    async def _extract_data(self, data: str, data_type: str) -> Dict[str, Any]:
+        """Extract structured data from raw input"""
+        # Implementation would use NLP for text, OCR for images, etc.
+        return {
+            "content": data,
+            "type": data_type,
+            "timestamp": asyncio.get_event_loop().time(),
+            "source": "helixflow_integration"
+        }
+
+    async def _extract_concepts(self, text: str) -> str:
+        """Extract key concepts from text for memory search"""
+        # Simplified concept extraction
+        # In practice, would use NLP models
+        return text.lower()
+
+    async def _calculate_relevance(self, query: str, result: Dict[str, Any]) -> float:
+        """Calculate relevance score between query and result"""
+        # Simplified relevance calculation
+        # In practice, would use semantic similarity
+        query_words = set(query.lower().split())
+        result_words = set(result['content'].lower().split())
+        overlap = len(query_words.intersection(result_words))
+        return overlap / len(query_words) if query_words else 0.0
+
+    def _format_conversation(self, messages: List[Dict[str, Any]], response: Dict[str, Any]) -> str:
+        """Format conversation for memory storage"""
+        conversation_parts = []
+        for msg in messages:
+            conversation_parts.append(f"{msg['role']}: {msg['content']}")
+
+        conversation_parts.append(f"assistant: {response['choices'][0]['message']['content']}")
+
+        return "\n".join(conversation_parts)
+
+    async def _analyze_response_quality(self, response: Dict[str, Any]) -> Dict[str, Any]:
+        """Analyze response quality for feedback"""
+        # Simplified quality analysis
+        content = response['choices'][0]['message']['content']
+        return {
+            "length": len(content),
+            "has_code": "```" in content,
+            "completeness": 0.8,  # Placeholder
+            "needs_improvement": len(content) < 50
+        }
+
+    async def _store_feedback(self, feedback: Dict[str, Any]):
+        """Store feedback data for learning"""
+        # Store in vector database for future analysis
+        pass
+
+    async def _optimize_memory(self):
+        """Optimize memory based on feedback"""
+        # Trigger memory reorganization
+        await self.cognee.memify()
+
+    async def close(self):
+        """Cleanup resources"""
+        await self.graph_db.close()
+        await self.vector_db.close()
+        await self.cognee.cleanup()
+```
+
+```bash
+# Premium feature activation and configuration
+#!/bin/bash
+
+# Activate Cognee premium feature
+helixflow feature activate cognee --tier premium
+
+# Configure Cognee integration
+helixflow cognee configure \
+  --neo4j-uri "bolt://localhost:7687" \
+  --qdrant-url "http://localhost:6333" \
+  --graph-db-auth "user:password" \
+  --vector-db-api-key "your-api-key" \
+  --memory-size "10GB" \
+  --retention-days "90" \
+  --feedback-enabled true
+
+# Initialize memory with existing data
+helixflow cognee initialize \
+  --data-source "./user_data" \
+  --data-types "text,pdf,docx" \
+  --parallel-jobs 4
+
+# Test Cognee integration
+helixflow cognee test \
+  --query "What is HelixFlow?" \
+  --expected-results 3 \
+  --verbose
+
+# Monitor Cognee performance
+helixflow cognee monitor \
+  --dashboard \
+  --metrics-port 9091 \
+  --alert-threshold 0.8
+
+# Backup memory data
+helixflow cognee backup \
+  --destination "./backups/cognee_memory_$(date +%Y%m%d)" \
+  --compress \
+  --encrypt
+
+# Optimize memory performance
+helixflow cognee optimize \
+  --reindex-vectors \
+  --prune-old-data \
+  --consolidate-graphs
+```
+
+```python
+# Advanced Cognee usage with multi-modal data
+import asyncio
+from helixflow import HelixFlow
+from helixflow.cognee import CogneeMemoryEngine
+
+async def advanced_memory_demo():
+    """Demonstrate advanced Cognee memory capabilities"""
+
+    client = HelixFlow("your-api-key")
+    await client.enable_cognee("premium")
+
+    # Add different types of data to memory
+    data_sources = [
+        ("HelixFlow is an AI inference platform with decentralized compute.", "text"),
+        ("./documents/api_reference.pdf", "pdf"),
+        ("./images/architecture_diagram.png", "image"),
+        ("./audio/product_demo.mp3", "audio")
+    ]
+
+    for data, data_type in data_sources:
+        await client.add_to_memory(data, data_type)
+
+    # Process data through ECL pipeline
+    await client.cognee.cognify()  # Extract and Cognify
+    await client.cognee.memify()   # Apply memory algorithms
+
+    # Multi-modal search
+    queries = [
+        "What is HelixFlow's architecture?",
+        "Show me API examples",
+        "Explain the product features",
+        "What does the demo sound like?"
+    ]
+
+    for query in queries:
+        results = await client.search_memory(query, limit=5)
+
+        print(f"\nQuery: {query}")
+        for i, result in enumerate(results, 1):
+            print(f"{i}. {result['content']} (relevance: {result['score']:.2f})")
+
+    # Demonstrate memory-enhanced conversations
+    conversation_history = []
+
+    questions = [
+        "What is HelixFlow?",
+        "How does it work with decentralized compute?",
+        "Can you show me some technical details?",
+        "What are the benefits of using Cognee memory?"
+    ]
+
+    for question in questions:
+        # Get memory-enhanced response
+        response = await client.chat_completion_with_memory(
+            model="gpt-4",
+            messages=conversation_history + [{"role": "user", "content": question}]
+        )
+
+        answer = response['choices'][0]['message']['content']
+        print(f"\nQ: {question}")
+        print(f"A: {answer}")
+
+        # Update conversation history
+        conversation_history.extend([
+            {"role": "user", "content": question},
+            {"role": "assistant", "content": answer}
+        ])
+
+if __name__ == "__main__":
+    asyncio.run(advanced_memory_demo())
+```
+
 #### Model Registry Configuration
 
 **models.yaml:**
