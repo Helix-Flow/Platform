@@ -69,20 +69,29 @@ HelixFlow is a state-of-the-art AI inference platform designed to provide develo
 - **Service-to-Service Authentication**: mTLS and JWT for inter-service communication
 
 #### 2.2.3 Model Router
-- **Dynamic Model Selection**: Intelligent routing based on request characteristics
-- **Load Balancing**: Distribute requests across optimal compute resources
-- **Model Versioning**: Support for multiple model versions and A/B testing
-- **Fallback Mechanisms**: Automatic failover to backup instances
-- **Service Discovery**: Automatic detection of available model instances
-- **Health Monitoring**: Real-time health checks and instance management
+- **Dynamic Model Selection**: Intelligent routing based on request characteristics, cost, performance, and availability
+- **Load Balancing**: Distribute requests across optimal compute resources with least-loaded algorithm
+- **Model Versioning**: Support for multiple model versions and A/B testing capabilities
+- **Zero Completion Insurance**: Automatic fallback to alternative models/providers if primary fails - only pay for successful completions
+- **Auto-Routing**: Smart routing that considers model performance, cost, and user preferences
+- **Fallback Mechanisms**: Multi-level fallback chains with provider redundancy
+- **Service Discovery**: Automatic detection of available model instances across regions
+- **Health Monitoring**: Real-time health checks and instance management with predictive scaling
+- **Regional Routing**: Geographic-aware routing for optimal latency and compliance
+- **Data Policy Routing**: Route requests based on custom data policies and privacy requirements
+- **Prompt Caching**: Intelligent caching of prompts and responses to reduce latency and costs
 
 #### 2.2.4 Inference Engine
-- **GPU Optimization**: CUDA, ROCm, and custom kernel optimizations
-- **Batch Processing**: Automatic request batching for improved throughput
-- **Memory Management**: Efficient GPU memory allocation and deallocation
-- **Model Caching**: Hot models kept in memory for instant response
-- **Auto-Scaling**: Dynamic scaling based on workload demands
-- **Port Management**: Automatic port allocation and conflict resolution
+- **GPU Optimization**: CUDA, ROCm, and custom kernel optimizations for maximum performance
+- **Batch Processing**: Automatic request batching for improved throughput and cost efficiency
+- **Memory Management**: Efficient GPU memory allocation and deallocation with memory pooling
+- **Model Caching**: Hot models kept in memory for instant response with LRU eviction
+- **Prompt Caching**: Intelligent caching of prompts and intermediate results to reduce redundant computation
+- **KV Cache Optimization**: Advanced key-value caching for transformer models to improve inference speed
+- **Auto-Scaling**: Dynamic scaling based on workload demands with predictive scaling
+- **Port Management**: Automatic port allocation and conflict resolution with service discovery integration
+- **Model Warmup**: Pre-loading frequently used models to ensure instant availability
+- **Resource Optimization**: Dynamic batch size adjustment based on model and hardware characteristics
 
 #### 2.2.5 Service Discovery & Configuration
 - **Consul Integration**: HashiCorp Consul for service discovery and configuration
@@ -199,6 +208,17 @@ HelixFlow is a state-of-the-art AI inference platform designed to provide develo
 - **Transparent Billing**: Detailed usage metrics and cost breakdown
 - **Volume Discounts**: Automatic discounts for high-volume usage
 - **Free Tier**: $1 free credit for new users to explore the platform
+- **Platform Fee**: Competitive platform fee (5.5% or less) added to provider costs
+- **No Provider Markup**: Direct pass-through of provider pricing without additional markups
+- **Credit System**: Pre-purchase credits with automatic top-up options
+- **Bulk Credits**: Volume discounts for large credit purchases
+
+#### 3.3.2 Enterprise Pricing
+- **Volume Commitments**: Annual or monthly volume commitments with discounted rates
+- **Custom SLAs**: Service level agreements with guaranteed performance
+- **Dedicated Support**: Priority support with dedicated account management
+- **Custom Integrations**: Tailored integrations and white-label options
+- **Procurement Options**: Purchase orders, invoicing, and custom payment terms
 
 ### 3.4 Regional Deployment and Billing
 
@@ -214,6 +234,8 @@ HelixFlow implements geo-distributed architecture with region-specific billing s
 - **Payment Methods**: Credit cards, ACH, digital wallets
 - **Currency**: USD with automatic conversion for international users
 - **Regional Features**: Enhanced US market analytics and compliance reporting
+- **Regional Routing**: Automatic routing to US-based inference endpoints for optimal latency
+- **Data Sovereignty**: Strict US data residency with local processing guarantees
 
 **Europe Region (EU Countries + UK):**
 - **Billing System**: Stripe EUR with VAT handling and EU tax compliance
@@ -278,6 +300,8 @@ Each region features customized LLM offerings based on:
 - **Performance Optimization**: Latency-optimized model deployment
 - **Compliance Filtering**: Regulatory-compliant content generation
 - **Local Partnerships**: Region-specific model partnerships and integrations
+- **Regional Routing**: Geographic load balancing for minimal latency
+- **Data Localization**: Region-specific data processing and storage
 
 #### 3.4.3 Billing and Subscription Management
 
@@ -437,17 +461,31 @@ Authorization: Bearer hf_your_api_key_here
 #### API Key Management Endpoints
 
 **GET /v1/keys**
-- List all API keys for the authenticated user
-- Response: Array of key objects with id, name, created_at, last_used
+- List all API keys for the authenticated user or organization
+- Query parameters: limit, offset, search, status
+- Response: Array of key objects with id, name, created_at, last_used, permissions, usage_stats
 
 **POST /v1/keys**
-- Create a new API key
-- Body: `{"name": "My API Key", "permissions": ["read", "write"]}`
+- Create a new API key with granular permissions
+- Body: `{"name": "My API Key", "permissions": ["read", "write"], "rate_limit": 1000, "budget_limit": 100.00, "allowed_models": ["*"], "allowed_providers": ["*"], "data_policy": "standard"}`
 - Response: Key object with secret (only shown once)
+
+**PATCH /v1/keys/{key_id}**
+- Update API key settings and permissions
+- Body: Same as POST, partial updates supported
+- Response: Updated key object
 
 **DELETE /v1/keys/{key_id}**
 - Delete an API key
 - Response: Success confirmation
+
+#### Provisioning API Keys (Enterprise)
+
+**POST /v1/organizations/{org_id}/keys/provision**
+- Programmatically create API keys for sub-organizations or clients
+- Supports bulk provisioning with CSV upload
+- Automatic key rotation and lifecycle management
+- Integration with identity providers for automated key management
 
 ### 5.2 Chat Completions - Detailed Reference
 
@@ -765,6 +803,26 @@ Returns detailed information about a specific model.
 
 Returns current billing information and payment methods.
 
+#### Budgets and Spend Controls: `POST /v1/budgets`
+
+**Parameters:**
+- `daily_limit`: Daily spending limit in USD
+- `monthly_limit`: Monthly spending limit in USD
+- `alert_threshold`: Percentage threshold for alerts (e.g., 80)
+- `auto_pause`: Automatically pause API keys when limits exceeded
+
+**Response:** Budget configuration confirmation
+
+#### Usage Alerts: `POST /v1/alerts`
+
+Configure spending and usage alerts with webhook notifications.
+
+**Parameters:**
+- `type`: "spending" or "usage"
+- `threshold`: Alert threshold value
+- `webhook_url`: URL for alert notifications
+- `email_alerts`: Enable email notifications
+
 ### 5.9 Error Handling
 
 **Common Error Codes:**
@@ -878,12 +936,24 @@ HelixFlow provides comprehensive client applications for both administrators and
   - System health monitoring and alerting configuration
   - Regional deployment management and failover controls
   - Audit logging and compliance reporting
+  - App rankings and marketplace analytics
 - **Security**: Multi-factor authentication and session management
 - **Testing**: 100% test coverage with comprehensive E2E test suites
 
+#### 6.1.5 Built-in Chat Interface
+- **Model Testing**: Interactive chat interface for testing all available models
+- **Side-by-Side Comparison**: Compare responses from different models simultaneously
+- **Streaming Support**: Real-time streaming responses with typing indicators
+- **Parameter Tuning**: Adjustable temperature, max tokens, and other parameters
+- **Conversation History**: Persistent chat history with export capabilities
+- **Model Switching**: Easy switching between models within conversations
+- **Performance Metrics**: Response time, token count, and cost display
+- **Share Conversations**: Public sharing of interesting conversations
+- **Integration Testing**: Test API integrations directly from the interface
+
 ### 6.2 SDKs and Libraries
 
-#### 6.1.1 Official SDKs
+#### 6.2.1 Official SDKs
 - **Python**: Full OpenAI client compatibility with base URL override
 - **JavaScript/TypeScript**: npm package with type definitions
 - **Java**: Maven/Gradle package with async support
@@ -891,6 +961,25 @@ HelixFlow provides comprehensive client applications for both administrators and
 - **C#**: NuGet package with async/await
 - **Rust**: Cargo crate with tokio support
 - **PHP**: Composer package with PSR standards
+- **HelixFlow SDK**: Native SDK with advanced features including:
+  - Auto-routing with fallback mechanisms
+  - Intelligent prompt caching
+  - Built-in telemetry and usage tracking
+  - Streaming optimizations
+  - Multi-region support
+  - Error handling and retry logic
+  - Cost optimization features
+
+#### 6.2.2 App Attribution and Rankings
+- **App Registration**: Register applications to appear on public leaderboards
+- **Usage Tracking**: Automatic tracking of token usage by application
+- **Public Rankings**: Global rankings by token consumption, model usage, and performance
+- **Analytics Dashboard**: Detailed analytics for registered applications
+- **Attribution Headers**: HTTP-Referer and X-Title headers for app identification
+- **Leaderboard Categories**: Rankings by model, provider, programming language, and use case
+- **Market Share Analysis**: Provider and model market share visualization
+- **Trend Analysis**: Weekly growth rates and usage patterns
+- **Top Apps Showcase**: Featured applications with usage statistics
 
 #### 6.1.2 Third-Party Integrations
 
@@ -982,6 +1071,37 @@ curl -X POST "https://api.helixflow.ai/v1/chat/completions" \
   }'
 ```
 
+## 6.4 Rankings and Analytics Platform
+
+### 6.4.1 Public Leaderboards
+- **Model Rankings**: Real-time rankings by token usage, latency, and reliability
+- **Provider Market Share**: Market share analysis across all providers
+- **Application Rankings**: Top applications by token consumption and user engagement
+- **Category Rankings**: Specialized rankings for coding, chat, images, etc.
+- **Language Rankings**: Usage statistics by programming and natural languages
+- **Tool Usage Analytics**: Function calling and tool usage patterns
+- **Image Processing Stats**: Image generation and processing metrics
+- **Weekly Growth Tracking**: Trend analysis with growth percentages
+
+### 6.4.2 Analytics Dashboard
+- **Usage Analytics**: Detailed token consumption by model, provider, and time period
+- **Performance Metrics**: Latency, throughput, and error rate analytics
+- **Cost Analysis**: Spending patterns and cost optimization insights
+- **Geographic Distribution**: Usage patterns by region and country
+- **Application Insights**: Per-application usage and performance metrics
+- **Trend Visualization**: Interactive charts and graphs for usage trends
+- **Export Capabilities**: CSV/JSON export for custom analysis
+- **Real-time Updates**: Live dashboard updates with streaming data
+
+### 6.4.3 App Attribution System
+- **App Registration**: Simple registration process for applications
+- **Attribution Headers**: HTTP-Referer and X-Title headers for automatic tracking
+- **Usage Attribution**: Accurate attribution of token usage to applications
+- **Public Showcase**: Featured applications on leaderboards
+- **Analytics Integration**: Detailed analytics for registered applications
+- **Privacy Controls**: Opt-in attribution with user consent
+- **Ranking Incentives**: Benefits for high-ranking applications
+
 ## 7. Deployment Options and Infrastructure
 
 ### 6.1 Cloud Deployment Strategies
@@ -1040,6 +1160,25 @@ curl -X POST "https://api.helixflow.ai/v1/chat/completions" \
 - **Deployment**: Air-gapped installations available
 - **Management**: Full administrative control
 - **Support**: Enterprise SLA with dedicated engineers
+
+## 7.5 Reliability and Uptime Features
+
+### 7.5.1 Zero Completion Insurance
+- **Automatic Fallback**: Seamless fallback to alternative models/providers on failure
+- **No Charge for Failures**: Only pay for successful completions, never for failed attempts
+- **Multi-Level Redundancy**: Provider-level and model-level redundancy
+- **Transparent Billing**: Clear billing only for successful inference runs
+- **Uptime Optimization**: Intelligent routing to highest-uptime providers
+- **Failure Recovery**: Automatic retry with exponential backoff
+- **Status Monitoring**: Real-time status page with incident history
+
+### 7.5.2 Service Level Agreements
+- **Uptime Guarantees**: 99.9% uptime SLA for enterprise customers
+- **Performance SLAs**: Guaranteed latency and throughput commitments
+- **Support SLAs**: Response time guarantees for support requests
+- **Financial Compensation**: Service credits for SLA violations
+- **Incident Response**: 24/7 incident response for critical issues
+- **Status Communication**: Transparent communication during outages
 
 ## 8. Deployment Guides and Configuration
 
@@ -2130,6 +2269,10 @@ class ZeroTrustMiddleware:
 - **Session Management**: Secure session handling with automatic timeout and concurrent session limits
 - **API Key Management**: Secure API key generation, rotation, and revocation with audit logging
 - **OAuth 2.0 Integration**: Support for enterprise SSO providers (Azure AD, Google Workspace, Okta)
+- **Data Policy-Based Routing**: Fine-grained data policies that control which models and providers can access specific data types
+- **Privacy Controls**: Per-request data retention settings and prompt filtering
+- **Geographic Data Controls**: Regional data residency and cross-border transfer controls
+- **Content Filtering**: Configurable content policies for different use cases and compliance requirements
 
 #### 10.1.3 Network Security
 - **Web Application Firewall**: Cloudflare WAF with custom rules for API protection
