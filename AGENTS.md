@@ -14,6 +14,13 @@ HelixFlow AI inference platform configuration repository with Specify developmen
 - Single test: No framework configured - check plan.md for test commands
 - All tests: Run after implementation based on tech stack in plan.md
 
+### CI/CD and Quality Assurance
+- Manual Execution: All CI/CD processes must be executed manually
+- No GitHub Actions: No automated workflows configured
+- No Git Hooks: No pre-commit, pre-push, or other automated Git hooks
+- Manual Quality Gates: All testing, linting, and reviews performed manually
+- Explicit Commands: Developers must run all checks before commits and deployments
+
 ### Git Operations
 - Upstream: git@github.com:Helix-Flow/Platform.git
 - Feature branches: Must use 3-digit prefix (e.g., 001-feature-name)
