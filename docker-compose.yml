@@ -13,7 +13,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./schemas/postgresql-helixflow.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./schemas/postgresql-helixflow-complete.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - helixflow-network
     healthcheck:
@@ -51,6 +51,13 @@ services:
       - DATABASE_URL=postgresql://helixflow:helixflow_secure_pass@postgres:5432/helixflow
       - REDIS_URL=redis://redis:6379
       - REDIS_PASSWORD=helixflow_redis_pass
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=helixflow
+      - DB_PASSWORD=helixflow_secure_pass
+      - DB_NAME=helixflow
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - API_GATEWAY_PORT=8080
       - JWT_SECRET=your-jwt-secret-key-here-must-be-at-least-32-characters-long
       - LOG_LEVEL=INFO
@@ -64,7 +71,7 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
       start_period: 40s
 
@@ -80,6 +87,13 @@ services:
       - DATABASE_URL=postgresql://helixflow:helixflow_secure_pass@postgres:5432/helixflow
       - REDIS_URL=redis://redis:6379
       - REDIS_PASSWORD=helixflow_redis_pass
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=helixflow
+      - DB_PASSWORD=helixflow_secure_pass
+      - DB_NAME=helixflow
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - AUTH_SERVICE_PORT=8081
       - JWT_SECRET=your-jwt-secret-key-here-must-be-at-least-32-characters-long
       - LOG_LEVEL=INFO
@@ -93,7 +107,7 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
       start_period: 40s
 
@@ -109,6 +123,13 @@ services:
       - DATABASE_URL=postgresql://helixflow:helixflow_secure_pass@postgres:5432/helixflow
       - REDIS_URL=redis://redis:6379
       - REDIS_PASSWORD=helixflow_redis_pass
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=helixflow
+      - DB_PASSWORD=helixflow_secure_pass
+      - DB_NAME=helixflow
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - INFERENCE_POOL_PORT=8082
       - LOG_LEVEL=INFO
     depends_on:
@@ -121,7 +142,7 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
       start_period: 40s
 
@@ -138,6 +159,13 @@ services:
       - DATABASE_URL=postgresql://helixflow:helixflow_secure_pass@postgres:5432/helixflow
       - REDIS_URL=redis://redis:6379
       - REDIS_PASSWORD=helixflow_redis_pass
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=helixflow
+      - DB_PASSWORD=helixflow_secure_pass
+      - DB_NAME=helixflow
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - MONITORING_PORT=8083
       - PROMETHEUS_PORT=9090
       - LOG_LEVEL=INFO
@@ -151,7 +179,7 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
       interval: 30s
-      timeout: 10s
+      timeout: 5s
       retries: 3
       start_period: 40s
 

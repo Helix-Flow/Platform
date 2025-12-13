@@ -1,15 +1,29 @@
 module helixflow/auth-service
 
-go 1.21
+go 1.24.0
+
+toolchain go1.24.11
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.0.0
-	github.com/gorilla/mux v1.8.0
-	github.com/redis/go-redis/v9 v9.0.5
-	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
+	golang.org/x/crypto v0.46.0
+	google.golang.org/grpc v1.77.0
+	helixflow/auth v0.0.0-00010101000000-000000000000
+	helixflow/database v0.0.0-00010101000000-000000000000
 )
 
 require (
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
+	github.com/lib/pq v1.10.9 // indirect
+	github.com/redis/go-redis/v9 v9.17.2 // indirect
+	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251022142026-3a174f9686a8 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 )
+
+replace helixflow/auth => ../../helixflow/auth
+
+replace helixflow/database => ../../internal/database

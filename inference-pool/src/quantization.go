@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"math"
 	"time"
 )
 
@@ -25,10 +22,10 @@ type QuantizedModel struct {
 func NewModelQuantizer() *ModelQuantizer {
 	return &ModelQuantizer{
 		quantizationLevels: map[string]int{
-			"gpt-4":        8,  // 8-bit quantization
-			"claude-3":     4,  // 4-bit quantization
+			"gpt-4":         8, // 8-bit quantization
+			"claude-3":      4, // 4-bit quantization
 			"deepseek-chat": 8,
-			"glm-4":        8,
+			"glm-4":         8,
 		},
 		modelCache: make(map[string]*QuantizedModel),
 	}

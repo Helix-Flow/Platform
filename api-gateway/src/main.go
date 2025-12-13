@@ -269,7 +269,7 @@ func (ag *APIGateway) handleStreamingResponse(w http.ResponseWriter, req ChatCom
 	content := "This is a streaming response from the HelixFlow API Gateway."
 	words := strings.Fields(content)
 
-	for i, word := range words {
+	for _, word := range words {
 		chunk := map[string]interface{}{
 			"id":      fmt.Sprintf("chatcmpl-%d", time.Now().UnixNano()),
 			"object":  "chat.completion.chunk",

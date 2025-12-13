@@ -2,15 +2,17 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+
+	"helixflow/inference"
 )
 
 // GPUManager handles GPU resource allocation and monitoring
@@ -45,7 +47,7 @@ type CachedModel struct {
 
 // InferencePoolService implements the gRPC service
 type InferencePoolService struct {
-	UnimplementedInferenceServiceServer
+	inference.UnimplementedInferenceServiceServer
 	gpuManager *GPUManager
 	modelCache *ModelCache
 	jobQueue   chan *InferenceJob
@@ -54,8 +56,8 @@ type InferencePoolService struct {
 
 type InferenceJob struct {
 	ID       string
-	Request  *InferenceRequest
-	Response chan *InferenceResponse
+	Request  *inference.InferenceRequest
+	Response chan *inference.InferenceResponse
 	Error    chan error
 }
 
@@ -222,11 +224,11 @@ func NewInferencePoolService() *InferencePoolService {
 	}
 }
 
-func (s *InferencePoolService) SubmitInference(ctx context.Context, req *InferenceRequest) (*InferenceResponse, error) {
+func (s *InferencePoolService) SubmitInference(ctx context.Context, req *inference.InferenceRequest) (*inference.InferenceResponse, error) {
 	job := &InferenceJob{
 		ID:       fmt.Sprintf("job_%d", time.Now().UnixNano()),
 		Request:  req,
-		Response: make(chan *InferenceResponse, 1),
+		Response: make(chan *inference.InferenceResponse, 1),
 		Error:    make(chan error, 1),
 	}
 
@@ -249,28 +251,38 @@ func (s *InferencePoolService) SubmitInference(ctx context.Context, req *Inferen
 	}
 }
 
-func (s *InferencePoolService) GetInferenceStatus(ctx context.Context, req *StatusRequest) (*StatusResponse, error) {
+func (s *InferencePoolService) GetSystemStatus(ctx context.Context, req *inference.SystemStatusRequest) (*inference.SystemStatusResponse, error) {
 	// In a real implementation, check job status from storage
-	return &StatusResponse{
-		JobId:  req.JobId,
-		Status: "completed",
-		Result: "Mock inference result",
+	return &inference.SystemStatusResponse{
+		// JobId:  req.JobId,
+		// Status: "completed",
+		// Result: "Mock inference result",
 	}, nil
 }
 
-func (s *InferencePoolService) StreamInference(req *InferenceRequest, stream InferenceService_StreamInferenceServer) error {
+func (s *InferencePoolService) StreamInference(req *inference.InferenceRequest, stream inference.InferenceService_StreamInferenceServer) error {
 	// Simulate streaming response
-	content := fmt.Sprintf("Streaming response for model %s", req.Model)
+	content := fmt.Sprintf("Streaming response for model %s", req.ModelId)
 
 	words := []string{}
 	for _, word := range strings.Fields(content) {
 		words = append(words, word)
 	}
 
-	for i, word := range words {
-		chunk := &InferenceChunk{
-			Content:  word + " ",
-			Finished: i == len(words)-1,
+	for _, word := range words {
+		chunk := &inference.InferenceChunk{
+			Id:      fmt.Sprintf("chunk_%d", time.Now().UnixNano()),
+			Object:  "inference.chunk",
+			Created: time.Now().Unix(),
+			Model:   req.ModelId,
+			Choices: []*inference.Choice{
+				{
+					Index: 0,
+					Delta: &inference.Delta{
+						Content: word + " ",
+					},
+				},
+			},
 		}
 
 		if err := stream.Send(chunk); err != nil {
@@ -302,37 +314,54 @@ func (s *InferencePoolService) processJob(job *InferenceJob) {
 	req := job.Request
 
 	// Check model cache
-	cachedModel := s.modelCache.GetModel(req.Model)
+	cachedModel := s.modelCache.GetModel(req.ModelId)
 	if cachedModel == nil {
 		// Model not cached, allocate GPU and load model
 		modelSize := uint64(4 * 1024 * 1024 * 1024) // 4GB mock size
-		gpuID, err := s.gpuManager.AllocateGPU(req.Model, modelSize)
+		gpuID, err := s.gpuManager.AllocateGPU(req.ModelId, modelSize)
 		if err != nil {
 			job.Error <- err
 			return
 		}
 
 		// Cache the model
-		s.modelCache.CacheModel(req.Model, modelSize, gpuID)
+		s.modelCache.CacheModel(req.ModelId, modelSize, gpuID)
 
 		// Simulate model loading time
 		time.Sleep(2 * time.Second)
 	} else {
 		// Model already cached
-		gpuID = cachedModel.GPUID
+		_ = cachedModel.GPUID // Use the GPUID
 	}
 
 	// Simulate inference processing
 	time.Sleep(500 * time.Millisecond)
 
 	// Generate mock response
-	response := &InferenceResponse{
-		JobId:  job.ID,
-		Status: "completed",
+	response := &inference.InferenceResponse{
+		Id:      job.ID,
+		Object:  "inference.response",
+		Created: time.Now().Unix(),
+		Model:   req.ModelId,
+		Choices: []*inference.Choice{
+			{
+				Index: 0,
+				Message: &inference.ChatMessage{
+					Role:    "assistant",
+					Content: "Mock response",
+				},
+				FinishReason: "stop",
+			},
+		},
+		Usage: &inference.Usage{
+			PromptTokens:     100,
+			CompletionTokens: 50,
+			TotalTokens:      150,
+		},
 	}
 
 	// Release model reference
-	s.modelCache.ReleaseModel(req.Model)
+	s.modelCache.ReleaseModel(req.ModelId)
 
 	job.Response <- response
 }
@@ -351,7 +380,7 @@ func main() {
 	}
 
 	server := grpc.NewServer()
-	RegisterInferenceServiceServer(server, service)
+	inference.RegisterInferenceServiceServer(server, service)
 	reflection.Register(server)
 
 	log.Printf("Inference Pool gRPC server starting on :50051")
