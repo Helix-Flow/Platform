@@ -1,10 +1,10 @@
-<!-- 
+<!--
 Sync Impact Report:
-Version change: 0.0.0 → 1.0.0
-Modified principles: None (new constitution)
-Added sections: Core Principles, Security Requirements, Development Workflow, Governance
+Version change: 1.0.0 → 2.0.0
+Modified principles: None
+Added sections: Technology Stack Requirements
 Removed sections: None
-Templates requiring updates: 
+Templates requiring updates:
   ✅ .specify/templates/plan-template.md
   ✅ .specify/templates/spec-template.md
   ✅ .specify/templates/tasks-template.md
@@ -43,6 +43,60 @@ HelixFlow MUST implement enterprise-grade security with zero-trust architecture,
 HelixFlow MUST provide transparent pricing models with predictable expenses, multiple subscription tiers from free access to enterprise contracts, and per-token pricing that decreases with volume. The platform MUST implement cost optimization features and detailed billing analytics.
 
 **Rationale**: Transparent and efficient pricing makes AI accessible to organizations of all sizes while ensuring sustainable business growth and customer satisfaction.
+
+## Technology Stack Requirements
+
+### Programming Languages and SDKs
+- **Supported Languages**: HelixFlow MUST provide comprehensive SDKs for Python, JavaScript/TypeScript, Java, Go, C#, Rust, and PHP
+- **SDK Quality**: All SDKs MUST include full API coverage, comprehensive documentation, interactive examples, and real-time testing capabilities
+- **Language Parity**: All supported languages MUST have equivalent functionality and performance characteristics
+
+### Infrastructure and Orchestration
+- **Container Platform**: Docker MUST be used for all containerization with NVIDIA Container Runtime and ROCm support
+- **Orchestration**: Kubernetes MUST be the primary orchestration platform with GPU device plugins and cluster autoscaling
+- **Service Mesh**: Istio MUST be implemented for service-to-service communication with automatic mTLS and traffic management
+- **Service Discovery**: Consul MUST be used for automatic service registration, health checking, and DNS-based discovery
+- **Infrastructure as Code**: Terraform MUST be used for all infrastructure provisioning and management
+- **GitOps**: ArgoCD MUST be implemented for declarative, Git-driven deployment management
+
+### Databases and Storage
+- **Primary Database**: PostgreSQL with SQLCipher AES-256 encryption MUST be used for all relational data storage
+- **Caching Layer**: Redis Cluster MUST be implemented for session management, rate limiting, and high-performance caching
+- **Graph Database**: Neo4j MUST be used for knowledge graph storage in Cognee AI Memory Engine
+- **Vector Database**: Qdrant or Pinecone MUST be implemented for semantic search and embedding storage
+- **Backup Encryption**: All database backups MUST use client-side AES-256 encryption before cloud storage
+
+### Monitoring and Observability
+- **Metrics Collection**: Prometheus MUST be used for comprehensive metrics collection across all services
+- **Visualization**: Grafana MUST be implemented for metrics visualization and alerting dashboards
+- **Error Tracking**: Sentry MUST be used for real-time error tracking, crash reporting, and performance monitoring
+- **Logging**: ELK Stack (Elasticsearch, Logstash, Kibana) MUST be implemented for centralized logging and analysis
+- **Alerting**: PagerDuty integration MUST be configured for automated incident response and escalation
+
+### Security Infrastructure
+- **Transport Security**: TLS 1.3 with perfect forward secrecy MUST be used for all data in transit
+- **Authentication**: JWT with RS256 signatures MUST be implemented for API authentication
+- **Authorization**: Role-Based Access Control (RBAC) MUST be enforced across all services and APIs
+- **Service Security**: Mutual TLS (mTLS) MUST be implemented for all service-to-service communications
+- **Key Management**: Hardware Security Modules (HSM) MUST be used for encryption key storage and rotation
+- **Certificate Management**: Automated certificate rotation and renewal MUST be implemented
+
+### GPU and Compute Infrastructure
+- **GPU Support**: Both NVIDIA CUDA and AMD ROCm MUST be supported for GPU acceleration
+- **GPU Orchestration**: Kubernetes GPU device plugins MUST be configured for GPU resource management
+- **Hardware Validation**: Automated GPU performance benchmarking and reliability testing MUST be implemented
+- **Thermal Management**: GPU temperature monitoring and load distribution MUST be enforced
+
+### Development Environment
+- **IDE Support**: Native integrations MUST be provided for VS Code, Cursor, JetBrains IDEs, and Vim/Neovim
+- **CLI Tools**: Cross-platform CLI tools MUST work on Windows, macOS, and Linux
+- **Testing Frameworks**: Comprehensive automated testing including unit, integration, performance, and security testing MUST be implemented
+- **Code Quality**: Automated code quality scanning with SonarQube and security scanning with SAST/DAST tools MUST be enforced
+
+### Cloud Provider Support
+- **Multi-Cloud**: Support for AWS, Azure, and GCP MUST be implemented with equivalent functionality
+- **Regional Deployment**: Global deployment capabilities with regional data residency compliance MUST be maintained
+- **Load Balancing**: Advanced load balancing with Envoy, NGINX Plus, and cloud-native load balancers MUST be configured
 
 ## Security Requirements
 
@@ -104,4 +158,4 @@ HelixFlow MUST provide transparent pricing models with predictable expenses, mul
 - **Incident Response**: Any constitutional violations MUST be reported and addressed within 72 hours
 - **Continuous Improvement**: Governance processes MUST be reviewed annually for effectiveness
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-13 | **Last Amended**: 2025-12-13
+**Version**: 2.0.0 | **Ratified**: 2025-12-13 | **Last Amended**: 2025-12-13
