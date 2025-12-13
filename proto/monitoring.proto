@@ -1,0 +1,341 @@
+syntax = "proto3";
+
+package helixflow.monitoring;
+
+option go_package = "helixflow/monitoring";
+
+// Monitoring Service for system metrics and alerting
+service MonitoringService {
+  // Get system metrics
+  rpc GetSystemMetrics(GetSystemMetricsRequest) returns (GetSystemMetricsResponse);
+  
+  // Get service metrics
+  rpc GetServiceMetrics(GetServiceMetricsRequest) returns (GetServiceMetricsResponse);
+  
+  // Get GPU metrics
+  rpc GetGPUMetrics(GetGPUMetricsRequest) returns (GetGPUMetricsResponse);
+  
+  // Get application metrics
+  rpc GetApplicationMetrics(GetApplicationMetricsRequest) returns (GetApplicationMetricsResponse);
+  
+  // Create alert rule
+  rpc CreateAlertRule(CreateAlertRuleRequest) returns (CreateAlertRuleResponse);
+  
+  // Update alert rule
+  rpc UpdateAlertRule(UpdateAlertRuleRequest) returns (UpdateAlertRuleResponse);
+  
+  // Delete alert rule
+  rpc DeleteAlertRule(DeleteAlertRuleRequest) returns (DeleteAlertRuleResponse);
+  
+  // List alert rules
+  rpc ListAlertRules(ListAlertRulesRequest) returns (ListAlertRulesResponse);
+  
+  // Get alerts
+  rpc GetAlerts(GetAlertsRequest) returns (GetAlertsResponse);
+  
+  // Acknowledge alert
+  rpc AcknowledgeAlert(AcknowledgeAlertRequest) returns (AcknowledgeAlertResponse);
+  
+  // Get predictive scaling recommendations
+  rpc GetScalingRecommendations(GetScalingRecommendationsRequest) returns (GetScalingRecommendationsResponse);
+  
+  // Stream metrics for real-time monitoring
+  rpc StreamMetrics(StreamMetricsRequest) returns (stream MetricData);
+}
+
+// Request for system metrics
+message GetSystemMetricsRequest {
+  string start_time = 1;  // RFC3339 format
+  string end_time = 2;    // RFC3339 format
+  repeated string metric_names = 3;
+  int32 interval_seconds = 4;
+}
+
+// Response with system metrics
+message GetSystemMetricsResponse {
+  bool success = 1;
+  repeated MetricData metrics = 2;
+  string message = 3;
+}
+
+// Request for service metrics
+message GetServiceMetricsRequest {
+  string service_name = 1;
+  string start_time = 2;
+  string end_time = 3;
+  repeated string metric_names = 4;
+  int32 interval_seconds = 5;
+}
+
+// Response with service metrics
+message GetServiceMetricsResponse {
+  bool success = 1;
+  repeated MetricData metrics = 2;
+  ServiceInfo service_info = 3;
+  string message = 4;
+}
+
+// Request for GPU metrics
+message GetGPUMetricsRequest {
+  repeated int32 gpu_ids = 1;  // Empty for all GPUs
+  string start_time = 2;
+  string end_time = 3;
+  repeated string metric_names = 4;
+  int32 interval_seconds = 5;
+}
+
+// Response with GPU metrics
+message GetGPUMetricsResponse {
+  bool success = 1;
+  repeated GPUMetricData gpu_metrics = 2;
+  string message = 3;
+}
+
+// Request for application metrics
+message GetApplicationMetricsRequest {
+  string application_name = 1;
+  string start_time = 2;
+  string end_time = 3;
+  repeated string metric_names = 4;
+  int32 interval_seconds = 5;
+}
+
+// Response with application metrics
+message GetApplicationMetricsResponse {
+  bool success = 1;
+  repeated MetricData metrics = 2;
+  ApplicationInfo app_info = 3;
+  string message = 4;
+}
+
+// Request to create alert rule
+message CreateAlertRuleRequest {
+  string name = 1;
+  string description = 2;
+  string metric_name = 3;
+  string condition = 4;  // e.g., ">", "<", ">=", "<=", "=="
+  double threshold = 5;
+  int32 duration_seconds = 6;
+  AlertSeverity severity = 7;
+  repeated string notification_channels = 8;
+  map<string, string> labels = 9;
+  bool enabled = 10;
+}
+
+// Response for alert rule creation
+message CreateAlertRuleResponse {
+  bool success = 1;
+  string message = 2;
+  AlertRule alert_rule = 3;
+}
+
+// Request to update alert rule
+message UpdateAlertRuleRequest {
+  string rule_id = 1;
+  string name = 2;
+  string description = 3;
+  string condition = 4;
+  double threshold = 5;
+  int32 duration_seconds = 6;
+  AlertSeverity severity = 7;
+  repeated string notification_channels = 8;
+  map<string, string> labels = 9;
+  bool enabled = 10;
+}
+
+// Response for alert rule update
+message UpdateAlertRuleResponse {
+  bool success = 1;
+  string message = 2;
+  AlertRule alert_rule = 3;
+}
+
+// Request to delete alert rule
+message DeleteAlertRuleRequest {
+  string rule_id = 1;
+}
+
+// Response for alert rule deletion
+message DeleteAlertRuleResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to list alert rules
+message ListAlertRulesRequest {
+  string filter = 1;  // Optional filter
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+// Response with alert rules
+message ListAlertRulesResponse {
+  bool success = 1;
+  repeated AlertRule alert_rules = 2;
+  int32 total_count = 3;
+}
+
+// Request to get alerts
+message GetAlertsRequest {
+  string start_time = 1;
+  string end_time = 2;
+  AlertSeverity severity = 3;  // Optional filter
+  string status = 4;  // Optional filter: "active", "resolved", "acknowledged"
+  int32 limit = 5;
+  int32 offset = 6;
+}
+
+// Response with alerts
+message GetAlertsResponse {
+  bool success = 1;
+  repeated Alert alerts = 2;
+  int32 total_count = 3;
+}
+
+// Request to acknowledge alert
+message AcknowledgeAlertRequest {
+  string alert_id = 1;
+  string user_id = 2;
+  string message = 3;
+}
+
+// Response for alert acknowledgment
+message AcknowledgeAlertResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request for scaling recommendations
+message GetScalingRecommendationsRequest {
+  string service_name = 1;
+  int32 prediction_horizon_minutes = 2;
+}
+
+// Response with scaling recommendations
+message GetScalingRecommendationsResponse {
+  bool success = 1;
+  repeated ScalingRecommendation recommendations = 2;
+  PredictionMetrics prediction_metrics = 3;
+  string message = 4;
+}
+
+// Request to stream metrics
+message StreamMetricsRequest {
+  repeated string metric_names = 1;
+  int32 interval_seconds = 2;
+  string filter = 3;  // Optional filter
+}
+
+// Metric data point
+message MetricData {
+  string name = 1;
+  double value = 2;
+  string timestamp = 3;  // RFC3339 format
+  map<string, string> labels = 4;
+  string unit = 5;
+}
+
+// GPU-specific metric data
+message GPUMetricData {
+  int32 gpu_id = 1;
+  string gpu_name = 2;
+  repeated MetricData metrics = 3;
+  string timestamp = 4;
+}
+
+// Service information
+message ServiceInfo {
+  string name = 1;
+  string version = 2;
+  string status = 3;
+  int32 replica_count = 4;
+  repeated string endpoints = 5;
+  map<string, string> labels = 6;
+}
+
+// Application information
+message ApplicationInfo {
+  string name = 1;
+  string version = 2;
+  string environment = 3;
+  repeated string services = 4;
+  map<string, string> labels = 5;
+}
+
+// Alert rule definition
+message AlertRule {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string metric_name = 4;
+  string condition = 5;
+  double threshold = 6;
+  int32 duration_seconds = 7;
+  AlertSeverity severity = 8;
+  repeated string notification_channels = 9;
+  map<string, string> labels = 10;
+  bool enabled = 11;
+  string created_at = 12;
+  string updated_at = 13;
+}
+
+// Alert instance
+message Alert {
+  string id = 1;
+  string rule_id = 2;
+  string rule_name = 3;
+  string description = 4;
+  AlertSeverity severity = 5;
+  string status = 6;
+  string started_at = 7;
+  string resolved_at = 8;
+  string acknowledged_at = 9;
+  string acknowledged_by = 10;
+  string acknowledgment_message = 11;
+  repeated string notification_channels = 12;
+  map<string, string> labels = 13;
+  repeated MetricData trigger_metrics = 14;
+}
+
+// Scaling recommendation
+message ScalingRecommendation {
+  string service_name = 1;
+  ScalingAction action = 2;
+  int32 target_replicas = 3;
+  string reason = 4;
+  double confidence_score = 5;
+  string estimated_time = 6;
+  map<string, string> metrics = 7;
+}
+
+// Prediction metrics
+message PredictionMetrics {
+  double current_load = 1;
+  double predicted_load = 2;
+  double confidence_interval_lower = 3;
+  double confidence_interval_upper = 4;
+  repeated DataPoint predictions = 5;
+}
+
+// Data point for predictions
+message DataPoint {
+  string timestamp = 1;
+  double value = 2;
+}
+
+// Alert severity enum
+enum AlertSeverity {
+  ALERT_SEVERITY_UNKNOWN = 0;
+  ALERT_SEVERITY_INFO = 1;
+  ALERT_SEVERITY_WARNING = 2;
+  ALERT_SEVERITY_CRITICAL = 3;
+  ALERT_SEVERITY_EMERGENCY = 4;
+}
+
+// Scaling action enum
+enum ScalingAction {
+  SCALING_ACTION_UNKNOWN = 0;
+  SCALING_ACTION_SCALE_UP = 1;
+  SCALING_ACTION_SCALE_DOWN = 2;
+  SCALING_ACTION_NO_ACTION = 3;
+}

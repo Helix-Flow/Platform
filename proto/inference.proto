@@ -1,0 +1,205 @@
+syntax = "proto3";
+
+package helixflow.inference;
+
+option go_package = "helixflow/inference";
+
+// Inference Service for AI model operations
+service InferenceService {
+  // Standard inference request
+  rpc Inference(InferenceRequest) returns (InferenceResponse);
+  
+  // Streaming inference for real-time responses
+  rpc StreamInference(InferenceRequest) returns (stream InferenceChunk);
+  
+  // Get model status and information
+  rpc GetModelStatus(ModelStatusRequest) returns (ModelStatusResponse);
+  
+  // List available models
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+  
+  // Load a model into memory
+  rpc LoadModel(LoadModelRequest) returns (LoadModelResponse);
+  
+  // Unload a model from memory
+  rpc UnloadModel(UnloadModelRequest) returns (UnloadModelResponse);
+  
+  // Get system status
+  rpc GetSystemStatus(SystemStatusRequest) returns (SystemStatusResponse);
+}
+
+// Request message for inference
+message InferenceRequest {
+  string model_id = 1;
+  string user_id = 2;
+  repeated ChatMessage messages = 3;
+  int32 max_tokens = 4;
+  double temperature = 5;
+  double top_p = 6;
+  repeated string stop = 7;
+  bool stream = 8;
+  map<string, string> metadata = 9;
+}
+
+// Chat message structure
+message ChatMessage {
+  string role = 1;  // "user", "assistant", "system"
+  string content = 2;
+  string name = 3;  // Optional name for the message
+}
+
+// Response message for inference
+message InferenceResponse {
+  string id = 1;
+  string object = 2;
+  int64 created = 3;
+  string model = 4;
+  repeated Choice choices = 5;
+  Usage usage = 6;
+  string finish_reason = 7;
+}
+
+// Streaming response chunk
+message InferenceChunk {
+  string id = 1;
+  string object = 2;
+  int64 created = 3;
+  string model = 4;
+  repeated Choice choices = 5;
+}
+
+// Choice in response
+message Choice {
+  int32 index = 1;
+  ChatMessage message = 2;
+  string finish_reason = 3;
+  Delta delta = 4;  // For streaming responses
+}
+
+// Delta for streaming responses
+message Delta {
+  string role = 1;
+  string content = 2;
+}
+
+// Token usage information
+message Usage {
+  int32 prompt_tokens = 1;
+  int32 completion_tokens = 2;
+  int32 total_tokens = 3;
+}
+
+// Request for model status
+message ModelStatusRequest {
+  string model_id = 1;
+}
+
+// Response for model status
+message ModelStatusResponse {
+  string model_id = 1;
+  ModelStatus status = 2;
+  string loaded_at = 3;
+  int64 memory_usage = 4;
+  int32 gpu_id = 5;
+  repeated string capabilities = 6;
+}
+
+// Model status enum
+enum ModelStatus {
+  MODEL_STATUS_UNKNOWN = 0;
+  MODEL_STATUS_LOADING = 1;
+  MODEL_STATUS_READY = 2;
+  MODEL_STATUS_ERROR = 3;
+  MODEL_STATUS_UNLOADED = 4;
+}
+
+// Request to list models
+message ListModelsRequest {
+  string filter = 1;  // Optional filter for model types
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+// Response with model list
+message ListModelsResponse {
+  repeated ModelInfo models = 1;
+  int32 total_count = 2;
+}
+
+// Model information
+message ModelInfo {
+  string id = 1;
+  string name = 2;
+  string provider = 3;
+  string version = 4;
+  repeated string capabilities = 5;
+  int64 size = 6;
+  string description = 7;
+}
+
+// Request to load a model
+message LoadModelRequest {
+  string model_id = 1;
+  int32 gpu_id = 2;  // Optional specific GPU
+  map<string, string> config = 3;
+}
+
+// Response for model loading
+message LoadModelResponse {
+  string model_id = 1;
+  bool success = 2;
+  string message = 3;
+  int64 load_time_ms = 4;
+}
+
+// Request to unload a model
+message UnloadModelRequest {
+  string model_id = 1;
+}
+
+// Response for model unloading
+message UnloadModelResponse {
+  string model_id = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+// Request for system status
+message SystemStatusRequest {}
+
+// Response with system status
+message SystemStatusResponse {
+  repeated GPUInfo gpus = 1;
+  SystemResources resources = 2;
+  repeated LoadedModel loaded_models = 3;
+  int64 uptime_seconds = 4;
+}
+
+// GPU information
+message GPUInfo {
+  int32 id = 1;
+  string name = 2;
+  int64 memory_total = 3;
+  int64 memory_used = 4;
+  double utilization = 5;
+  double temperature = 6;
+  bool available = 7;
+}
+
+// System resources
+message SystemResources {
+  int64 memory_total = 1;
+  int64 memory_used = 2;
+  double cpu_utilization = 3;
+  int64 disk_total = 4;
+  int64 disk_used = 5;
+}
+
+// Currently loaded model
+message LoadedModel {
+  string model_id = 1;
+  int32 gpu_id = 2;
+  int64 memory_usage = 3;
+  int64 load_time = 4;
+  int32 active_requests = 5;
+}

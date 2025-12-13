@@ -1,0 +1,249 @@
+syntax = "proto3";
+
+package helixflow.auth;
+
+option go_package = "helixflow/auth";
+
+// Authentication Service for user management and token operations
+service AuthService {
+  // User registration
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  
+  // User login
+  rpc Login(LoginRequest) returns (LoginResponse);
+  
+  // Token validation
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+  
+  // Refresh token
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+  
+  // Logout/revoke token
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+  
+  // Get user profile
+  rpc GetUserProfile(GetUserProfileRequest) returns (GetUserProfileResponse);
+  
+  // Update user profile
+  rpc UpdateUserProfile(UpdateUserProfileRequest) returns (UpdateUserProfileResponse);
+  
+  // Change password
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+  
+  // Generate API key
+  rpc GenerateAPIKey(GenerateAPIKeyRequest) returns (GenerateAPIKeyResponse);
+  
+  // List API keys
+  rpc ListAPIKeys(ListAPIKeysRequest) returns (ListAPIKeysResponse);
+  
+  // Revoke API key
+  rpc RevokeAPIKey(RevokeAPIKeyRequest) returns (RevokeAPIKeyResponse);
+  
+  // Get user permissions
+  rpc GetUserPermissions(GetUserPermissionsRequest) returns (GetUserPermissionsResponse);
+}
+
+// Request for user registration
+message RegisterRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+  string first_name = 4;
+  string last_name = 5;
+  string organization = 6;  // Optional
+}
+
+// Response for user registration
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+  string user_id = 3;
+  User user = 4;
+}
+
+// Request for user login
+message LoginRequest {
+  string username = 1;  // Can be username or email
+  string password = 2;
+}
+
+// Response for user login
+message LoginResponse {
+  bool success = 1;
+  string message = 2;
+  string access_token = 3;
+  string refresh_token = 4;
+  int64 expires_in = 5;  // Seconds until expiration
+  User user = 6;
+}
+
+// Request for token validation
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+// Response for token validation
+message ValidateTokenResponse {
+  bool valid = 1;
+  string user_id = 2;
+  string username = 3;
+  repeated string permissions = 4;
+  int64 expires_at = 5;
+  string message = 6;
+}
+
+// Request for token refresh
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+// Response for token refresh
+message RefreshTokenResponse {
+  bool success = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  int64 expires_in = 4;
+  string message = 5;
+}
+
+// Request for logout
+message LogoutRequest {
+  string token = 1;
+  string user_id = 2;
+}
+
+// Response for logout
+message LogoutResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to get user profile
+message GetUserProfileRequest {
+  string user_id = 1;
+}
+
+// Response with user profile
+message GetUserProfileResponse {
+  bool success = 1;
+  User user = 2;
+  string message = 3;
+}
+
+// Request to update user profile
+message UpdateUserProfileRequest {
+  string user_id = 1;
+  string email = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string organization = 5;
+}
+
+// Response for profile update
+message UpdateUserProfileResponse {
+  bool success = 1;
+  string message = 2;
+  User user = 3;
+}
+
+// Request to change password
+message ChangePasswordRequest {
+  string user_id = 1;
+  string current_password = 2;
+  string new_password = 3;
+}
+
+// Response for password change
+message ChangePasswordResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to generate API key
+message GenerateAPIKeyRequest {
+  string user_id = 1;
+  string name = 2;
+  repeated string permissions = 3;
+  int32 expires_in_days = 4;  // Optional, 0 for no expiration
+}
+
+// Response for API key generation
+message GenerateAPIKeyResponse {
+  bool success = 1;
+  string message = 2;
+  APIKey api_key = 3;
+}
+
+// Request to list API keys
+message ListAPIKeysRequest {
+  string user_id = 1;
+  int32 limit = 2;
+  int32 offset = 3;
+}
+
+// Response with API keys list
+message ListAPIKeysResponse {
+  bool success = 1;
+  repeated APIKey api_keys = 2;
+  int32 total_count = 3;
+}
+
+// Request to revoke API key
+message RevokeAPIKeyRequest {
+  string key_id = 1;
+  string user_id = 2;
+}
+
+// Response for API key revocation
+message RevokeAPIKeyResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Request to get user permissions
+message GetUserPermissionsRequest {
+  string user_id = 1;
+}
+
+// Response with user permissions
+message GetUserPermissionsResponse {
+  bool success = 1;
+  repeated string permissions = 2;
+  repeated Role roles = 3;
+  string message = 4;
+}
+
+// User information
+message User {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string first_name = 4;
+  string last_name = 5;
+  string organization = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  bool active = 9;
+  repeated Role roles = 10;
+}
+
+// Role information
+message Role {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  repeated string permissions = 4;
+}
+
+// API Key information
+message APIKey {
+  string id = 1;
+  string name = 2;
+  string key_prefix = 3;  // First few characters for identification
+  repeated string permissions = 4;
+  string created_at = 5;
+  string expires_at = 6;  // Empty if no expiration
+  string last_used_at = 7;
+  bool active = 8;
+  int32 usage_count = 9;
+}
