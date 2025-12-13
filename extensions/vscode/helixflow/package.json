@@ -1,0 +1,51 @@
+{
+  "name": "helixflow-vscode",
+  "displayName": "HelixFlow",
+  "description": "AI-powered coding assistant using HelixFlow",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.70.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:helixflow.chatCompletion"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "helixflow.chatCompletion",
+        "title": "HelixFlow: Chat Completion"
+      }
+    ],
+    "configuration": {
+      "title": "HelixFlow",
+      "properties": {
+        "helixflow.apiKey": {
+          "type": "string",
+          "description": "Your HelixFlow API key"
+        },
+        "helixflow.baseUrl": {
+          "type": "string",
+          "default": "https://api.helixflow.ai",
+          "description": "HelixFlow API base URL"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.70.0",
+    "@types/node": "16.x",
+    "typescript": "^4.9.0"
+  },
+  "dependencies": {
+    "axios": "^1.3.0"
+  }
+}
