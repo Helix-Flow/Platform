@@ -1,0 +1,17 @@
+apiVersion: v2
+name: helixflow
+description: HelixFlow Enterprise AI Inference Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - ai
+  - inference
+  - enterprise
+  - kubernetes
+home: https://helixflow.com
+sources:
+  - https://github.com/helixflow/platform
+maintainers:
+  - name: HelixFlow Team
+    email: support@helixflow.com

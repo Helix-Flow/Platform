@@ -1,0 +1,173 @@
+# Default values for HelixFlow
+replicaCount: 3
+
+image:
+  repository: helixflow
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+services:
+  apiGateway:
+    name: api-gateway
+    port: 8080
+    targetPort: 8080
+    type: ClusterIP
+  
+  authService:
+    name: auth-service
+    port: 8081
+    targetPort: 8081
+    type: ClusterIP
+  
+  inferencePool:
+    name: inference-pool
+    port: 8082
+    targetPort: 8082
+    type: ClusterIP
+  
+  monitoring:
+    name: monitoring
+    port: 8083
+    targetPort: 8083
+    type: ClusterIP
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+  hosts:
+    - host: api.helixflow.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: helixflow-tls
+      hosts:
+        - api.helixflow.com
+
+resources:
+  apiGateway:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  authService:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  
+  inferencePool:
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+  
+  monitoring:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 250m
+      memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Database configuration
+postgresql:
+  enabled: true
+  auth:
+    username: helixflow
+    password: helixflow_secure_pass
+    database: helixflow
+  primary:
+    resources:
+      limits:
+        memory: 1Gi
+        cpu: 500m
+      requests:
+        memory: 512Mi
+        cpu: 250m
+
+# Redis configuration
+redis:
+  enabled: true
+  auth:
+    enabled: true
+    password: helixflow_redis_pass
+  master:
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: 250m
+      requests:
+        memory: 256Mi
+        cpu: 125m
+
+# Monitoring configuration
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    retention: 30d
+    resources:
+      limits:
+        memory: 2Gi
+        cpu: 1000m
+      requests:
+        memory: 1Gi
+        cpu: 500m
+  
+  grafana:
+    enabled: true
+    adminPassword: admin123
+    resources:
+      limits:
+        memory: 512Mi
+        cpu: 250m
+      requests:
+        memory: 256Mi
+        cpu: 125m
+
+# Security configuration
+security:
+  enabled: true
+  mtls: true
+  certManager: true
+  networkPolicy: true
