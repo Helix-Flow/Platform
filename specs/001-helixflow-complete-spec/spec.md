@@ -160,5 +160,4 @@ As a product manager, I need nano-level detailed specifications of user workflow
 - **SC-007**: Performance and scalability specifications enable meeting 99.9% uptime and sub-100ms latency targets
 - **SC-008**: Development workflow specifications result in 90% reduction in code review iterations and quality issues
 - **SC-009**: User experience specifications achieve 95% user satisfaction scores for developer tools and integrations
-- **SC-010**: Monitoring and observability specifications enable 100% system visibility and proactive issue resolution</content>
-<parameter name="filePath">specs/001-helixflow-complete-spec/spec.md
+- **SC-010**: Monitoring and observability specifications enable 100% system visibility and proactive issue resolution
