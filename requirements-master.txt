@@ -1,0 +1,43 @@
+# Core Testing Framework
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-asyncio==0.21.1
+pytest-mock==3.12.0
+pytest-xdist==3.5.0
+pytest-html==4.1.1
+pytest-benchmark==4.0.0
+
+# API Testing
+requests==2.31.0
+httpx==0.25.2
+aiohttp==3.9.1
+websockets==12.0
+
+# Security Testing
+bandit==1.7.5
+safety==2.3.5
+cryptography==41.0.7
+
+# Performance Testing
+locust==2.18.0
+k6==0.2.0
+
+# Database Testing
+psycopg2-binary==2.9.9
+redis==5.0.1
+sqlalchemy==2.0.23
+
+# Monitoring Testing
+prometheus-client==0.19.0
+grafana-api==1.0.3
+
+# Documentation Testing
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
+myst-parser==2.0.0
+
+# Code Quality
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
+isort==5.12.0
