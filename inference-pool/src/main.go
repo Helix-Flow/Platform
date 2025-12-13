@@ -251,12 +251,143 @@ func (s *InferencePoolService) SubmitInference(ctx context.Context, req *inferen
 	}
 }
 
+func (s *InferencePoolService) GetModelStatus(ctx context.Context, req *inference.ModelStatusRequest) (*inference.ModelStatusResponse, error) {
+	s.modelCache.mutex.RLock()
+	defer s.modelCache.mutex.RUnlock()
+
+	if model, exists := s.modelCache.models[req.ModelId]; exists {
+		return &inference.ModelStatusResponse{
+			ModelId:      req.ModelId,
+			Status:       inference.ModelStatus_MODEL_STATUS_READY,
+			LoadedAt:     model.LoadTime.Format(time.RFC3339),
+			MemoryUsage:  int64(model.Size),
+			GpuId:        int32(0), // Parse from model.GPUID if needed
+			Capabilities: []string{"text-generation", "chat"},
+		}, nil
+	}
+
+	return &inference.ModelStatusResponse{
+		ModelId: req.ModelId,
+		Status:  inference.ModelStatus_MODEL_STATUS_UNLOADED,
+	}, nil
+}
+
+func (s *InferencePoolService) ListModels(ctx context.Context, req *inference.ListModelsRequest) (*inference.ListModelsResponse, error) {
+	s.modelCache.mutex.RLock()
+	defer s.modelCache.mutex.RUnlock()
+
+	var models []*inference.ModelInfo
+	for name, model := range s.modelCache.models {
+		models = append(models, &inference.ModelInfo{
+			Id:           name,
+			Name:         name,
+			Provider:     "helixflow",
+			Version:      "1.0",
+			Capabilities: []string{"text-generation", "chat"},
+			Size:         int64(model.Size),
+			Description:  fmt.Sprintf("Model %s loaded in memory", name),
+		})
+	}
+
+	return &inference.ListModelsResponse{
+		Models:     models,
+		TotalCount: int32(len(models)),
+	}, nil
+}
+
+func (s *InferencePoolService) LoadModel(ctx context.Context, req *inference.LoadModelRequest) (*inference.LoadModelResponse, error) {
+	startTime := time.Now()
+
+	// Simulate model loading
+	time.Sleep(2 * time.Second) // Simulate load time
+
+	model := &CachedModel{
+		Name:         req.ModelId,
+		Size:         1024 * 1024 * 1024, // 1GB mock size
+		LoadTime:     startTime,
+		LastAccessed: time.Now(),
+		GPUID:        fmt.Sprintf("gpu_%d", req.GpuId),
+		RefCount:     0,
+	}
+
+	s.modelCache.mutex.Lock()
+	s.modelCache.models[req.ModelId] = model
+	s.modelCache.mutex.Unlock()
+
+	loadTime := time.Since(startTime).Milliseconds()
+
+	return &inference.LoadModelResponse{
+		ModelId:    req.ModelId,
+		Success:    true,
+		Message:    "Model loaded successfully",
+		LoadTimeMs: loadTime,
+	}, nil
+}
+
+func (s *InferencePoolService) UnloadModel(ctx context.Context, req *inference.UnloadModelRequest) (*inference.UnloadModelResponse, error) {
+	s.modelCache.mutex.Lock()
+	defer s.modelCache.mutex.Unlock()
+
+	if _, exists := s.modelCache.models[req.ModelId]; !exists {
+		return &inference.UnloadModelResponse{
+			ModelId: req.ModelId,
+			Success: false,
+			Message: "Model not found",
+		}, nil
+	}
+
+	delete(s.modelCache.models, req.ModelId)
+
+	return &inference.UnloadModelResponse{
+		ModelId: req.ModelId,
+		Success: true,
+		Message: "Model unloaded successfully",
+	}, nil
+}
+
 func (s *InferencePoolService) GetSystemStatus(ctx context.Context, req *inference.SystemStatusRequest) (*inference.SystemStatusResponse, error) {
-	// In a real implementation, check job status from storage
+	s.gpuManager.mutex.RLock()
+	defer s.gpuManager.mutex.RUnlock()
+
+	var gpus []*inference.GPUInfo
+	for id, gpu := range s.gpuManager.gpus {
+		gpuID := int32(0) // Parse from id if needed
+		_ = id            // Use the loop variable to avoid unused error
+		gpus = append(gpus, &inference.GPUInfo{
+			Id:          gpuID,
+			Name:        gpu.ID,
+			MemoryTotal: int64(gpu.TotalMemory),
+			MemoryUsed:  int64(gpu.UsedMemory),
+			Utilization: gpu.Utilization,
+			Temperature: gpu.Temperature,
+			Available:   gpu.Utilization < 90.0, // Available if less than 90% utilized
+		})
+	}
+
+	s.modelCache.mutex.RLock()
+	var loadedModels []*inference.LoadedModel
+	for name, model := range s.modelCache.models {
+		loadedModels = append(loadedModels, &inference.LoadedModel{
+			ModelId:        name,
+			GpuId:          int32(0), // Parse from model.GPUID if needed
+			MemoryUsage:    int64(model.Size),
+			LoadTime:       model.LoadTime.Unix(),
+			ActiveRequests: int32(model.RefCount),
+		})
+	}
+	s.modelCache.mutex.RUnlock()
+
 	return &inference.SystemStatusResponse{
-		// JobId:  req.JobId,
-		// Status: "completed",
-		// Result: "Mock inference result",
+		Gpus: gpus,
+		Resources: &inference.SystemResources{
+			MemoryTotal:    16 * 1024 * 1024 * 1024,  // 16GB mock
+			MemoryUsed:     8 * 1024 * 1024 * 1024,   // 8GB mock
+			CpuUtilization: 45.5,                     // Mock CPU utilization
+			DiskTotal:      500 * 1024 * 1024 * 1024, // 500GB mock
+			DiskUsed:       250 * 1024 * 1024 * 1024, // 250GB mock
+		},
+		LoadedModels:  loadedModels,
+		UptimeSeconds: int64(time.Since(time.Now().Add(-time.Hour * 24)).Seconds()), // Mock uptime
 	}, nil
 }
 
