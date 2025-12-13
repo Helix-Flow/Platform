@@ -73,35 +73,92 @@ def chat_completions():
         if not model or not messages:
             return jsonify({"error": "Missing required fields: model, messages"}), 400
 
-        # Route to inference service (placeholder)
-        # In real implementation, this would forward to inference-pool
-        response = {
-            "id": f"chatcmpl-{datetime.utcnow().timestamp()}",
-            "object": "chat.completion",
-            "created": int(datetime.utcnow().timestamp()),
-            "model": model,
-            "choices": [
-                {
-                    "index": 0,
-                    "message": {
-                        "role": "assistant",
-                        "content": f"This is a simulated response for model {model}",
-                    },
-                    "finish_reason": "stop",
-                }
-            ],
-            "usage": {
-                "prompt_tokens": len(str(messages)),
-                "completion_tokens": 50,
-                "total_tokens": len(str(messages)) + 50,
-            },
-        }
+        if stream:
+            # Return streaming response
+            return _stream_response(model, messages, max_tokens, user_id)
+        else:
+            # Route to inference service (placeholder)
+            # In real implementation, this would forward to inference-pool
+            response = {
+                "id": f"chatcmpl-{datetime.utcnow().timestamp()}",
+                "object": "chat.completion",
+                "created": int(datetime.utcnow().timestamp()),
+                "model": model,
+                "choices": [
+                    {
+                        "index": 0,
+                        "message": {
+                            "role": "assistant",
+                            "content": f"This is a simulated response for model {model}",
+                        },
+                        "finish_reason": "stop",
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": len(str(messages)),
+                    "completion_tokens": 50,
+                    "total_tokens": len(str(messages)) + 50,
+                },
+            }
 
-        return jsonify(response)
+            return jsonify(response)
 
     except Exception as e:
         logger.error(f"Error in chat completions: {e}")
         return jsonify({"error": "Internal server error"}), 500
+
+
+def _stream_response(model, messages, max_tokens, user_id):
+    """Generate streaming response for chat completions."""
+    from flask import Response
+    import json
+
+    def generate():
+        # Send initial chunk
+        chunk_id = f"chatcmpl-{datetime.utcnow().timestamp()}"
+        initial_chunk = {
+            "id": chunk_id,
+            "object": "chat.completion.chunk",
+            "created": int(datetime.utcnow().timestamp()),
+            "model": model,
+            "choices": [
+                {"index": 0, "delta": {"role": "assistant"}, "finish_reason": None}
+            ],
+        }
+        yield f"data: {json.dumps(initial_chunk)}\n\n"
+
+        # Simulate streaming content
+        content = f"This is a streaming response for model {model}. "
+        words = content.split()
+
+        for i, word in enumerate(words):
+            chunk = {
+                "id": chunk_id,
+                "object": "chat.completion.chunk",
+                "created": int(datetime.utcnow().timestamp()),
+                "model": model,
+                "choices": [
+                    {
+                        "index": 0,
+                        "delta": {"content": word + " "},
+                        "finish_reason": None,
+                    }
+                ],
+            }
+            yield f"data: {json.dumps(chunk)}\n\n"
+
+        # Final chunk
+        final_chunk = {
+            "id": chunk_id,
+            "object": "chat.completion.chunk",
+            "created": int(datetime.utcnow().timestamp()),
+            "model": model,
+            "choices": [{"index": 0, "delta": {}, "finish_reason": "stop"}],
+        }
+        yield f"data: {json.dumps(final_chunk)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return Response(generate(), mimetype="text/plain")
 
 
 @app.route("/v1/models", methods=["GET"])

@@ -1,0 +1,248 @@
+"""
+Penetration Testing Validation for Security Controls
+
+Tests security controls through simulated penetration testing scenarios
+to validate defense mechanisms and incident response.
+"""
+
+import pytest
+import requests
+import subprocess
+import time
+from urllib.parse import urlparse
+import os
+
+
+class TestPenetrationTesting:
+    """Test suite for penetration testing validation."""
+
+    @pytest.fixture
+    def target_urls(self):
+        """Target URLs for testing."""
+        return [
+            "https://api-gateway.helixflow.svc.cluster.local",
+            "https://auth-service.helixflow.svc.cluster.local",
+            "https://inference-pool.helixflow.svc.cluster.local",
+            "https://monitoring.helixflow.svc.cluster.local",
+        ]
+
+    @pytest.fixture
+    def test_credentials(self):
+        """Test credentials for authentication testing."""
+        return {
+            "valid_user": {"email": "test@example.com", "password": "password123"},
+            "admin_user": {"email": "admin@example.com", "password": "admin123"},
+            "weak_password": {"email": "test@example.com", "password": "123456"},
+            "sql_injection": {"email": "admin'--", "password": "password"},
+        }
+
+    def test_sql_injection_protection(self, target_urls):
+        """Test protection against SQL injection attacks."""
+        sql_payloads = [
+            "' OR '1'='1",
+            "'; DROP TABLE users; --",
+            "' UNION SELECT * FROM users --",
+            "admin'--",
+        ]
+
+        for url in target_urls:
+            for payload in sql_payloads:
+                # Test in login forms
+                response = requests.post(
+                    f"{url}/login",
+                    json={"email": payload, "password": "password"},
+                    verify=False,
+                )
+                # Should not return sensitive data or bypass auth
+                assert "error" in response.json() or response.status_code == 401
+
+    def test_xss_protection(self, target_urls):
+        """Test protection against Cross-Site Scripting (XSS) attacks."""
+        xss_payloads = [
+            "<script>alert('xss')</script>",
+            "<img src=x onerror=alert('xss')>",
+            "javascript:alert('xss')",
+            "<svg onload=alert('xss')>",
+        ]
+
+        for url in target_urls:
+            for payload in xss_payloads:
+                # Test in query parameters and body
+                response = requests.get(f"{url}/search?q={payload}", verify=False)
+                # Response should not contain unescaped payload
+                assert payload not in response.text
+
+    def test_csrf_protection(self, target_urls):
+        """Test protection against Cross-Site Request Forgery (CSRF)."""
+        for url in target_urls:
+            # Test POST requests without CSRF tokens
+            response = requests.post(
+                f"{url}/api/user/update", json={"name": "hacked"}, verify=False
+            )
+            # Should require authentication and CSRF protection
+            assert response.status_code in [401, 403, 419]  # 419 is Laravel's CSRF code
+
+    def test_directory_traversal_protection(self, target_urls):
+        """Test protection against directory traversal attacks."""
+        traversal_payloads = [
+            "../../../etc/passwd",
+            "..\\..\\..\\windows\\system32\\config\\sam",
+            "....//....//....//etc/passwd",
+            "%2e%2e%2f%2e%2e%2f%2e%2e%2fetc%2fpasswd",
+        ]
+
+        for url in target_urls:
+            for payload in traversal_payloads:
+                response = requests.get(f"{url}/files/{payload}", verify=False)
+                # Should not return file contents
+                assert response.status_code == 404 or "error" in response.json()
+
+    def test_brute_force_protection(self, target_urls, test_credentials):
+        """Test protection against brute force attacks."""
+        # Attempt multiple login failures
+        for _ in range(10):
+            response = requests.post(
+                f"{target_urls[0]}/login",
+                json=test_credentials["weak_password"],
+                verify=False,
+            )
+
+        # Next attempt should be rate limited or blocked
+        response = requests.post(
+            f"{target_urls[0]}/login",
+            json=test_credentials["weak_password"],
+            verify=False,
+        )
+
+        assert response.status_code in [429, 401]  # Rate limited or auth failed
+
+    def test_command_injection_protection(self, target_urls):
+        """Test protection against command injection attacks."""
+        injection_payloads = [
+            "; rm -rf /",
+            "| cat /etc/passwd",
+            "`whoami`",
+            "$(rm -rf /)",
+        ]
+
+        for url in target_urls:
+            for payload in injection_payloads:
+                response = requests.post(
+                    f"{url}/api/execute", json={"command": payload}, verify=False
+                )
+                # Should not execute commands
+                assert response.status_code == 403 or "error" in response.json()
+
+    def test_insecure_deserialization_protection(self, target_urls):
+        """Test protection against insecure deserialization."""
+        # Test with pickle-like payloads (if applicable)
+        dangerous_payloads = [
+            "pickle_payload_here",
+            "__import__('os').system('rm -rf /')",
+        ]
+
+        for url in target_urls:
+            for payload in dangerous_payloads:
+                response = requests.post(
+                    f"{url}/api/deserialize", json={"data": payload}, verify=False
+                )
+                assert response.status_code == 400 or "error" in response.json()
+
+    def test_ssrf_protection(self, target_urls):
+        """Test protection against Server-Side Request Forgery (SSRF)."""
+        ssrf_payloads = [
+            "http://localhost:22",
+            "http://127.0.0.1:3306",
+            "http://169.254.169.254/latest/meta-data/",  # AWS metadata
+            "file:///etc/passwd",
+        ]
+
+        for url in target_urls:
+            for payload in ssrf_payloads:
+                response = requests.post(
+                    f"{url}/api/fetch", json={"url": payload}, verify=False
+                )
+                # Should not allow internal access
+                assert response.status_code == 403 or "error" in response.json()
+
+    def test_idor_protection(self, target_urls):
+        """Test protection against Insecure Direct Object References (IDOR)."""
+        # Try to access other users' data
+        other_user_ids = ["user-123", "user-456", "admin-user"]
+
+        for user_id in other_user_ids:
+            response = requests.get(
+                f"{target_urls[0]}/api/user/{user_id}/data",
+                headers={"Authorization": "Bearer regular-user-token"},
+                verify=False,
+            )
+            # Should not allow access to other users' data
+            assert response.status_code == 403
+
+    def test_security_headers(self, target_urls):
+        """Test that security headers are properly set."""
+        required_headers = [
+            "X-Content-Type-Options",
+            "X-Frame-Options",
+            "X-XSS-Protection",
+            "Strict-Transport-Security",
+            "Content-Security-Policy",
+        ]
+
+        for url in target_urls:
+            response = requests.get(f"{url}/health", verify=False)
+            headers = response.headers
+
+            for header in required_headers:
+                assert header in headers, f"Missing security header: {header}"
+
+            # Check specific values
+            assert headers.get("X-Frame-Options") == "DENY"
+            assert "max-age=" in headers.get("Strict-Transport-Security", "")
+
+    def test_ssl_tls_configuration(self, target_urls):
+        """Test SSL/TLS configuration security."""
+        import ssl
+        import socket
+
+        for url in target_urls:
+            parsed = urlparse(url)
+            hostname = parsed.hostname
+            port = parsed.port or 443
+
+            # Test SSL version
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+
+            with socket.create_connection((hostname, port)) as sock:
+                with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                    # Should use TLS 1.3
+                    assert ssock.version() == "TLSv1.3"
+
+    def test_incident_detection(self, target_urls):
+        """Test that security incidents are detected and logged."""
+        # Perform suspicious activity
+        for _ in range(20):
+            requests.post(
+                f"{target_urls[0]}/login",
+                json={"email": "nonexistent@example.com", "password": "wrong"},
+                verify=False,
+            )
+
+        # Check if incident was logged
+        # This would query the monitoring system
+        monitoring_url = "https://monitoring.helixflow.svc.cluster.local"
+        response = requests.get(
+            f"{monitoring_url}/api/security/incidents",
+            headers={"Authorization": "Bearer admin-token"},
+            verify=False,
+        )
+
+        if response.status_code == 200:
+            incidents = response.json()
+            # Should have detected brute force attempt
+            brute_force_incidents = [
+                i for i in incidents if i.get("type") == "brute_force"
+            ]
+            assert len(brute_force_incidents) > 0

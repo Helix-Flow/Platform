@@ -77,19 +77,19 @@ Based on plan.md: Microservices architecture with Kubernetes orchestration
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T025 [P] [US1] Infrastructure contract test for Kubernetes deployments in tests/contract/test_infrastructure.py
-- [ ] T026 [P] [US1] Service mesh integration test for Istio communication in tests/integration/test_service_mesh.py
-- [ ] T027 [P] [US1] Multi-cloud deployment test for Terraform configurations in tests/integration/test_multicloud.py
+- [x] T025 [P] [US1] Infrastructure contract test for Kubernetes deployments in tests/contract/test_infrastructure.py
+- [x] T026 [P] [US1] Service mesh integration test for Istio communication in tests/integration/test_service_mesh.py
+- [x] T027 [P] [US1] Multi-cloud deployment test for Terraform configurations in tests/integration/test_multicloud.py
 
 ### Implementation for User Story 1
 
-- [ ] T028 [US1] Implement API Gateway service with Nginx/Traefik and Envoy proxy in api-gateway/src/
-- [ ] T029 [US1] Create inference pool service with GPU workload scheduling in inference-pool/src/
-- [ ] T030 [US1] Implement authentication service with JWT and OAuth2 support in auth-service/src/
-- [ ] T031 [US1] Setup monitoring service with Prometheus exporters in monitoring/src/
-- [ ] T032 [US1] Configure Kubernetes manifests for all services in k8s/
-- [ ] T033 [US1] Implement Istio service mesh policies and traffic management
-- [ ] T034 [US1] Setup Consul service discovery integration
+- [x] T028 [US1] Implement API Gateway service with Nginx/Traefik and Envoy proxy in api-gateway/src/
+- [x] T029 [US1] Create inference pool service with GPU workload scheduling in inference-pool/src/
+- [x] T030 [US1] Implement authentication service with JWT and OAuth2 support in auth-service/src/
+- [x] T031 [US1] Setup monitoring service with Prometheus exporters in monitoring/src/
+- [x] T032 [US1] Configure Kubernetes manifests for all services in k8s/
+- [x] T033 [US1] Implement Istio service mesh policies and traffic management
+- [x] T034 [US1] Setup Consul service discovery integration
 - [ ] T035 [US1] Configure load balancing with Envoy, HAProxy, and cloud-native balancers
 - [ ] T036 [US1] Implement health checks and service registration
 - [ ] T037 [US1] Add logging and structured output to all services

@@ -26,10 +26,93 @@ go.work.sum
 
 # env file
 .env
+.env*
 
 # Editor/IDE
-# .idea/
-# .vscode/
+.idea/
+.vscode/
+
+# Universal
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+
+# Node.js/JavaScript/TypeScript
+node_modules/
+dist/
+build/
+*.log
+coverage/
+*.min.js
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+dist/
+*.egg-info/
+.coverage
+.pytest_cache/
+
+# Java
+target/
+*.class
+*.jar
+.gradle/
+build/
+out/
+
+# C#/.NET
+bin/
+obj/
+*.user
+*.suo
+packages/
+*.dll
+*.exe
+*.pdb
+
+# Rust
+target/
+debug/
+release/
+*.rs.bk
+*.rlib
+*.prof*
+Cargo.lock
+
+# PHP
+vendor/
+*.log
+*.cache
+*.env
+composer.lock
+
+# Kubernetes
+*.secret.yaml
+secrets/
+.kube/
+kubeconfig*
+*.key
+*.crt
+
+# Terraform
+.terraform/
+*.tfstate*
+*.tfvars
+.terraform.lock.hcl
+
+# Docker
+Dockerfile*
+.dockerignore
 
 links.txt
 
