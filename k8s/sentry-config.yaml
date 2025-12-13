@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentry-config
+  namespace: monitoring
+data:
+  sentry.conf.py: |
+    import sentry_sdk
+    from sentry_sdk.integrations.flask import FlaskIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+    from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
+
+    sentry_sdk.init(
+        dsn="https://your-sentry-dsn-here@sentry.io/project-id",
+        integrations=[
+            FlaskIntegration(),
+            RedisIntegration(),
+            SqlalchemyIntegration(),
+        ],
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        traces_sample_rate=1.0,
+        # Set profiles_sample_rate to 1.0 to profile 100%
+        # of sampled transactions.
+        # We recommend adjusting this value in production.
+        profiles_sample_rate=1.0,
+        environment="production",
+        release="helixflow@1.0.0",
+        # Filter out health check endpoints
+        before_send=lambda event, hint: event if not any(
+            url.endswith(('/health', '/healthz', '/ready', '/live'))
+            for url in (event.get('request', {}).get('url', '').split('?')[0].split('#')[0])
+        ) else None,
+        # PII scrubbing
+        before_send_pii=lambda event, hint: scrub_pii(event),
+    )
+
+    def scrub_pii(event):
+        """Scrub personally identifiable information from events"""
+        if 'request' in event:
+            request = event['request']
+            if 'data' in request:
+                # Remove API keys, passwords, tokens from request data
+                data = request['data']
+                sensitive_keys = ['password', 'token', 'key', 'secret', 'authorization']
+                for key in sensitive_keys:
+                    if key in data:
+                        data[key] = '[FILTERED]'
+
+        if 'user' in event:
+            user = event['user']
+            # Hash or remove sensitive user data
+            if 'email' in user:
+                user['email'] = hash_email(user['email'])
+            if 'ip_address' in user:
+                user['ip_address'] = mask_ip(user['ip_address'])
+
+        return event
+
+    def hash_email(email):
+        """Hash email addresses for privacy"""
+        import hashlib
+        return hashlib.sha256(email.encode()).hexdigest()[:16] + '@hashed.local'
+
+    def mask_ip(ip):
+        """Mask IP addresses"""
+        parts = ip.split('.')
+        if len(parts) == 4:
+            return f"{parts[0]}.{parts[1]}.*.{parts[3]}"
+        return ip
+  sentry-requirements.txt: |
+    sentry-sdk[flask,redis,sqlalchemy]==1.39.0
+    blinker==1.7.0

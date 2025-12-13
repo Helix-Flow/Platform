@@ -1,0 +1,28 @@
+# Elasticsearch Configuration
+cluster.name: helixflow-logging
+node.name: ${HOSTNAME}
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+
+# Network settings
+network.host: 0.0.0.0
+http.port: 9200
+
+# Discovery settings (for single node)
+discovery.type: single-node
+
+# Memory settings
+bootstrap.memory_lock: true
+indices.memory.index_buffer_size: 10%
+
+# Security settings
+xpack.security.enabled: false
+xpack.monitoring.enabled: true
+xpack.monitoring.collection.enabled: true
+
+# Index settings
+index.number_of_shards: 1
+index.number_of_replicas: 0
+
+# Logging
+logger.level: INFO

@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: consul-config
+  namespace: default
+data:
+  consul-config.json: |
+    {
+      "datacenter": "helixflow-dc1",
+      "data_dir": "/consul/data",
+      "log_level": "INFO",
+      "node_name": "${HOSTNAME}",
+      "server": true,
+      "bootstrap_expect": 1,
+      "client_addr": "0.0.0.0",
+      "bind_addr": "{{ GetInterfaceIP \"eth0\" }}",
+      "advertise_addr": "{{ GetInterfaceIP \"eth0\" }}",
+      "ports": {
+        "http": 8500,
+        "https": -1,
+        "grpc": 8502
+      },
+      "ui_config": {
+        "enabled": true
+      },
+      "connect": {
+        "enabled": true
+      },
+      "telemetry": {
+        "prometheus_retention_time": "24h",
+        "disable_hostname": true
+      },
+      "acl": {
+        "enabled": true,
+        "default_policy": "deny",
+        "enable_token_persistence": true
+      }
+    }
+  api-gateway-service.json: |
+    {
+      "service": {
+        "name": "api-gateway",
+        "tags": ["api", "gateway", "helixflow"],
+        "port": 8080,
+        "check": {
+          "id": "api-gateway-health",
+          "name": "API Gateway Health Check",
+          "http": "http://localhost:8080/health",
+          "interval": "10s",
+          "timeout": "5s",
+          "method": "GET",
+          "header": {
+            "Accept": ["application/json"]
+          }
+        }
+      }
+    }
+  inference-pool-service.json: |
+    {
+      "service": {
+        "name": "inference-pool",
+        "tags": ["inference", "gpu", "helixflow"],
+        "port": 8080,
+        "check": {
+          "id": "inference-pool-health",
+          "name": "Inference Pool Health Check",
+          "http": "http://localhost:8080/health",
+          "interval": "5s",
+          "timeout": "3s",
+          "method": "GET"
+        }
+      }
+    }
+  auth-service.json: |
+    {
+      "service": {
+        "name": "auth-service",
+        "tags": ["auth", "security", "helixflow"],
+        "port": 8080,
+        "check": {
+          "id": "auth-service-health",
+          "name": "Auth Service Health Check",
+          "http": "http://localhost:8080/health",
+          "interval": "10s",
+          "timeout": "5s",
+          "method": "GET"
+        }
+      }
+    }

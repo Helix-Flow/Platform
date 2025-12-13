@@ -1,0 +1,69 @@
+# Qdrant Vector Database Configuration
+# Optimized for high-performance vector similarity search
+
+# Server Configuration
+uri: "http://localhost:6333"
+
+# Storage Configuration
+storage:
+  storage_path: "/qdrant/storage"
+  snapshots_path: "/qdrant/snapshots"
+  temp_path: "/qdrant/temp"
+  wal_path: "/qdrant/wal"
+
+  # Performance settings
+  performance:
+    max_search_threads: 4
+    max_optimization_threads: 2
+    optimizer_cpu_budget: 0.5
+
+  # Memory settings
+  mmap_advice: "random"
+
+# Service Configuration
+service:
+  http_port: 6333
+  grpc_port: 6334
+  enable_cors: true
+  max_request_size_mb: 32
+  max_workers: 4
+
+# Logging
+log_level: "INFO"
+log_format: "json"
+
+# Telemetry (optional)
+telemetry_disabled: false
+
+# Collections Configuration
+collections:
+  helixflow_embeddings:
+    vectors:
+      size: 1536  # OpenAI ada-002 dimensions
+      distance: "Cosine"
+    optimizers_config:
+      deleted_threshold: 0.2
+      vacuum_min_vector_number: 1000
+      default_segment_number: 2
+      max_segment_size_kb: 200000
+      memmap_threshold_kb: 200000
+      indexing_threshold_kb: 20000
+      flush_interval_sec: 30
+      max_optimization_threads: 2
+    wal_config:
+      wal_capacity_mb: 32
+      wal_segments_ahead: 0
+    quantization_config:
+      scalar:
+        type: "int8"
+        quantile: 0.99
+        always_ram: true
+
+# Access Control (optional)
+# api_key: "your-api-key-here"
+
+# TLS Configuration (optional)
+# tls:
+#   cert: "/path/to/cert.pem"
+#   key: "/path/to/key.pem"
+#   ca_cert: "/path/to/ca.pem"

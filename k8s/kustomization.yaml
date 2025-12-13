@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - istio-config.yaml
+  - gpu-operator.yaml
+  - cert-manager.yaml
+  - external-secrets.yaml
+  - argocd-config.yaml
+
+patchesStrategicMerge:
+  - patches/cluster-config.yaml
+
+images:
+  - name: nginx
+    newTag: "1.25-alpine"
+  - name: envoyproxy/envoy
+    newTag: "v1.27-latest"
+
+configMapGenerator:
+  - name: cluster-config
+    literals:
+      - CLUSTER_NAME=helixflow-prod
+      - REGION=us-east-1
+      - ENVIRONMENT=production
+      - LOG_LEVEL=info
+
+secretGenerator:
+  - name: database-secrets
+    literals:
+      - POSTGRES_PASSWORD=change-me-in-production
+      - REDIS_PASSWORD=change-me-in-production
+    type: Opaque
+
+generatorOptions:
+  disableNameSuffixHash: true

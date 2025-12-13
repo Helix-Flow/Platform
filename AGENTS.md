@@ -60,3 +60,10 @@ HelixFlow AI inference platform configuration repository with Specify developmen
 - `.opencode/`: AI agent command definitions
 - `specs/`: Feature specifications and implementation plans
 - `Upstreams/`: Remote repository configuration
+
+## Active Technologies
+- Multiple - Python, JavaScript/TypeScript, Java, Go, C#, Rust, PHP (as per Constitution Technology Stack Requirements) + Kubernetes, Istio, PostgreSQL, Redis, Prometheus, Grafana, Sentry, Terraform, ArgoCD, Docker, Consul (001-helixflow-complete-spec)
+- PostgreSQL with SQLCipher AES-256 encryption, Redis Cluster, Neo4j (for Cognee), Qdrant/Pinecone (vector databases) (001-helixflow-complete-spec)
+
+## Recent Changes
+- 001-helixflow-complete-spec: Added Multiple - Python, JavaScript/TypeScript, Java, Go, C#, Rust, PHP (as per Constitution Technology Stack Requirements) + Kubernetes, Istio, PostgreSQL, Redis, Prometheus, Grafana, Sentry, Terraform, ArgoCD, Docker, Consul

@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: helixflow-system
+  labels:
+    name: helixflow-system
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: helixflow-services
+  labels:
+    name: helixflow-services
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istio-config
+  namespace: helixflow-system
+data:
+  mesh: |
+    defaultConfig:
+      discoveryRefreshDelay: 1s
+      proxyMetadata:
+        ISTIO_META_DNS_CAPTURE: "true"
+        ISTIO_META_DNS_AUTO_ALLOCATE: "true"
+    enablePrometheusMerge: true
+    rootNamespace: helixflow-system
+    trustDomain: cluster.local
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: helixflow-gateway
+  namespace: helixflow-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: helixflow-tls
+    hosts:
+    - "api.helixflow.ai"
+    - "*.helixflow.ai"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: api-gateway
+  namespace: helixflow-services
+spec:
+  hosts:
+  - "api.helixflow.ai"
+  gateways:
+  - helixflow-gateway
+  http:
+  - match:
+    - uri:
+        prefix: "/v1"
+    route:
+    - destination:
+        host: api-gateway.helixflow-services.svc.cluster.local
+        port:
+          number: 8080
+  - match:
+    - uri:
+        prefix: "/health"
+    route:
+    - destination:
+        host: api-gateway.helixflow-services.svc.cluster.local
+        port:
+          number: 8080
