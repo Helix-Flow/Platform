@@ -487,8 +487,8 @@ func main() {
 	gateway := NewAPIGateway()
 	
 	// Load configuration
-	certFile := getEnv("TLS_CERT", "/certs/api-gateway.crt")
-	keyFile := getEnv("TLS_KEY", "/certs/api-gateway-key.pem")
+	certFile := getEnv("TLS_CERT", "./certs/api-gateway.crt")
+	keyFile := getEnv("TLS_KEY", "./certs/api-gateway-key.pem")
 	inferencePoolURL := getEnv("INFERENCE_POOL_URL", "inference-pool:50051")
 	
 	// Initialize inference handler with gRPC connection

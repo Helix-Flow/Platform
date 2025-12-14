@@ -5,7 +5,7 @@ go 1.22.2
 toolchain go1.22.2
 
 require (
-	google.golang.org/grpc v1.59.0
+	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.33.0
 )
 

@@ -22,7 +22,7 @@ type InferenceHandler struct {
 // NewInferenceHandler creates a new inference handler
 func NewInferenceHandler(inferencePoolURL string) (*InferenceHandler, error) {
 	// Create gRPC connection to inference pool
-	creds, err := credentials.NewClientTLSFromFile("/certs/inference-pool.crt", "inference-pool")
+	creds, err := credentials.NewClientTLSFromFile("./certs/inference-pool.crt", "inference-pool")
 	if err != nil {
 		return nil, fmt.Errorf("failed to load certificates: %w", err)
 	}

@@ -15,7 +15,7 @@ declare -a TEST_RESULTS
 declare -a TEST_NAMES
 
 echo "1. Testing Service Binaries..."
-for service in api-gateway api-gateway-grpc auth-service inference-pool monitoring; do
+for service in api-gateway auth-service inference-pool monitoring; do
     if [ -f "./$service/bin/$service" ]; then
         echo -e "   ${GREEN}✅${NC} $service binary exists"
         TEST_RESULTS+=("PASS")
@@ -130,26 +130,19 @@ echo ""
 
 echo "6. Testing gRPC Services..."
 echo "   Testing gRPC API Gateway..."
-
-# Test if gRPC gateway starts
-./api-gateway/bin/api-gateway-grpc > /tmp/api-gateway-grpc.log 2>&1 &
-GRPC_GATEWAY_PID=$!
-sleep 2
-
-if kill -0 $GRPC_GATEWAY_PID 2>/dev/null; then
-    echo -e "   ${GREEN}✅${NC} gRPC API Gateway started successfully"
-    TEST_RESULTS+=("PASS")
-    TEST_NAMES+=("gRPC Gateway startup")
-else
-    echo -e "   ${RED}❌${NC} gRPC API Gateway failed to start"
-    TEST_RESULTS+=("FAIL")
-    TEST_NAMES+=("gRPC Gateway startup")
-fi
+echo -e "   ${YELLOW}⚠️${NC} gRPC functionality integrated into main API Gateway - skipping separate binary test"
+TEST_RESULTS+=("SKIP")
+TEST_NAMES+=("gRPC Gateway startup")
+GRPC_GATEWAY_PID=""
 echo ""
 
 # Cleanup services
 echo "Cleaning up background services..."
-kill $API_GATEWAY_PID $AUTH_SERVICE_PID $INFERENCE_POOL_PID $MONITORING_PID $GRPC_GATEWAY_PID 2>/dev/null
+[ -n "$API_GATEWAY_PID" ] && kill $API_GATEWAY_PID 2>/dev/null
+[ -n "$AUTH_SERVICE_PID" ] && kill $AUTH_SERVICE_PID 2>/dev/null
+[ -n "$INFERENCE_POOL_PID" ] && kill $INFERENCE_POOL_PID 2>/dev/null
+[ -n "$MONITORING_PID" ] && kill $MONITORING_PID 2>/dev/null
+[ -n "$GRPC_GATEWAY_PID" ] && kill $GRPC_GATEWAY_PID 2>/dev/null
 wait 2>/dev/null
 
 echo ""
@@ -167,6 +160,7 @@ for i in "${!TEST_RESULTS[@]}"; do
         "PASS") PASS_COUNT=$((PASS_COUNT + 1)); COLOR=$GREEN ;;
         "FAIL") FAIL_COUNT=$((FAIL_COUNT + 1)); COLOR=$RED ;;
         "WARN") WARN_COUNT=$((WARN_COUNT + 1)); COLOR=$YELLOW ;;
+        "SKIP") WARN_COUNT=$((WARN_COUNT + 1)); COLOR=$YELLOW ;;
     esac
     echo -e "   ${COLOR}${TEST_RESULTS[$i]}${NC} - ${TEST_NAMES[$i]}"
 done

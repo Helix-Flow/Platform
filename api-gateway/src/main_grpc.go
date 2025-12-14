@@ -62,12 +62,12 @@ type ModelPermission struct {
 // NewAPIGatewayGRPC creates a new API Gateway with gRPC clients
 func NewAPIGatewayGRPC() *APIGatewayGRPC {
 	// Load TLS certificates
-	cert, err := tls.LoadX509KeyPair("/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/api-gateway-client.crt", "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/api-gateway-client-key.pem")
+	cert, err := tls.LoadX509KeyPair("./certs/api-gateway-client.crt", "./certs/api-gateway-client-key.pem")
 	if err != nil {
 		log.Fatalf("Failed to load client certificate: %v", err)
 	}
 
-	caCert, err := os.ReadFile("/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/helixflow-ca.pem")
+	caCert, err := os.ReadFile("./certs/helixflow-ca.pem")
 	if err != nil {
 		log.Fatalf("Failed to load CA certificate: %v", err)
 	}
@@ -586,9 +586,4 @@ func mainGRPC() {
 	if err := gateway.Start(); err != nil {
 		log.Fatalf("Failed to start API Gateway: %v", err)
 	}
-}
-
-func mainGRPC() {
-	// This function is called from main.go to start the gRPC version
-	log.Println("Starting gRPC API Gateway...")
 }
