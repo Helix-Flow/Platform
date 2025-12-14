@@ -58,7 +58,7 @@ func (s *AuthServiceServer) Register(ctx context.Context, req *auth.RegisterRequ
 		return nil, status.Error(codes.AlreadyExists, "email already exists")
 	}
 
-	// Create user
+	// Create user using the database interface method
 	userID, err := s.dbManager.CreateUser(req.Username, req.Email, req.Password, req.FirstName, req.LastName, req.Organization)
 	if err != nil {
 		log.Printf("Failed to create user: %v", err)

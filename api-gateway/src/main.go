@@ -20,6 +20,7 @@ type APIGateway struct {
 	inferencePoolURL    string
 	authServiceURL      string
 	router              *mux.Router
+	inferenceHandler    *InferenceHandler
 }
 
 type ChatCompletionRequest struct {
@@ -174,7 +175,24 @@ func (ag *APIGateway) chatCompletionsHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (ag *APIGateway) handleStandardResponse(w http.ResponseWriter, req ChatCompletionRequest, userID string) {
-	// For now, create a realistic mock response (will be replaced with real inference later)
+	// Use real inference if available, otherwise fallback to mock
+	if ag.inferenceHandler != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		
+		response, err := ag.inferenceHandler.HandleChatCompletion(ctx, req, userID)
+		if err != nil {
+			log.Printf("Inference error: %v", err)
+			http.Error(w, "Inference service error", http.StatusInternalServerError)
+			return
+		}
+		
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+	
+	// Fallback to mock response if inference service is not available
 	responseContent := generateMockResponse(req.Messages)
 	promptTokens := estimatePromptTokens(req.Messages)
 	completionTokens := estimateCompletionTokens(responseContent)
@@ -216,6 +234,20 @@ func (ag *APIGateway) sendSSEChunk(w http.ResponseWriter, data map[string]interf
 }
 
 func (ag *APIGateway) handleStreamingResponse(w http.ResponseWriter, req ChatCompletionRequest, userID string) {
+	// Use real inference if available, otherwise fallback to mock
+	if ag.inferenceHandler != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+		
+		err := ag.inferenceHandler.HandleStreamingChatCompletion(ctx, req, userID, w)
+		if err != nil {
+			log.Printf("Streaming inference error: %v", err)
+			http.Error(w, "Streaming inference service error", http.StatusInternalServerError)
+		}
+		return
+	}
+	
+	// Fallback to mock streaming if inference service is not available
 	// Set headers for SSE
 	w.Header().Set("Content-Type", "text/plain")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -457,12 +489,20 @@ func main() {
 	// Load configuration
 	certFile := getEnv("TLS_CERT", "/certs/api-gateway.crt")
 	keyFile := getEnv("TLS_KEY", "/certs/api-gateway-key.pem")
+	inferencePoolURL := getEnv("INFERENCE_POOL_URL", "inference-pool:50051")
 	
-	// Initialize service connections (HTTP for now, gRPC will be added in next phase)
-	log.Printf("Setting up service connections (HTTP mode for phase 2)")
+	// Initialize inference handler with gRPC connection
+	log.Printf("Setting up inference service connection to %s", inferencePoolURL)
+	inferenceHandler, err := NewInferenceHandler(inferencePoolURL)
+	if err != nil {
+		log.Printf("Warning: Failed to initialize inference handler: %v. Using mock responses.", err)
+		inferenceHandler = nil
+	} else {
+		log.Printf("Inference service connection established successfully")
+	}
 	
-	// For now, we'll use HTTP-based service communication
-	// gRPC integration will be added in the next phase
+	// Set inference handler on gateway
+	gateway.inferenceHandler = inferenceHandler
 	
 	gateway.SetupRoutes()
 

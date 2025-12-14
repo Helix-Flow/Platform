@@ -48,10 +48,11 @@ type CachedModel struct {
 // InferencePoolService implements the gRPC service
 type InferencePoolService struct {
 	inference.UnimplementedInferenceServiceServer
-	gpuManager *GPUManager
-	modelCache *ModelCache
-	jobQueue   chan *InferenceJob
-	workers    int
+	gpuManager      *GPUManager
+	modelCache      *ModelCache
+	inferenceEngine *InferenceEngine
+	jobQueue        chan *InferenceJob
+	workers         int
 }
 
 type InferenceJob struct {
@@ -216,11 +217,16 @@ func (mc *ModelCache) EvictLRU() {
 }
 
 func NewInferencePoolService() *InferencePoolService {
+	gpuManager := NewGPUManager()
+	modelCache := NewModelCache()
+	inferenceEngine := NewInferenceEngine(gpuManager, modelCache)
+	
 	return &InferencePoolService{
-		gpuManager: NewGPUManager(),
-		modelCache: NewModelCache(),
-		jobQueue:   make(chan *InferenceJob, 1000),
-		workers:    10,
+		gpuManager:      gpuManager,
+		modelCache:      modelCache,
+		inferenceEngine: inferenceEngine,
+		jobQueue:        make(chan *InferenceJob, 1000),
+		workers:         10,
 	}
 }
 
@@ -444,45 +450,48 @@ func (s *InferencePoolService) processJob(job *InferenceJob) {
 
 	req := job.Request
 
-	// Check model cache
-	cachedModel := s.modelCache.GetModel(req.ModelId)
-	if cachedModel == nil {
-		// Model not cached, allocate GPU and load model
-		modelSize := uint64(4 * 1024 * 1024 * 1024) // 4GB mock size
-		gpuID, err := s.gpuManager.AllocateGPU(req.ModelId, modelSize)
-		if err != nil {
-			job.Error <- err
-			return
-		}
-
-		// Cache the model
-		s.modelCache.CacheModel(req.ModelId, modelSize, gpuID)
-
-		// Simulate model loading time
-		time.Sleep(2 * time.Second)
-	} else {
-		// Model already cached
-		_ = cachedModel.GPUID // Use the GPUID
+	// Convert gRPC request to inference engine request
+	inferenceReq := &InferenceRequest{
+		Model:       req.ModelId,
+		Input:       req.Messages[0].Content, // Simplified for now
+		MaxTokens:   int(req.MaxTokens),
+		Temperature: float32(req.Temperature),
+		Stream:      false,
+		Messages:    convertGRPCMessages(req.Messages),
 	}
 
-	// Simulate inference processing
-	time.Sleep(500 * time.Millisecond)
+	// Process inference using the inference engine
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-	// Generate intelligent response based on input
-	responseContent := generateResponseContent(req)
-	promptTokens := estimateTokens(req.Messages)
-	completionTokens := estimateTokensFromContent(responseContent)
-	
-	response := &inference.InferenceResponse{
+	response, err := s.inferenceEngine.ProcessInferenceRequest(ctx, inferenceReq)
+	if err != nil {
+		job.Error <- err
+		return
+	}
+
+	// Convert response back to gRPC format
+	grpcResponse := &inference.InferenceResponse{
 		Id:      job.ID,
 		Object:  "inference.response",
-		Created: time.Now().Unix(),
-		Model:   req.ModelId,
+		Created: response.CreatedAt.Unix(),
+		Model:   response.Model,
 		Choices: []*inference.Choice{
 			{
 				Index: 0,
 				Message: &inference.ChatMessage{
 					Role:    "assistant",
+					Content: response.Output,
+				},
+				FinishReason: response.FinishReason,
+			},
+		},
+		Usage: &inference.Usage{
+			PromptTokens:     int32(engine.countTokens(inferenceReq.Input)),
+			CompletionTokens: int32(response.TokensUsed),
+			TotalTokens:      int32(engine.countTokens(inferenceReq.Input) + response.TokensUsed),
+		},
+	}
 					Content: responseContent,
 				},
 				FinishReason: "stop",
@@ -578,4 +587,16 @@ func main() {
 	if err := server.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
+}
+
+// convertGRPCMessages converts gRPC messages to inference engine format
+func convertGRPCMessages(grpcMessages []*inference.ChatMessage) []Message {
+	messages := make([]Message, len(grpcMessages))
+	for i, msg := range grpcMessages {
+		messages[i] = Message{
+			Role:    msg.Role,
+			Content: msg.Content,
+		}
+	}
+	return messages
 }

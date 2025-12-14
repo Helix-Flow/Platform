@@ -20,6 +20,13 @@ func main() {
 	// Create monitoring service server
 	monitoringServer := NewMonitoringServiceServer()
 
+	// Start gRPC server in a goroutine
+	go func() {
+		if err := StartGRPCServer(); err != nil {
+			log.Fatalf("Failed to start gRPC server: %v", err)
+		}
+	}()
+
 	// Create HTTP server for health checks
 	mux := http.NewServeMux()
 	
