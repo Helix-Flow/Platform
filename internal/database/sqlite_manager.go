@@ -264,16 +264,23 @@ func (dm *SQLiteManager) GetUserByUsername(username string) (*User, error) {
 			  FROM users WHERE username = ?`
 
 	var user User
+	var createdAt, updatedAt, lastLoginAt sql.NullString
 	err := dm.DB.QueryRow(query, username).Scan(
 		&user.ID, &user.Username, &user.Email, &user.PasswordHash,
 		&user.FirstName, &user.LastName, &user.Organization, &user.Role,
-		&user.Active, &user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
+		&user.Active, &createdAt, &updatedAt, &lastLoginAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("user not found")
 		}
 		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	user.CreatedAt = createdAt.String
+	user.UpdatedAt = updatedAt.String
+	if lastLoginAt.Valid {
+		user.LastLoginAt = lastLoginAt.String
 	}
 
 	return &user, nil
@@ -284,17 +291,26 @@ func (dm *SQLiteManager) GetUserByEmail(email string) (*User, error) {
 	query := `SELECT id, username, email, password_hash, first_name, last_name, organization, role, active, created_at, updated_at, last_login_at 
 			  FROM users WHERE email = ?`
 
+	log.Printf("GetUserByEmail: searching for email '%s'", email)
+
 	var user User
+	var createdAt, updatedAt, lastLoginAt sql.NullString
 	err := dm.DB.QueryRow(query, email).Scan(
 		&user.ID, &user.Username, &user.Email, &user.PasswordHash,
 		&user.FirstName, &user.LastName, &user.Organization, &user.Role,
-		&user.Active, &user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
+		&user.Active, &createdAt, &updatedAt, &lastLoginAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("user not found")
 		}
 		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	user.CreatedAt = createdAt.String
+	user.UpdatedAt = updatedAt.String
+	if lastLoginAt.Valid {
+		user.LastLoginAt = lastLoginAt.String
 	}
 
 	return &user, nil

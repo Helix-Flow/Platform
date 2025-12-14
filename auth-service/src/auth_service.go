@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
+	"strings"
 	"log"
 	"time"
 
@@ -90,6 +91,7 @@ func (s *AuthServiceServer) Login(ctx context.Context, req *auth.LoginRequest) (
 	var user *database.User
 	var err error
 
+	log.Printf("Login attempt for username/email: %s", req.Username)
 	if contains(req.Username, "@") {
 		user, err = s.dbManager.GetUserByEmail(req.Username)
 	} else {
@@ -97,11 +99,13 @@ func (s *AuthServiceServer) Login(ctx context.Context, req *auth.LoginRequest) (
 	}
 
 	if err != nil {
+		log.Printf("Login failed - user not found: %v", err)
 		return nil, status.Error(codes.NotFound, "invalid credentials")
 	}
 
 	// Validate password
 	if !s.dbManager.ValidatePassword(user, req.Password) {
+		log.Printf("Login failed - invalid password for user: %s", req.Username)
 		return nil, status.Error(codes.NotFound, "invalid credentials")
 	}
 
@@ -478,5 +482,5 @@ func hashAPIKey(apiKey string) string {
 }
 
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && s[:len(substr)] == substr || s[len(s)-len(substr):] == substr
+	return strings.Contains(s, substr)
 }
