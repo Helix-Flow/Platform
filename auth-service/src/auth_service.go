@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -24,6 +25,8 @@ type AuthServiceServer struct {
 	dbManager  database.DatabaseManager
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
+	blacklist  map[string]time.Time
+	blMutex    sync.RWMutex
 }
 
 // NewAuthServiceServer creates a new auth service server
@@ -38,6 +41,7 @@ func NewAuthServiceServer(dbManager database.DatabaseManager) (*AuthServiceServe
 		dbManager:  dbManager,
 		privateKey: privateKey,
 		publicKey:  &privateKey.PublicKey,
+		blacklist:  make(map[string]time.Time),
 	}, nil
 }
 
@@ -144,6 +148,26 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 		}, nil
 	}
 
+	// Check blacklist
+	s.blMutex.RLock()
+	expiry, blacklisted := s.blacklist[req.Token]
+	s.blMutex.RUnlock()
+	if blacklisted {
+		// Clean up if expired
+		if time.Now().After(expiry) {
+			s.blMutex.Lock()
+			delete(s.blacklist, req.Token)
+			s.blMutex.Unlock()
+			log.Printf("Token blacklist entry expired and removed")
+		} else {
+			log.Printf("Token validation rejected: token revoked")
+			return &auth.ValidateTokenResponse{
+				Valid:   false,
+				Message: "token revoked",
+			}, nil
+		}
+	}
+
 	// Parse and validate token
 	token, err := jwt.Parse(req.Token, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
@@ -240,14 +264,43 @@ func (s *AuthServiceServer) RefreshToken(ctx context.Context, req *auth.RefreshT
 
 // Logout handles user logout
 func (s *AuthServiceServer) Logout(ctx context.Context, req *auth.LogoutRequest) (*auth.LogoutResponse, error) {
-	// In a real implementation, you would:
-	// 1. Add the token to a blacklist
-	// 2. Remove refresh tokens from database
-	// 3. Log the logout event
+	if req.Token == "" {
+		return &auth.LogoutResponse{
+			Success: false,
+			Message: "token is required",
+		}, nil
+	}
+
+	// Parse token to get expiration
+	token, err := jwt.Parse(req.Token, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return s.publicKey, nil
+	})
+	if err != nil {
+		// If token is invalid, we still consider logout successful
+		// (e.g., token already expired)
+		return &auth.LogoutResponse{
+			Success: true,
+			Message: "logout successful",
+		}, nil
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		exp, ok := claims["exp"].(float64)
+		if ok {
+			expiry := time.Unix(int64(exp), 0)
+			s.blMutex.Lock()
+			s.blacklist[req.Token] = expiry
+			s.blMutex.Unlock()
+			log.Printf("Token blacklisted (expires at %v)", expiry)
+		}
+	}
 
 	return &auth.LogoutResponse{
 		Success: true,
-		Message: "Logout successful",
+		Message: "logout successful",
 	}, nil
 }
 
