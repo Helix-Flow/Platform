@@ -6,10 +6,11 @@ HelixFlow AI inference platform - enterprise-grade microservices providing OpenA
 
 ### Go Services
 ```bash
-# Build services
-cd api-gateway && go build -o bin/api-gateway src/main.go
-cd auth-service && go build -o bin/auth-service src/main.go  
-cd inference-pool && go build -o bin/inference-pool src/main.go
+# Build services (go.mod inside src directory)
+cd api-gateway/src && go build -o ../bin/api-gateway .
+cd auth-service/src && go build -o ../bin/auth-service .
+cd inference-pool/src && go build -o ../bin/inference-pool .
+cd monitoring/src && go build -o ../bin/monitoring .
 
 # Python SDK
 cd sdks/python && python setup.py build
@@ -17,6 +18,9 @@ cd sdks/python && python setup.py build
 
 ### Testing
 ```bash
+# Run integration test script (comprehensive)
+./test_integration.sh
+
 # Run single test
 python -m pytest tests/integration/test_auth.py::test_login -v
 

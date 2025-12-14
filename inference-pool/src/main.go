@@ -560,20 +560,47 @@ func (s *InferencePoolService) GetGPUStatus() map[string]*GPUInfo {
 	return s.gpuManager.GetGPUStatus()
 }
 
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
+}
+
 func main() {
 	service := NewInferencePoolService()
 	service.startWorkers()
 
-	lis, err := net.Listen("tcp", ":50051")
+	// Get port from environment
+	port := getEnv("PORT", "50051")
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+		log.Fatalf("Failed to listen on port %s: %v", port, err)
 	}
 
-	server := grpc.NewServer()
+	// Configure TLS if certificates are available
+	certFile := getEnv("TLS_CERT", "./certs/inference-pool.crt")
+	keyFile := getEnv("TLS_KEY", "./certs/inference-pool-key.pem")
+
+	var serverOptions []grpc.ServerOption
+	_, certErr := os.Stat(certFile)
+	_, keyErr := os.Stat(keyFile)
+	if certErr == nil && keyErr == nil {
+		creds, tlsErr := credentials.NewServerTLSFromFile(certFile, keyFile)
+		if tlsErr != nil {
+			log.Printf("Failed to load TLS credentials: %v", tlsErr)
+		} else {
+			serverOptions = append(serverOptions, grpc.Creds(creds))
+			log.Printf("TLS enabled for inference pool")
+		}
+	}
+
+	// Create gRPC server with options
+	server := grpc.NewServer(serverOptions...)
 	inference.RegisterInferenceServiceServer(server, service)
 	reflection.Register(server)
 
-	log.Printf("Inference Pool gRPC server starting on :50051")
+	log.Printf("Inference Pool gRPC server starting on :%s", port)
 	if err := server.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}

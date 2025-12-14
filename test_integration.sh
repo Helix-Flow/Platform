@@ -71,18 +71,50 @@ MONITORING_PID=$!
 sleep 3
 
 echo "   Checking service health..."
-# Test HTTP health endpoints
-for service in api-gateway auth-service inference-pool monitoring; do
-    if timeout 3s curl -k https://localhost:8443/health > /dev/null 2>&1; then
-        echo -e "   ${GREEN}✅${NC} $service health check passed"
-        TEST_RESULTS+=("PASS")
-        TEST_NAMES+=("$service health")
-    else
-        echo -e "   ${YELLOW}⚠️${NC} $service health check failed (may need more time)"
-        TEST_RESULTS+=("WARN")
-        TEST_NAMES+=("$service health")
-    fi
-done
+# Test service-specific health endpoints
+# API Gateway: HTTPS health endpoint on 8443
+if timeout 3s curl -k https://localhost:8443/health > /dev/null 2>&1; then
+    echo -e "   ${GREEN}✅${NC} api-gateway health check passed"
+    TEST_RESULTS+=("PASS")
+    TEST_NAMES+=("api-gateway health")
+else
+    echo -e "   ${YELLOW}⚠️${NC} api-gateway health check failed (may need more time)"
+    TEST_RESULTS+=("WARN")
+    TEST_NAMES+=("api-gateway health")
+fi
+
+# Auth Service: gRPC on 8081 - test TCP connectivity
+if timeout 3s bash -c "echo > /dev/tcp/localhost/8081" 2>/dev/null; then
+    echo -e "   ${GREEN}✅${NC} auth-service TCP connectivity passed"
+    TEST_RESULTS+=("PASS")
+    TEST_NAMES+=("auth-service health")
+else
+    echo -e "   ${YELLOW}⚠️${NC} auth-service TCP connectivity failed (may need more time)"
+    TEST_RESULTS+=("WARN")
+    TEST_NAMES+=("auth-service health")
+fi
+
+# Inference Pool: gRPC on 50051 - test TCP connectivity
+if timeout 3s bash -c "echo > /dev/tcp/localhost/50051" 2>/dev/null; then
+    echo -e "   ${GREEN}✅${NC} inference-pool TCP connectivity passed"
+    TEST_RESULTS+=("PASS")
+    TEST_NAMES+=("inference-pool health")
+else
+    echo -e "   ${YELLOW}⚠️${NC} inference-pool TCP connectivity failed (may need more time)"
+    TEST_RESULTS+=("WARN")
+    TEST_NAMES+=("inference-pool health")
+fi
+
+# Monitoring: gRPC on 8083 - test TCP connectivity
+if timeout 3s bash -c "echo > /dev/tcp/localhost/8083" 2>/dev/null; then
+    echo -e "   ${GREEN}✅${NC} monitoring TCP connectivity passed"
+    TEST_RESULTS+=("PASS")
+    TEST_NAMES+=("monitoring health")
+else
+    echo -e "   ${YELLOW}⚠️${NC} monitoring TCP connectivity failed (may need more time)"
+    TEST_RESULTS+=("WARN")
+    TEST_NAMES+=("monitoring health")
+fi
 echo ""
 
 echo "5. Testing API Gateway Functionality..."

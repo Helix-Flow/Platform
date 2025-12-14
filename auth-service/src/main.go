@@ -61,8 +61,8 @@ func main() {
 	}
 
 	// Configure TLS if certificates are available
-	certFile := getEnv("TLS_CERT", "./certs/server-cert.pem")
-	keyFile := getEnv("TLS_KEY", "./certs/server-key.pem")
+	certFile := getEnv("TLS_CERT", "./certs/auth-service.crt")
+	keyFile := getEnv("TLS_KEY", "./certs/auth-service-key.pem")
 
 	var serverOptions []grpc.ServerOption
 	_, certErr := os.Stat(certFile)
