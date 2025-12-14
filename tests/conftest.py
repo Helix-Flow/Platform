@@ -27,7 +27,7 @@ def test_config():
     """Test configuration."""
     return {
         "api_gateway_url": "https://localhost:8443",
-        "auth_service_url": "https://localhost:8081",
+        "auth_service_url": "http://localhost:8082",
         "inference_pool_url": "http://localhost:50051",
         "monitoring_url": "http://localhost:8083",
         "test_timeout": 30,

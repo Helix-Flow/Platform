@@ -22,7 +22,7 @@ class TestAuthIntegration:
     @pytest.fixture
     def auth_service_url(self):
         """Auth service URL."""
-        return "https://localhost:8081"
+        return "http://localhost:8082"
 
     @pytest.fixture
     def api_gateway_url(self):

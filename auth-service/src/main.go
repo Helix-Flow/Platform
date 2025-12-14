@@ -53,6 +53,15 @@ func main() {
 		log.Fatalf("Failed to create auth service: %v", err)
 	}
 
+	// Start HTTP server for REST API (concurrently)
+	httpPort := getEnv("HTTP_PORT", "8082")
+	httpServer := NewAuthHTTPServer(authServer)
+	go func() {
+		if err := httpServer.Start(httpPort); err != nil {
+			log.Printf("HTTP server failed: %v", err)
+		}
+	}()
+
 	// Get port from environment
 	port := getEnv("PORT", "8081")
 	lis, err := net.Listen("tcp", ":"+port)

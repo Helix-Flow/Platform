@@ -27,7 +27,7 @@ class TestSecurityContract:
     @pytest.fixture
     def auth_service_url(self):
         """Auth service URL."""
-        return "https://localhost:8081"
+        return "http://localhost:8082"
 
     @pytest.fixture
     def valid_auth_headers(self):

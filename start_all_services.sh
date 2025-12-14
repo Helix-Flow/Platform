@@ -10,6 +10,7 @@ export DATABASE_TYPE=sqlite
 export DATABASE_PATH=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/data/helixflow.db
 export REDIS_HOST=localhost
 export REDIS_PORT=6379
+export HTTP_PORT=8082
 
 # Create logs directory
 mkdir -p /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs
@@ -56,7 +57,7 @@ echo ""
 echo "🎯 All services started!"
 echo ""
 echo "Service Status:"
-echo "- Auth Service: gRPC on localhost:8081"
+echo "- Auth Service: gRPC on localhost:8081, HTTP on localhost:8082"
 echo "- Inference Pool: gRPC on localhost:50051" 
 echo "- Monitoring: gRPC on localhost:8083"
 echo "- API Gateway: HTTPS on https://localhost:8443/health"
