@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -325,7 +327,7 @@ func (tbl *TokenBucketLimiter) Check(userID string, requestType string) (bool, m
 
 func NewSlidingWindowLimiter(windowSize int, granularity time.Duration, maxRequests int) *SlidingWindowLimiter {
 	return &SlidingWindowLimiter{
-		windowSize:  windowSize,
+		windowSize:  time.Duration(windowSize) * time.Second,
 		granularity: granularity,
 		maxRequests: maxRequests,
 		windows:     make(map[string]*SlidingWindow),

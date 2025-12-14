@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -119,8 +118,8 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 		if response.Choices[0].Delta != nil {
 			delta["content"] = response.Choices[0].Delta.Content
 		}
-		finishReason := response.Choices[0].FinishReason
-		if finishReason == "" {
+		var finishReason interface{} = response.Choices[0].FinishReason
+		if response.Choices[0].FinishReason == "" {
 			finishReason = nil
 		} else {
 			sentFinishReason = true

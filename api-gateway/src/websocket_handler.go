@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -156,10 +157,11 @@ func (wsm *WebSocketManager) HandleStreamingChat(conn *WebSocketConnection, requ
 	// Convert WebSocket request to gRPC format
 	grpcRequest := &inference.InferenceRequest{
 		ModelId:     request.Model,
+		UserId:      conn.UserID,
 		MaxTokens:   int32(request.MaxTokens),
-		Temperature: float32(request.Temperature),
+		Temperature: request.Temperature,
 		TopP:        0.9,
-		TopK:        50,
+		Stop:        nil,
 		Stream:      true,
 		Messages:    convertWebSocketMessages(request.Messages),
 	}
@@ -212,7 +214,7 @@ func (wsm *WebSocketManager) simulateStreamingInference(ctx context.Context, con
 	// Simulate streaming content with realistic delays
 	responses := wsm.generateStreamingResponses(request)
 	
-	for i, content := range responses {
+	for _, content := range responses {
 		select {
 		case <-ctx.Done():
 			log.Printf("Streaming context cancelled for connection %s", conn.ID)
