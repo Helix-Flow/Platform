@@ -152,6 +152,7 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 	s.blMutex.RLock()
 	expiry, blacklisted := s.blacklist[req.Token]
 	s.blMutex.RUnlock()
+	log.Printf("ValidateToken: blacklist check, token prefix: %s, blacklisted: %v, map size: %d", req.Token[:10], blacklisted, len(s.blacklist))
 	if blacklisted {
 		// Clean up if expired
 		if time.Now().After(expiry) {
