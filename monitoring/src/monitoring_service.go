@@ -7,8 +7,6 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"helixflow/monitoring"
 )
 
 // MonitoringServiceServer implements the gRPC MonitoringService

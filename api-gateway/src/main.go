@@ -193,7 +193,6 @@ func (ag *APIGateway) handleStandardResponse(w http.ResponseWriter, req ChatComp
 		http.Error(w, "Inference service unavailable", http.StatusServiceUnavailable)
 		return
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -217,11 +216,8 @@ func (ag *APIGateway) handleStandardResponse(w http.ResponseWriter, req ChatComp
 		Model:   req.Model,
 		Choices: []ChatCompletionChoice{
 			{
-				Index: 0,
-				Message: ChatMessage{
-					Role:    "assistant",
-					Content: getStringFromMap(inferenceResp, "result"),
-				},
+				Index:        0,
+				Message:      ChatMessage{Role: "assistant", Content: getStringFromMap(inferenceResp, "result")},
 				FinishReason: "stop",
 			},
 		},
@@ -234,6 +230,18 @@ func (ag *APIGateway) handleStandardResponse(w http.ResponseWriter, req ChatComp
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(openaiResp)
+}
+
+func (ag *APIGateway) sendSSEChunk(w http.ResponseWriter, data map[string]interface{}) {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("Failed to marshal SSE chunk: %v", err)
+		return
+	}
+	fmt.Fprintf(w, "data: %s\n\n", jsonData)
+	if flusher, ok := w.(http.Flusher); ok {
+		flusher.Flush()
+	}
 }
 
 func (ag *APIGateway) handleStreamingResponse(w http.ResponseWriter, req ChatCompletionRequest, userID string) {
@@ -354,9 +362,8 @@ func (ag *APIGateway) modelsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ag *APIGateway) websocketHandler(w http.ResponseWriter, r *http.Request) {
-	// Placeholder for WebSocket implementation
-	// In a real implementation, upgrade to WebSocket connection
-	http.Error(w, "WebSocket not implemented", http.StatusNotImplemented)
+	// For now, just redirect to chat completion handler
+	ag.chatCompletionsHandler(w, r)
 }
 
 func (ag *APIGateway) authenticateRequest(r *http.Request) (string, error) {

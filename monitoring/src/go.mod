@@ -6,7 +6,7 @@ toolchain go1.24.11
 
 require (
 	github.com/redis/go-redis/v9 v9.0.5
-	google.golang.org/grpc v1.77.0
+	google.golang.org/grpc v1.65.0
 )
 
 require (
@@ -19,4 +19,4 @@ require (
 	google.golang.org/protobuf v1.36.11 // indirect
 )
 
-replace helixflow/monitoring => ../../helixflow/monitoring
+

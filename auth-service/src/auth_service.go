@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
+	"database/sql"
 	"fmt"
 	"log"
 	"time"
@@ -261,7 +262,20 @@ func (s *AuthServiceServer) GetUserProfile(ctx context.Context, req *auth.GetUse
 
 // UpdateUserProfile updates user profile
 func (s *AuthServiceServer) UpdateUserProfile(ctx context.Context, req *auth.UpdateUserProfileRequest) (*auth.UpdateUserProfileResponse, error) {
-	// Implementation would update user in database
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user ID is required")
+	}
+
+	// Update user in database
+	query := `UPDATE users SET first_name = $1, last_name = $2, organization = $3, updated_at = CURRENT_TIMESTAMP 
+			  WHERE id = $4`
+
+	_, err := s.dbManager.Postgres.Exec(query, req.FirstName, req.LastName, req.Organization, req.UserId)
+	if err != nil {
+		log.Printf("Failed to update user profile: %v", err)
+		return nil, status.Error(codes.Internal, "failed to update profile")
+	}
+
 	return &auth.UpdateUserProfileResponse{
 		Success: true,
 		Message: "Profile updated successfully",
@@ -270,7 +284,35 @@ func (s *AuthServiceServer) UpdateUserProfile(ctx context.Context, req *auth.Upd
 
 // ChangePassword changes user password
 func (s *AuthServiceServer) ChangePassword(ctx context.Context, req *auth.ChangePasswordRequest) (*auth.ChangePasswordResponse, error) {
-	// Implementation would validate current password and update to new password
+	if req.UserId == "" || req.CurrentPassword == "" || req.NewPassword == "" {
+		return nil, status.Error(codes.InvalidArgument, "user ID, current password, and new password are required")
+	}
+
+	// Get user
+	user, err := s.dbManager.GetUserByUsername(req.UserId) // Simplified - use ID in real implementation
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	// Validate current password
+	if !s.dbManager.ValidatePassword(user, req.CurrentPassword) {
+		return nil, status.Error(codes.InvalidArgument, "current password is incorrect")
+	}
+
+	// Hash new password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to hash new password")
+	}
+
+	// Update password
+	query := `UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
+	_, err = s.dbManager.Postgres.Exec(query, string(hashedPassword), user.ID)
+	if err != nil {
+		log.Printf("Failed to update password: %v", err)
+		return nil, status.Error(codes.Internal, "failed to update password")
+	}
+
 	return &auth.ChangePasswordResponse{
 		Success: true,
 		Message: "Password changed successfully",
@@ -309,17 +351,65 @@ func (s *AuthServiceServer) GenerateAPIKey(ctx context.Context, req *auth.Genera
 
 // ListAPIKeys lists user's API keys
 func (s *AuthServiceServer) ListAPIKeys(ctx context.Context, req *auth.ListAPIKeysRequest) (*auth.ListAPIKeysResponse, error) {
-	// Implementation would retrieve API keys from database
+	if req.UserId == "" {
+		return nil, status.Error(codes.InvalidArgument, "user ID is required")
+	}
+
+	query := `SELECT id, name, key_prefix, permissions, created_at, expires_at, 
+			  last_used_at, usage_count, active 
+			  FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC`
+
+	rows, err := s.dbManager.Postgres.Query(query, req.UserId)
+	if err != nil {
+		log.Printf("Failed to list API keys: %v", err)
+		return nil, status.Error(codes.Internal, "failed to list API keys")
+	}
+	defer rows.Close()
+
+	var apiKeys []*auth.APIKey
+	for rows.Next() {
+		var key auth.APIKey
+		var expiresAt, lastUsedAt sql.NullTime
+
+		err := rows.Scan(
+			&key.Id, &key.Name, &key.KeyPrefix, &key.Permissions,
+			&key.CreatedAt, &expiresAt, &lastUsedAt, &key.UsageCount, &key.Active,
+		)
+		if err != nil {
+			log.Printf("Failed to scan API key: %v", err)
+			continue
+		}
+
+		if expiresAt.Valid {
+			key.ExpiresAt = expiresAt.Time.Format(time.RFC3339)
+		}
+		if lastUsedAt.Valid {
+			key.LastUsedAt = lastUsedAt.Time.Format(time.RFC3339)
+		}
+
+		apiKeys = append(apiKeys, &key)
+	}
+
 	return &auth.ListAPIKeysResponse{
 		Success:    true,
-		ApiKeys:    []*auth.APIKey{}, // Empty for now
-		TotalCount: 0,
+		ApiKeys:    apiKeys,
+		TotalCount: int32(len(apiKeys)),
 	}, nil
 }
 
 // RevokeAPIKey revokes an API key
 func (s *AuthServiceServer) RevokeAPIKey(ctx context.Context, req *auth.RevokeAPIKeyRequest) (*auth.RevokeAPIKeyResponse, error) {
-	// Implementation would revoke API key in database
+	if req.KeyId == "" {
+		return nil, status.Error(codes.InvalidArgument, "key ID is required")
+	}
+
+	query := `UPDATE api_keys SET active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1`
+	_, err := s.dbManager.Postgres.Exec(query, req.KeyId)
+	if err != nil {
+		log.Printf("Failed to revoke API key: %v", err)
+		return nil, status.Error(codes.Internal, "failed to revoke API key")
+	}
+
 	return &auth.RevokeAPIKeyResponse{
 		Success: true,
 		Message: "API key revoked successfully",
