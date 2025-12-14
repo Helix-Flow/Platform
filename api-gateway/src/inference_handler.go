@@ -94,7 +94,6 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 	}
 
 	// Process streaming response
-	encoder := json.NewEncoder(w)
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		return fmt.Errorf("response writer doesn't support flushing")
@@ -102,6 +101,7 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 
 	responseID := fmt.Sprintf("chatcmpl-%d", time.Now().UnixNano())
 	created := time.Now().Unix()
+	sentFinishReason := false
 
 	for {
 		response, err := stream.Recv()
@@ -109,7 +109,22 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 			break
 		}
 
+		// Skip if no choices
+		if len(response.Choices) == 0 {
+			continue
+		}
+
 		// Convert to SSE format
+		delta := map[string]interface{}{}
+		if response.Choices[0].Delta != nil {
+			delta["content"] = response.Choices[0].Delta.Content
+		}
+		finishReason := response.Choices[0].FinishReason
+		if finishReason == "" {
+			finishReason = nil
+		} else {
+			sentFinishReason = true
+		}
 		sseEvent := map[string]interface{}{
 			"id":      responseID,
 			"object":  "chat.completion.chunk",
@@ -117,11 +132,9 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 			"model":   req.Model,
 			"choices": []map[string]interface{}{
 				{
-					"index": 0,
-					"delta": map[string]interface{}{
-						"content": response.Content,
-					},
-					"finish_reason": nil,
+					"index":         0,
+					"delta":         delta,
+					"finish_reason": finishReason,
 				},
 			},
 		}
@@ -131,28 +144,30 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 		flusher.Flush()
 
 		// Check if this is the final chunk
-		if response.IsFinal {
+		if response.Choices[0].FinishReason != "" {
 			break
 		}
 	}
 
-	// Send final chunk with finish reason
-	finalEvent := map[string]interface{}{
-		"id":      responseID,
-		"object":  "chat.completion.chunk",
-		"created": created,
-		"model":   req.Model,
-		"choices": []map[string]interface{}{
-			{
-				"index":        0,
-				"delta":        map[string]interface{}{},
-				"finish_reason": "stop",
+	// Send final chunk with finish reason if not already sent
+	if !sentFinishReason {
+		finalEvent := map[string]interface{}{
+			"id":      responseID,
+			"object":  "chat.completion.chunk",
+			"created": created,
+			"model":   req.Model,
+			"choices": []map[string]interface{}{
+				{
+					"index":        0,
+					"delta":        map[string]interface{}{},
+					"finish_reason": "stop",
+				},
 			},
-		},
-	}
+		}
 
-	fmt.Fprintf(w, "data: %s\n\n", mustMarshalJSON(finalEvent))
-	flusher.Flush()
+		fmt.Fprintf(w, "data: %s\n\n", mustMarshalJSON(finalEvent))
+		flusher.Flush()
+	}
 
 	return nil
 }

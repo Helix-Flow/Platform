@@ -1,13 +1,13 @@
 module helixflow/database
 
-go 1.24.0
+go 1.22.2
 
-toolchain go1.24.11
+toolchain go1.22.2
 
 require (
 	github.com/lib/pq v1.10.9
 	github.com/redis/go-redis/v9 v9.17.2
-	golang.org/x/crypto v0.46.0
+	golang.org/x/crypto v0.17.0
 )
 
 require (
