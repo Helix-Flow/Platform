@@ -140,6 +140,14 @@ type MemoryReservation struct {
 	mutex        sync.RWMutex
 }
 
+// Defragment performs memory defragmentation on GPUs
+func (md *MemoryDefragmenter) Defragment(gpus map[string]*GPUDevice) error {
+	// Mock implementation - in real implementation, this would reorganize memory
+	// to reduce fragmentation and improve allocation efficiency
+	log.Printf("Performing memory defragmentation on %d GPUs", len(gpus))
+	return nil
+}
+
 // Reservation represents a memory reservation
 type Reservation struct {
 	ID          string
@@ -203,7 +211,7 @@ func NewGPUOptimizer(config *GPUOptimizationConfig) *GPUOptimizer {
 }
 
 // initializeGPUs sets up GPU devices (mock implementation)
-func (go *GPUOptimizer) initializeGPUs() {
+func (g *GPUOptimizer) initializeGPUs() {
 	// Mock GPU initialization - in real implementation, detect actual GPUs
 	gpuConfigs := []struct {
 		id       string
@@ -235,25 +243,25 @@ func (go *GPUOptimizer) initializeGPUs() {
 			ErrorRate:       0.01,
 		}
 		
-		go.gpus[config.id] = gpu
+		g.gpus[config.id] = gpu
 	}
 }
 
 // AllocateGPU intelligently allocates GPU resources
-func (go *GPUOptimizer) AllocateGPU(ctx context.Context, request *SchedulingRequest) (string, error) {
-	go.mutex.Lock()
-	defer go.mutex.Unlock()
+func (g *GPUOptimizer) AllocateGPU(ctx context.Context, request *SchedulingRequest) (string, error) {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	
 	log.Printf("Allocating GPU for model %s (memory: %d bytes)", request.ModelName, request.MemoryRequired)
 	
 	// Get available GPUs
-	availableGPUs := go.getAvailableGPUs(request.MemoryRequired)
+	availableGPUs := g.getAvailableGPUs(request.MemoryRequired)
 	if len(availableGPUs) == 0 {
 		return "", fmt.Errorf("no GPUs available with sufficient memory for model %s", request.ModelName)
 	}
 	
 	// Select best GPU using scheduling algorithm
-	selectedGPU, err := go.scheduler.SelectGPU(request, availableGPUs)
+	selectedGPU, err := g.scheduler.SelectGPU(request, availableGPUs)
 	if err != nil {
 		return "", fmt.Errorf("failed to select GPU: %w", err)
 	}
@@ -273,7 +281,7 @@ func (go *GPUOptimizer) AllocateGPU(ctx context.Context, request *SchedulingRequ
 	}
 	
 	// Update GPU state
-	gpu := go.gpus[selectedGPU]
+	gpu := g.gpus[selectedGPU]
 	gpu.MemoryUsed += request.MemoryRequired
 	gpu.MemoryAvailable -= request.MemoryRequired
 	gpu.ActiveModels[request.ModelID] = allocation
@@ -293,11 +301,11 @@ func (go *GPUOptimizer) AllocateGPU(ctx context.Context, request *SchedulingRequ
 }
 
 // ReleaseGPU releases GPU resources
-func (go *GPUOptimizer) ReleaseGPU(ctx context.Context, gpuID string, modelID string) error {
-	go.mutex.Lock()
-	defer go.mutex.Unlock()
+func (g *GPUOptimizer) ReleaseGPU(ctx context.Context, gpuID string, modelID string) error {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	
-	gpu, exists := go.gpus[gpuID]
+	gpu, exists := g.gpus[gpuID]
 	if !exists {
 		return fmt.Errorf("GPU %s not found", gpuID)
 	}
@@ -327,40 +335,40 @@ func (go *GPUOptimizer) ReleaseGPU(ctx context.Context, gpuID string, modelID st
 }
 
 // OptimizeMemory performs memory optimization
-func (go *GPUOptimizer) OptimizeMemory(ctx context.Context) error {
-	go.mutex.Lock()
-	defer go.mutex.Unlock()
+func (g *GPUOptimizer) OptimizeMemory(ctx context.Context) error {
+	g.mutex.Lock()
+	defer g.mutex.Unlock()
 	
-	print_status "Starting memory optimization..."
+	log.Printf("Starting memory optimization...")
 	
 	// Defragment memory if enabled
-	if go.config.MemoryDefragEnabled {
-		if err := go.memoryManager.defragmenter.Defragment(go.gpus); err != nil {
+	if g.config.MemoryDefragEnabled {
+		if err := g.memoryManager.defragmenter.Defragment(g.gpus); err != nil {
 			log.Printf("Memory defragmentation failed: %v", err)
 		}
 	}
 	
 	// Evict unused models
-	if err := go.evictUnusedModels(ctx); err != nil {
+	if err := g.evictUnusedModels(ctx); err != nil {
 		return fmt.Errorf("failed to evict unused models: %w", err)
 	}
 	
 	// Preload frequently used models
-	if go.config.ModelPreloadEnabled {
-		if err := go.preloadFrequentModels(ctx); err != nil {
+	if g.config.ModelPreloadEnabled {
+		if err := g.preloadFrequentModels(ctx); err != nil {
 			return fmt.Errorf("failed to preload models: %w", err)
 		}
 	}
 	
-	print_status "Memory optimization completed"
+	log.Printf("Memory optimization completed")
 	return nil
 }
 
 // evictUnusedModels removes models that haven't been used recently
-func (go *GPUOptimizer) evictUnusedModels(ctx context.Context) error {
+func (g *GPUOptimizer) evictUnusedModels(ctx context.Context) error {
 	threshold := 30 * time.Minute // Models unused for 30 minutes
 	
-	for _, gpu := range go.gpus {
+	for _, gpu := range g.gpus {
 		modelsToEvict := make([]string, 0)
 		
 		for modelID, allocation := range gpu.ActiveModels {
@@ -370,7 +378,7 @@ func (go *GPUOptimizer) evictUnusedModels(ctx context.Context) error {
 		}
 		
 		for _, modelID := range modelsToEvict {
-			if err := go.ReleaseGPU(ctx, gpu.ID, modelID); err != nil {
+			if err := g.ReleaseGPU(ctx, gpu.ID, modelID); err != nil {
 				log.Printf("Failed to evict model %s from GPU %s: %v", modelID, gpu.ID, err)
 			}
 		}
@@ -380,14 +388,14 @@ func (go *GPUOptimizer) evictUnusedModels(ctx context.Context) error {
 }
 
 // preloadFrequentModels preloads models that are frequently requested
-func (go *GPUOptimizer) preloadFrequentModels(ctx context.Context) error {
+func (g *GPUOptimizer) preloadFrequentModels(ctx context.Context) error {
 	// Analyze usage patterns and identify frequently used models
-	frequentModels := go.analyzeUsagePatterns()
+	frequentModels := g.analyzeUsagePatterns()
 	
 	for _, modelInfo := range frequentModels {
 		// Check if model is already loaded
 		alreadyLoaded := false
-		for _, gpu := range go.gpus {
+		for _, gpu := range g.gpus {
 			if _, exists := gpu.ActiveModels[modelInfo.ModelID]; exists {
 				alreadyLoaded = true
 				break
@@ -396,7 +404,7 @@ func (go *GPUOptimizer) preloadFrequentModels(ctx context.Context) error {
 		
 		if !alreadyLoaded {
 			// Find available GPU
-			availableGPUs := go.getAvailableGPUs(modelInfo.MemoryRequired)
+			availableGPUs := g.getAvailableGPUs(modelInfo.MemoryRequired)
 			if len(availableGPUs) > 0 {
 				// Preload model to first available GPU
 				request := &SchedulingRequest{
@@ -408,7 +416,7 @@ func (go *GPUOptimizer) preloadFrequentModels(ctx context.Context) error {
 					Deadline:       time.Now().Add(5 * time.Minute),
 				}
 				
-				if _, err := go.AllocateGPU(ctx, request); err != nil {
+				if _, err := g.AllocateGPU(ctx, request); err != nil {
 					log.Printf("Failed to preload model %s: %v", modelInfo.ModelID, err)
 				}
 			}
@@ -419,10 +427,10 @@ func (go *GPUOptimizer) preloadFrequentModels(ctx context.Context) error {
 }
 
 // analyzeUsagePatterns analyzes GPU usage patterns
-func (go *GPUOptimizer) analyzeUsagePatterns() []*ModelUsageInfo {
+func (g *GPUOptimizer) analyzeUsagePatterns() []*ModelUsageInfo {
 	usageMap := make(map[string]*ModelUsageInfo)
 	
-	for _, gpu := range go.gpus {
+	for _, gpu := range g.gpus {
 		for modelID, allocation := range gpu.ActiveModels {
 			if usage, exists := usageMap[modelID]; exists {
 				usage.RequestCount += allocation.InferenceCount
@@ -458,10 +466,10 @@ func (go *GPUOptimizer) analyzeUsagePatterns() []*ModelUsageInfo {
 }
 
 // getAvailableGPUs returns GPUs with sufficient memory
-func (go *GPUOptimizer) getAvailableGPUs(memoryRequired uint64) []*GPUDevice {
+func (g *GPUOptimizer) getAvailableGPUs(memoryRequired uint64) []*GPUDevice {
 	var available []*GPUDevice
 	
-	for _, gpu := range go.gpus {
+	for _, gpu := range g.gpus {
 		if gpu.Status == "available" && gpu.MemoryAvailable >= memoryRequired {
 			available = append(available, gpu)
 		}
@@ -471,34 +479,34 @@ func (go *GPUOptimizer) getAvailableGPUs(memoryRequired uint64) []*GPUDevice {
 }
 
 // startBackgroundTasks starts background optimization tasks
-func (go *GPUOptimizer) startBackgroundTasks() {
+func (g *GPUOptimizer) startBackgroundTasks() {
 	// Memory optimization every 5 minutes
 	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 	
 	for range ticker.C {
 		ctx := context.Background()
-		if err := go.OptimizeMemory(ctx); err != nil {
+		if err := g.OptimizeMemory(ctx); err != nil {
 			log.Printf("Background memory optimization failed: %v", err)
 		}
 	}
 }
 
 // GetMetrics returns GPU performance metrics
-func (go *GPUOptimizer) GetMetrics() map[string]interface{} {
-	go.mutex.RLock()
-	defer go.mutex.RUnlock()
+func (g *GPUOptimizer) GetMetrics() map[string]interface{} {
+	g.mutex.RLock()
+	defer g.mutex.RUnlock()
 	
 	metrics := make(map[string]interface{})
 	
 	// Overall metrics
-	totalGPUs := len(go.gpus)
+	totalGPUs := len(g.gpus)
 	availableGPUs := 0
 	busyGPUs := 0
 	totalMemory := uint64(0)
 	usedMemory := uint64(0)
 	
-	for _, gpu := range go.gpus {
+	for _, gpu := range g.gpus {
 		totalMemory += gpu.MemoryTotal
 		usedMemory += gpu.MemoryUsed
 		
@@ -519,7 +527,7 @@ func (go *GPUOptimizer) GetMetrics() map[string]interface{} {
 	
 	// Per-GPU metrics
 	gpuMetrics := make([]map[string]interface{}, 0)
-	for _, gpu := range go.gpus {
+	for _, gpu := range g.gpus {
 		gpuMetric := map[string]interface{}{
 			"id":              gpu.ID,
 			"name":            gpu.Name,
@@ -561,6 +569,31 @@ func NewGPUScheduler(config *GPUOptimizationConfig) *GPUScheduler {
 	go scheduler.startWorkers()
 	
 	return scheduler
+}
+
+// SelectGPU selects the best GPU for a given request
+func (s *GPUScheduler) SelectGPU(request *SchedulingRequest, availableGPUs []*GPUDevice) (string, error) {
+	// Use best fit algorithm by default
+	algorithm, exists := s.algorithms["best_fit"]
+	if !exists {
+		return "", fmt.Errorf("no scheduling algorithm available")
+	}
+	
+	return algorithm.SelectGPU(request, availableGPUs)
+}
+
+// startWorkers starts the scheduler worker goroutines
+func (s *GPUScheduler) startWorkers() {
+	for i := 0; i < s.workers; i++ {
+		go func(workerID int) {
+			log.Printf("GPU scheduler worker %d started", workerID)
+			// Mock worker implementation
+			for request := range s.queue {
+				log.Printf("Worker %d processing request for model %s", workerID, request.ModelName)
+				// In a real implementation, this would process scheduling requests
+			}
+		}(i)
+	}
 }
 
 // SchedulingAlgorithm implementations

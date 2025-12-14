@@ -219,7 +219,7 @@ func (mc *ModelCache) EvictLRU() {
 func NewInferencePoolService() *InferencePoolService {
 	gpuManager := NewGPUManager()
 	modelCache := NewModelCache()
-	inferenceEngine := NewInferenceEngine(gpuManager, modelCache)
+	inferenceEngine := NewInferenceEngine(gpuManager)
 	
 	return &InferencePoolService{
 		gpuManager:      gpuManager,
@@ -487,28 +487,16 @@ func (s *InferencePoolService) processJob(job *InferenceJob) {
 			},
 		},
 		Usage: &inference.Usage{
-			PromptTokens:     int32(engine.countTokens(inferenceReq.Input)),
+			PromptTokens:     int32(s.inferenceEngine.countTokens(inferenceReq.Input)),
 			CompletionTokens: int32(response.TokensUsed),
-			TotalTokens:      int32(engine.countTokens(inferenceReq.Input) + response.TokensUsed),
+			TotalTokens:      int32(s.inferenceEngine.countTokens(inferenceReq.Input) + response.TokensUsed),
 		},
-	}
-					Content: responseContent,
-				},
-				FinishReason: "stop",
-			},
-		},
-		Usage: &inference.Usage{
-			PromptTokens:     promptTokens,
-			CompletionTokens: completionTokens,
-			TotalTokens:      promptTokens + completionTokens,
-		},
-		FinishReason: "stop",
 	}
 
 	// Release model reference
 	s.modelCache.ReleaseModel(req.ModelId)
 
-	job.Response <- response
+	job.Response <- grpcResponse
 }
 
 func generateResponseContent(req *inference.InferenceRequest) string {

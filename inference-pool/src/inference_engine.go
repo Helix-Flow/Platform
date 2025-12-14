@@ -2,10 +2,7 @@ package main
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/json"
 	"fmt"
-	"math/big"
 	"strings"
 	"time"
 )
@@ -13,16 +10,14 @@ import (
 // InferenceEngine handles AI model inference
 type InferenceEngine struct {
 	gpuManager  *GPUManager
-	modelCache  *ModelCache
 	maxTokens   int
 	temperature float32
 }
 
 // NewInferenceEngine creates a new inference engine
-func NewInferenceEngine(gpuManager *GPUManager, modelCache *ModelCache) *InferenceEngine {
+func NewInferenceEngine(gpuManager *GPUManager) *InferenceEngine {
 	return &InferenceEngine{
 		gpuManager:  gpuManager,
-		modelCache:  modelCache,
 		maxTokens:   4096,
 		temperature: 0.7,
 	}
@@ -37,18 +32,19 @@ func (engine *InferenceEngine) ProcessInferenceRequest(ctx context.Context, req 
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}
 
-	// Check if model is available
-	model, err := engine.getModel(req.Model)
-	if err != nil {
-		return nil, fmt.Errorf("model not available: %w", err)
+	// Check if model is available (simplified - just validate model name)
+	model := engine.loadModel(req.Model)
+	if model == nil {
+		return nil, fmt.Errorf("model not available: %s", req.Model)
 	}
 
-	// Allocate GPU resources
-	gpuID, err := engine.gpuManager.AllocateGPU(req.Model)
+	// Allocate GPU resources (use 2GB as default memory requirement)
+	const defaultMemoryRequirement = 2 * 1024 * 1024 * 1024 // 2GB
+	gpuID, err := engine.gpuManager.AllocateGPU(req.Model, defaultMemoryRequirement)
 	if err != nil {
 		return nil, fmt.Errorf("GPU allocation failed: %w", err)
 	}
-	defer engine.gpuManager.ReleaseGPU(gpuID)
+	defer engine.gpuManager.FreeGPU(gpuID, req.Model, defaultMemoryRequirement)
 
 	// Generate response based on model type
 	response, err := engine.generateResponse(ctx, req, model)
@@ -77,18 +73,19 @@ func (engine *InferenceEngine) ProcessStreamingInference(ctx context.Context, re
 		return fmt.Errorf("invalid request: %w", err)
 	}
 
-	// Check if model is available
-	model, err := engine.getModel(req.Model)
-	if err != nil {
-		return fmt.Errorf("model not available: %w", err)
+	// Check if model is available (simplified - just validate model name)
+	model := engine.loadModel(req.Model)
+	if model == nil {
+		return fmt.Errorf("model not available: %s", req.Model)
 	}
 
-	// Allocate GPU resources
-	gpuID, err := engine.gpuManager.AllocateGPU(req.Model)
+	// Allocate GPU resources (use 2GB as default memory requirement)
+	const defaultMemoryRequirement = 2 * 1024 * 1024 * 1024 // 2GB
+	gpuID, err := engine.gpuManager.AllocateGPU(req.Model, defaultMemoryRequirement)
 	if err != nil {
 		return fmt.Errorf("GPU allocation failed: %w", err)
 	}
-	defer engine.gpuManager.ReleaseGPU(gpuID)
+	defer engine.gpuManager.FreeGPU(gpuID, req.Model, defaultMemoryRequirement)
 
 	// Generate streaming response
 	return engine.generateStreamingResponse(ctx, req, model, stream)
@@ -113,19 +110,12 @@ func (engine *InferenceEngine) validateRequest(req *InferenceRequest) error {
 
 // getModel retrieves model information
 func (engine *InferenceEngine) getModel(modelName string) (*ModelInfo, error) {
-	// Check model cache first
-	if cached := engine.modelCache.Get(modelName); cached != nil {
-		return cached, nil
-	}
-
 	// Load model based on name
 	model := engine.loadModel(modelName)
 	if model == nil {
 		return nil, fmt.Errorf("model '%s' not found", modelName)
 	}
 
-	// Cache the model
-	engine.modelCache.Set(modelName, model)
 	return model, nil
 }
 
