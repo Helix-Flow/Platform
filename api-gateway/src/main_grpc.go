@@ -31,41 +31,6 @@ type APIGatewayGRPC struct {
 	tlsConfig           *tls.Config
 }
 
-type ChatCompletionRequest struct {
-	Model       string        `json:"model"`
-	Messages    []ChatMessage `json:"messages"`
-	MaxTokens   int           `json:"max_tokens,omitempty"`
-	Temperature float64       `json:"temperature,omitempty"`
-	Stream      bool          `json:"stream,omitempty"`
-	User        string        `json:"user,omitempty"`
-}
-
-type ChatMessage struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-}
-
-type ChatCompletionResponse struct {
-	ID      string                 `json:"id"`
-	Object  string                 `json:"object"`
-	Created int64                  `json:"created"`
-	Model   string                 `json:"model"`
-	Choices []ChatCompletionChoice `json:"choices"`
-	Usage   Usage                  `json:"usage"`
-}
-
-type ChatCompletionChoice struct {
-	Index        int         `json:"index"`
-	Message      ChatMessage `json:"message"`
-	FinishReason string      `json:"finish_reason"`
-}
-
-type Usage struct {
-	PromptTokens     int `json:"prompt_tokens"`
-	CompletionTokens int `json:"completion_tokens"`
-	TotalTokens      int `json:"total_tokens"`
-}
-
 type ModelResponse struct {
 	Data   []ModelInfo `json:"data"`
 	Object string      `json:"object"`
@@ -623,13 +588,7 @@ func mainGRPC() {
 	}
 }
 
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
-}
-
-func main() {
-	mainGRPC()
+func mainGRPC() {
+	// This function is called from main.go to start the gRPC version
+	log.Println("Starting gRPC API Gateway...")
 }

@@ -10,7 +10,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"helixflow/inference"
+	inference "helixflow/api-gateway/inference"
 )
 
 // InferenceHandler handles inference requests to the inference pool
@@ -46,9 +46,8 @@ func (h *InferenceHandler) HandleChatCompletion(ctx context.Context, req ChatCom
 	inferenceReq := &inference.InferenceRequest{
 		ModelId:     req.Model,
 		MaxTokens:   int32(req.MaxTokens),
-		Temperature: float32(req.Temperature),
+		Temperature: req.Temperature,
 		TopP:        0.9,
-		TopK:        50,
 		Stream:      req.Stream,
 		Messages:    convertMessages(req.Messages),
 	}
@@ -58,7 +57,7 @@ func (h *InferenceHandler) HandleChatCompletion(ctx context.Context, req ChatCom
 	defer cancel()
 
 	// Call inference service
-	response, err := h.inferenceClient.GenerateCompletion(ctx, inferenceReq)
+	response, err := h.inferenceClient.Inference(ctx, inferenceReq)
 	if err != nil {
 		return nil, fmt.Errorf("inference failed: %w", err)
 	}
@@ -78,9 +77,8 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 	inferenceReq := &inference.InferenceRequest{
 		ModelId:     req.Model,
 		MaxTokens:   int32(req.MaxTokens),
-		Temperature: float32(req.Temperature),
+		Temperature: req.Temperature,
 		TopP:        0.9,
-		TopK:        50,
 		Stream:      true,
 		Messages:    convertMessages(req.Messages),
 	}
@@ -90,7 +88,7 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 	defer cancel()
 
 	// Call streaming inference service
-	stream, err := h.inferenceClient.GenerateStreamingCompletion(ctx, inferenceReq)
+	stream, err := h.inferenceClient.StreamInference(ctx, inferenceReq)
 	if err != nil {
 		return fmt.Errorf("streaming inference failed: %w", err)
 	}

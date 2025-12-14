@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"helixflow/inference"
+	inference "helixflow/api-gateway/inference"
 )
 
 // WebSocketManager manages WebSocket connections and real-time communication

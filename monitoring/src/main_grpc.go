@@ -366,8 +366,8 @@ func (s *MonitoringServiceServer) StreamMetrics(req *monitoring.StreamMetricsReq
 func StartGRPCServer() error {
 	// Load certificates
 	creds, err := credentials.NewServerTLSFromFile(
-		"/certs/monitoring.crt",
-		"/certs/monitoring-key.pem",
+		"/app/certs/monitoring.crt",
+		"/app/certs/monitoring-key.pem",
 	)
 	if err != nil {
 		return fmt.Errorf("failed to load certificates: %w", err)
