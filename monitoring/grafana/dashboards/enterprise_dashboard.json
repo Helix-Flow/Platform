@@ -1,0 +1,475 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "HelixFlow Enterprise Monitoring Dashboard",
+    "tags": ["helixflow", "enterprise", "ai", "inference"],
+    "timezone": "browser",
+    "refresh": "10s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "System Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "up{job=\"helixflow\"}",
+            "legendFormat": "Services Online"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(helixflow_api_requests_total[5m])",
+            "legendFormat": "Requests/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 6,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Response Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(helixflow_response_time_bucket[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(helixflow_response_time_bucket[5m]))",
+            "legendFormat": "50th percentile"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Response Time (ms)",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 18,
+          "y": 0
+        }
+      },
+      {
+        "id": 4,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(helixflow_api_errors_total[5m]) / rate(helixflow_api_requests_total[5m]) * 100",
+            "legendFormat": "Error Rate %"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Error Rate %",
+            "max": 100,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "GPU Utilization",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "avg(helixflow_gpu_utilization_percent)",
+            "legendFormat": "Average GPU Utilization"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Utilization %",
+            "max": 100,
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 6,
+        "title": "Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "avg(helixflow_gpu_memory_used_bytes)",
+            "legendFormat": "Memory Used"
+          },
+          {
+            "expr": "avg(helixflow_gpu_memory_total_bytes)",
+            "legendFormat": "Memory Total"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Memory (bytes)",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 7,
+        "title": "Inference Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "avg(helixflow_inference_latency_ms)",
+            "legendFormat": "Average Latency"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(helixflow_inference_latency_ms_bucket[5m]))",
+            "legendFormat": "95th Percentile"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Latency (ms)",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      },
+      {
+        "id": 8,
+        "title": "Rate Limiting",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(helixflow_rate_limit_allowed_total[5m])",
+            "legendFormat": "Allowed Requests/sec"
+          },
+          {
+            "expr": "rate(helixflow_rate_limit_denied_total[5m])",
+            "legendFormat": "Denied Requests/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Requests/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 9,
+        "title": "Cache Performance",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(helixflow_cache_hit_total[5m])",
+            "legendFormat": "Cache Hits/sec"
+          },
+          {
+            "expr": "rate(helixflow_cache_miss_total[5m])",
+            "legendFormat": "Cache Misses/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Cache Operations/sec",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 24
+        }
+      },
+      {
+        "id": 10,
+        "title": "Active Models",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "helixflow_model_active_count",
+            "legendFormat": "{{model_id}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 32
+        }
+      },
+      {
+        "id": 11,
+        "title": "Authentication Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(helixflow_auth_success_total[5m]) / (rate(helixflow_auth_success_total[5m]) + rate(helixflow_auth_failure_total[5m])) * 100",
+            "legendFormat": "Success Rate %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 95
+                },
+                {
+                  "color": "green",
+                  "value": 99
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 40
+        }
+      },
+      {
+        "id": 12,
+        "title": "Database Connection Pool",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "helixflow_db_connections_active",
+            "legendFormat": "Active Connections"
+          },
+          {
+            "expr": "helixflow_db_connections_idle",
+            "legendFormat": "Idle Connections"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 6,
+          "y": 40
+        }
+      },
+      {
+        "id": 13,
+        "title": "WebSocket Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "helixflow_websocket_connections_active",
+            "legendFormat": "Active WebSocket Connections"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "Connections",
+            "min": 0
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 18,
+          "y": 40
+        }
+      },
+      {
+        "id": 14,
+        "title": "Error Analysis",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "topk(10, helixflow_errors_by_type)",
+            "legendFormat": "{{error_type}}"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 48
+        }
+      },
+      {
+        "id": 15,
+        "title": "System Health Alerts",
+        "type": "alertlist",
+        "targets": [],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 56
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "environment",
+          "type": "custom",
+          "current": {
+            "text": "Production",
+            "value": "production"
+          },
+          "options": [
+            {
+              "text": "Production",
+              "value": "production"
+            },
+            {
+              "text": "Staging",
+              "value": "staging"
+            },
+            {
+              "text": "Development",
+              "value": "development"
+            }
+          ]
+        },
+        {
+          "name": "time_range",
+          "type": "interval",
+          "current": {
+            "text": "5m",
+            "value": "5m"
+          },
+          "options": [
+            {
+              "text": "1m",
+              "value": "1m"
+            },
+            {
+              "text": "5m",
+              "value": "5m"
+            },
+            {
+              "text": "15m",
+              "value": "15m"
+            },
+            {
+              "text": "1h",
+              "value": "1h"
+            },
+            {
+              "text": "6h",
+              "value": "6h"
+            },
+            {
+              "text": "24h",
+              "value": "24h"
+            }
+          ]
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "-- Grafana --",
+          "type": "dashboard",
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "enable": true,
+          "hide": false
+        }
+      ]
+    },
+    "links": [
+      {
+        "title": "HelixFlow Documentation",
+        "url": "https://docs.helixflow.com",
+        "type": "link"
+      },
+      {
+        "title": "API Reference",
+        "url": "https://api.helixflow.com/docs",
+        "type": "link"
+      }
+    ]
+  }
+}
