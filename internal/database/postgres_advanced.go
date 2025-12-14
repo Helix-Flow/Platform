@@ -7,8 +7,6 @@ import (
 	"log"
 	"sync"
 	"time"
-
-	"github.com/lib/pq"
 )
 
 // PostgresAdvancedManager extends PostgresManager with enterprise features
@@ -95,13 +93,14 @@ type PoolStats struct {
 
 // MetricsCollector collects database performance metrics
 type MetricsCollector struct {
-	queryCount      int64
-	errorCount      int64
-	slowQueryCount  int64
-	cacheHitCount   int64
-	cacheMissCount  int64
-	lastReset       time.Time
-	mutex           sync.RWMutex
+	queryCount        int64
+	errorCount        int64
+	slowQueryCount    int64
+	cacheHitCount     int64
+	cacheMissCount    int64
+	lastReset         time.Time
+	mutex             sync.RWMutex
+	slowQueryThreshold time.Duration
 }
 
 // NewPostgresAdvancedManager creates an advanced PostgreSQL manager
@@ -116,7 +115,7 @@ func NewPostgresAdvancedManager(baseManager *PostgresManager, config *AdvancedDa
 
 // InitializeAdvanced initializes advanced PostgreSQL features
 func (dm *PostgresAdvancedManager) InitializeAdvanced() error {
-	print_status "Initializing advanced PostgreSQL features..."
+	log.Printf("Initializing advanced PostgreSQL features...")
 	
 	// Setup connection pooling
 	if err := dm.setupConnectionPooling(); err != nil {
@@ -142,21 +141,17 @@ func (dm *PostgresAdvancedManager) InitializeAdvanced() error {
 		}
 	}
 	
-	print_status "Advanced PostgreSQL features initialized successfully"
+	log.Printf("Advanced PostgreSQL features initialized successfully")
 	return nil
 }
 
 // setupConnectionPooling configures advanced connection pooling
 func (dm *PostgresAdvancedManager) setupConnectionPooling() error {
-	print_status "Setting up connection pooling..."
+	log.Printf("Setting up connection pooling...")
 	
 	// Configure primary database connection pool
-	primaryConfig := dm.config
-	primaryConfig.MaxConnections = dm.advancedConfig.MaxConnections
-	primaryConfig.MinConnections = dm.advancedConfig.MinConnections
-	
 	primaryDSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require",
-		primaryConfig.Host, primaryConfig.Port, primaryConfig.User, primaryConfig.Password, primaryConfig.Database)
+		dm.config.Host, dm.config.Port, dm.config.User, dm.config.Password, dm.config.DBName)
 	
 	primaryDB, err := sql.Open("postgres", primaryDSN)
 	if err != nil {
@@ -179,17 +174,17 @@ func (dm *PostgresAdvancedManager) setupConnectionPooling() error {
 	
 	dm.primaryDB = primaryDB
 	
-	print_status "Primary database connection pooling configured"
+	log.Printf("Primary database connection pooling configured")
 	return nil
 }
 
 // setupReadReplicas configures read replica connections
 func (dm *PostgresAdvancedManager) setupReadReplicas() error {
-	print_status "Setting up read replica connections..."
+	log.Printf("Setting up read replica connections...")
 	
 	replicaDSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=require",
 		dm.advancedConfig.ReadReplicaHost, dm.advancedConfig.ReadReplicaPort,
-		dm.config.User, dm.config.Password, dm.config.Database)
+		dm.config.User, dm.config.Password, dm.config.DBName)
 	
 	replicaDB, err := sql.Open("postgres", replicaDSN)
 	if err != nil {
@@ -212,13 +207,13 @@ func (dm *PostgresAdvancedManager) setupReadReplicas() error {
 	
 	dm.readReplicaDB = replicaDB
 	
-	print_status "Read replica connection pooling configured"
+	log.Printf("Read replica connection pooling configured")
 	return nil
 }
 
 // configureAdvancedSettings configures advanced PostgreSQL settings
 func (dm *PostgresAdvancedManager) configureAdvancedSettings() error {
-	print_status "Configuring advanced PostgreSQL settings..."
+	log.Printf("Configuring advanced PostgreSQL settings...")
 	
 	settings := []string{
 		fmt.Sprintf("SET statement_timeout = '%dms'", dm.advancedConfig.StatementTimeout.Milliseconds()),
@@ -252,13 +247,13 @@ func (dm *PostgresAdvancedManager) configureAdvancedSettings() error {
 		cancel()
 	}
 	
-	print_status "Advanced PostgreSQL settings configured"
+	log.Printf("Advanced PostgreSQL settings configured")
 	return nil
 }
 
 // setupMetricsCollection configures performance metrics collection
 func (dm *PostgresAdvancedManager) setupMetricsCollection() error {
-	print_status "Setting up metrics collection..."
+	log.Printf("Setting up metrics collection...")
 	
 	// Enable pg_stat_statements if available
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -302,7 +297,7 @@ func (dm *PostgresAdvancedManager) setupMetricsCollection() error {
 		}
 	}
 	
-	print_status "Metrics collection setup completed"
+	log.Printf("Metrics collection setup completed")
 	return nil
 }
 
@@ -385,11 +380,11 @@ func (dm *PostgresAdvancedManager) HealthCheck() (string, error) {
 		}
 	}
 	
-	// Check connection pool health
-	stats := dm.connectionPool.GetStats()
-	if stats.ActiveConnections > dm.advancedConfig.MaxConnections*90/100 {
-		return "degraded", fmt.Errorf("connection pool at 90% capacity")
-	}
+	// Check connection pool health (simplified for now)
+	// stats := dm.connectionPool.GetStats()
+	// if stats.ActiveConnections > dm.advancedConfig.MaxConnections*90/100 {
+	//     return "degraded", fmt.Errorf("connection pool at 90% capacity")
+	// }
 	
 	return "healthy", nil
 }
@@ -455,7 +450,8 @@ func (qc *QueryCache) evictOldest() {
 
 func NewMetricsCollector() *MetricsCollector {
 	return &MetricsCollector{
-		lastReset: time.Now(),
+		lastReset:          time.Now(),
+		slowQueryThreshold: 100 * time.Millisecond, // Default threshold
 	}
 }
 

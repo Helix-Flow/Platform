@@ -13,7 +13,7 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
-	"helixflow/monitoring"
+	monitoring "helixflow/monitoring/monitoring"
 )
 
 // MonitoringServiceServer implements the gRPC MonitoringService
