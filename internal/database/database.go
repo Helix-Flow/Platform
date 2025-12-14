@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
-	"strconv"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -32,8 +30,8 @@ type RedisConfig struct {
 	DB       int
 }
 
-// DatabaseManager manages database connections
-type DatabaseManager struct {
+// LegacyDatabaseManager manages database connections (renamed to avoid conflict)
+type LegacyDatabaseManager struct {
 	Postgres    *sql.DB
 	Redis       *redis.Client
 	config      *DatabaseConfig
@@ -41,15 +39,15 @@ type DatabaseManager struct {
 }
 
 // NewDatabaseManager creates a new database manager
-func NewDatabaseManager(dbConfig *DatabaseConfig, redisConfig *RedisConfig) *DatabaseManager {
-	return &DatabaseManager{
+func NewDatabaseManager(dbConfig *DatabaseConfig, redisConfig *RedisConfig) *LegacyDatabaseManager {
+	return &LegacyDatabaseManager{
 		config:      dbConfig,
 		redisConfig: redisConfig,
 	}
 }
 
 // Initialize initializes database connections
-func (dm *DatabaseManager) Initialize() error {
+func (dm *LegacyDatabaseManager) Initialize() error {
 	// Initialize PostgreSQL connection
 	if err := dm.initPostgres(); err != nil {
 		return fmt.Errorf("failed to initialize PostgreSQL: %w", err)
@@ -65,7 +63,7 @@ func (dm *DatabaseManager) Initialize() error {
 }
 
 // initPostgres initializes PostgreSQL connection
-func (dm *DatabaseManager) initPostgres() error {
+func (dm *LegacyDatabaseManager) initPostgres() error {
 	connStr := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		dm.config.Host, dm.config.Port, dm.config.User, dm.config.Password, dm.config.DBName, dm.config.SSLMode)
 
@@ -92,7 +90,7 @@ func (dm *DatabaseManager) initPostgres() error {
 }
 
 // initRedis initializes Redis connection
-func (dm *DatabaseManager) initRedis() error {
+func (dm *LegacyDatabaseManager) initRedis() error {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", dm.redisConfig.Host, dm.redisConfig.Port),
 		Password: dm.redisConfig.Password,
@@ -112,7 +110,7 @@ func (dm *DatabaseManager) initRedis() error {
 }
 
 // Close closes database connections
-func (dm *DatabaseManager) Close() error {
+func (dm *LegacyDatabaseManager) Close() error {
 	var errors []error
 
 	if dm.Postgres != nil {
@@ -135,7 +133,7 @@ func (dm *DatabaseManager) Close() error {
 }
 
 // CreateUser creates a new user in the database
-func (dm *DatabaseManager) CreateUser(username, email, password, firstName, lastName, organization string) (string, error) {
+func (dm *LegacyDatabaseManager) CreateUser(username, email, password, firstName, lastName, organization string) (string, error) {
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -156,17 +154,17 @@ func (dm *DatabaseManager) CreateUser(username, email, password, firstName, last
 }
 
 // GetUserByUsername retrieves user by username
-func (dm *DatabaseManager) GetUserByUsername(username string) (*User, error) {
+func (dm *LegacyDatabaseManager) GetUserByUsername(username string) (*User, error) {
 	query := `SELECT id, username, email, password_hash, first_name, last_name, organization, 
-			  created_at, updated_at, last_login, active, email_verified 
+			  created_at, updated_at, last_login_at, active, role 
 			  FROM users WHERE username = $1`
 
 	user := &User{}
 	err := dm.Postgres.QueryRow(query, username).Scan(
 		&user.ID, &user.Username, &user.Email, &user.PasswordHash,
 		&user.FirstName, &user.LastName, &user.Organization,
-		&user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
-		&user.Active, &user.EmailVerified,
+		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
+		&user.Active, &user.Role,
 	)
 
 	if err != nil {
@@ -180,17 +178,17 @@ func (dm *DatabaseManager) GetUserByUsername(username string) (*User, error) {
 }
 
 // GetUserByEmail retrieves user by email
-func (dm *DatabaseManager) GetUserByEmail(email string) (*User, error) {
+func (dm *LegacyDatabaseManager) GetUserByEmail(email string) (*User, error) {
 	query := `SELECT id, username, email, password_hash, first_name, last_name, organization, 
-			  created_at, updated_at, last_login, active, email_verified 
+			  created_at, updated_at, last_login_at, active, role 
 			  FROM users WHERE email = $1`
 
 	user := &User{}
 	err := dm.Postgres.QueryRow(query, email).Scan(
 		&user.ID, &user.Username, &user.Email, &user.PasswordHash,
 		&user.FirstName, &user.LastName, &user.Organization,
-		&user.CreatedAt, &user.UpdatedAt, &user.LastLogin,
-		&user.Active, &user.EmailVerified,
+		&user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt,
+		&user.Active, &user.Role,
 	)
 
 	if err != nil {
@@ -204,36 +202,22 @@ func (dm *DatabaseManager) GetUserByEmail(email string) (*User, error) {
 }
 
 // ValidatePassword validates user password
-func (dm *DatabaseManager) ValidatePassword(user *User, password string) bool {
+func (dm *LegacyDatabaseManager) ValidatePassword(user *User, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	return err == nil
 }
 
 // UpdateLastLogin updates user's last login time
-func (dm *DatabaseManager) UpdateLastLogin(userID string) error {
+func (dm *LegacyDatabaseManager) UpdateLastLogin(userID string) error {
 	query := `UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1`
 	_, err := dm.Postgres.Exec(query, userID)
 	return err
 }
 
-// User represents a user in the database
-type User struct {
-	ID            string     `json:"id"`
-	Username      string     `json:"username"`
-	Email         string     `json:"email"`
-	PasswordHash  string     `json:"-"` // Don't include in JSON
-	FirstName     string     `json:"first_name"`
-	LastName      string     `json:"last_name"`
-	Organization  string     `json:"organization"`
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
-	LastLogin     *time.Time `json:"last_login"`
-	Active        bool       `json:"active"`
-	EmailVerified bool       `json:"email_verified"`
-}
+
 
 // GetUserPermissions retrieves user permissions
-func (dm *DatabaseManager) GetUserPermissions(userID string) ([]string, error) {
+func (dm *LegacyDatabaseManager) GetUserPermissions(userID string) ([]string, error) {
 	query := `SELECT DISTINCT p.name 
 			  FROM permissions p
 			  JOIN role_permissions rp ON p.id = rp.permission_id
@@ -259,12 +243,12 @@ func (dm *DatabaseManager) GetUserPermissions(userID string) ([]string, error) {
 }
 
 // CreateAPIKey creates a new API key for a user
-func (dm *DatabaseManager) CreateAPIKey(userID, name, keyHash, keyPrefix string, permissions []string, expiresAt *time.Time) (string, error) {
-	query := `INSERT INTO api_keys (user_id, name, key_hash, key_prefix, permissions, expires_at) 
-			  VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+func (dm *LegacyDatabaseManager) CreateAPIKey(userID, name, keyHash, keyPrefix string, permissions []string) (string, error) {
+	query := `INSERT INTO api_keys (user_id, name, key_hash, key_prefix, permissions) 
+			  VALUES ($1, $2, $3, $4, $5) RETURNING id`
 
 	var keyID string
-	err := dm.Postgres.QueryRow(query, userID, name, keyHash, keyPrefix, permissions, expiresAt).Scan(&keyID)
+	err := dm.Postgres.QueryRow(query, userID, name, keyHash, keyPrefix, permissions).Scan(&keyID)
 	if err != nil {
 		return "", fmt.Errorf("failed to create API key: %w", err)
 	}
@@ -273,7 +257,7 @@ func (dm *DatabaseManager) CreateAPIKey(userID, name, keyHash, keyPrefix string,
 }
 
 // GetAPIKeyByHash retrieves API key by hash
-func (dm *DatabaseManager) GetAPIKeyByHash(keyHash string) (*APIKey, error) {
+func (dm *LegacyDatabaseManager) GetAPIKeyByHash(keyHash string) (*APIKey, error) {
 	query := `SELECT id, user_id, name, key_prefix, permissions, created_at, expires_at, 
 			  last_used_at, usage_count, active 
 			  FROM api_keys WHERE key_hash = $1 AND active = true`
@@ -295,29 +279,17 @@ func (dm *DatabaseManager) GetAPIKeyByHash(keyHash string) (*APIKey, error) {
 }
 
 // UpdateAPIKeyUsage updates API key usage information
-func (dm *DatabaseManager) UpdateAPIKeyUsage(keyID string) error {
+func (dm *LegacyDatabaseManager) UpdateAPIKeyUsage(keyID string) error {
 	query := `UPDATE api_keys SET usage_count = usage_count + 1, last_used_at = CURRENT_TIMESTAMP 
 			  WHERE id = $1`
 	_, err := dm.Postgres.Exec(query, keyID)
 	return err
 }
 
-// APIKey represents an API key in the database
-type APIKey struct {
-	ID          string     `json:"id"`
-	UserID      string     `json:"user_id"`
-	Name        string     `json:"name"`
-	KeyPrefix   string     `json:"key_prefix"`
-	Permissions []string   `json:"permissions"`
-	CreatedAt   time.Time  `json:"created_at"`
-	ExpiresAt   *time.Time `json:"expires_at"`
-	LastUsedAt  *time.Time `json:"last_used_at"`
-	UsageCount  int        `json:"usage_count"`
-	Active      bool       `json:"active"`
-}
+
 
 // LogInferenceRequest logs an inference request
-func (dm *DatabaseManager) LogInferenceRequest(userID, modelID string, requestData, responseData map[string]interface{}, status string, errorMessage *string, tokensUsed, processingTimeMs int, cost float64) error {
+func (dm *LegacyDatabaseManager) LogInferenceRequest(userID, modelID string, requestData, responseData map[string]interface{}, status string, errorMessage *string, tokensUsed, processingTimeMs int, cost float64) error {
 	query := `INSERT INTO inference_requests 
 			  (user_id, model_id, request_data, response_data, status, error_message, tokens_used, processing_time_ms, cost) 
 			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
@@ -338,43 +310,4 @@ func (dm *DatabaseManager) LogInferenceRequest(userID, modelID string, requestDa
 	}
 
 	return nil
-}
-
-// GetDefaultDatabaseConfig returns default database configuration
-func GetDefaultDatabaseConfig() *DatabaseConfig {
-	return &DatabaseConfig{
-		Host:     getEnv("DB_HOST", "localhost"),
-		Port:     getEnvInt("DB_PORT", 5432),
-		User:     getEnv("DB_USER", "helixflow"),
-		Password: getEnv("DB_PASSWORD", ""),
-		DBName:   getEnv("DB_NAME", "helixflow"),
-		SSLMode:  getEnv("DB_SSLMODE", "disable"),
-	}
-}
-
-// GetDefaultRedisConfig returns default Redis configuration
-func GetDefaultRedisConfig() *RedisConfig {
-	return &RedisConfig{
-		Host:     getEnv("REDIS_HOST", "localhost"),
-		Port:     getEnvInt("REDIS_PORT", 6379),
-		Password: getEnv("REDIS_PASSWORD", ""),
-		DB:       getEnvInt("REDIS_DB", 0),
-	}
-}
-
-// Helper functions for environment variables
-func getEnv(key, defaultValue string) string {
-	if value := os.Getenv(key); value != "" {
-		return value
-	}
-	return defaultValue
-}
-
-func getEnvInt(key string, defaultValue int) int {
-	if value := os.Getenv(key); value != "" {
-		if intValue, err := strconv.Atoi(value); err == nil {
-			return intValue
-		}
-	}
-	return defaultValue
 }

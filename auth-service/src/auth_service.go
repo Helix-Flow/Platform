@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"crypto/rsa"
-	"database/sql"
 	"fmt"
 	"log"
 	"time"
@@ -21,13 +20,13 @@ import (
 // AuthServiceServer implements the gRPC AuthService
 type AuthServiceServer struct {
 	auth.UnimplementedAuthServiceServer
-	dbManager  *database.DatabaseManager
+	dbManager  database.DatabaseManager
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 }
 
 // NewAuthServiceServer creates a new auth service server
-func NewAuthServiceServer(dbManager *database.DatabaseManager) (*AuthServiceServer, error) {
+func NewAuthServiceServer(dbManager database.DatabaseManager) (*AuthServiceServer, error) {
 	// Generate RSA keys for JWT signing
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {

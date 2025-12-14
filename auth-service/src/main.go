@@ -9,20 +9,42 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 
-	"helixflow/auth"
-	"helixflow/database"
+	pb "helixflow/auth"
+	database "helixflow/database"
 )
 
 func main() {
-	// Initialize database manager
-	dbConfig := database.GetDefaultDatabaseConfig()
+	// Initialize database based on configuration
+	dbType := database.GetDatabaseType()
 	redisConfig := database.GetDefaultRedisConfig()
-
-	dbManager := database.NewDatabaseManager(dbConfig, redisConfig)
-	if err := dbManager.Initialize(); err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
+	
+	log.Printf("Using database type: %s", dbType)
+	
+	var dbManager database.DatabaseManager
+	var err error
+	
+	switch dbType {
+	case database.DatabaseTypePostgres:
+		dbConfig := database.GetPostgreSQLConfig()
+		postgresManager := database.NewDatabaseManager(dbConfig, redisConfig)
+		if err = postgresManager.Initialize(); err != nil {
+			log.Fatalf("Failed to initialize PostgreSQL: %v", err)
+		}
+		defer postgresManager.Close()
+		dbManager = postgresManager
+		
+	case database.DatabaseTypeSQLite:
+		sqliteConfig := database.GetSQLiteConfig()
+		sqliteManager := database.NewSQLiteManager(sqliteConfig, redisConfig)
+		if err = sqliteManager.Initialize(); err != nil {
+			log.Fatalf("Failed to initialize SQLite: %v", err)
+		}
+		defer sqliteManager.Close()
+		dbManager = sqliteManager
+		
+	default:
+		log.Fatalf("Unknown database type: %s", dbType)
 	}
-	defer dbManager.Close()
 
 	// Create auth service server
 	authServer, err := NewAuthServiceServer(dbManager)
