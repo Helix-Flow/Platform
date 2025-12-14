@@ -46,6 +46,7 @@ type DatabaseManager interface {
 	CreateUser(username, email, password, firstName, lastName, organization string) (string, error)
 	GetUserByUsername(username string) (*User, error)
 	GetUserByEmail(email string) (*User, error)
+	GetUserByID(userID string) (*User, error)
 	ValidatePassword(user *User, password string) bool
 	UpdateLastLogin(userID string) error
 	UpdateUserProfile(userID, firstName, lastName, organization string) error

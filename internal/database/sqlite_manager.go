@@ -316,6 +316,34 @@ func (dm *SQLiteManager) GetUserByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
+// GetUserByID retrieves user by ID
+func (dm *SQLiteManager) GetUserByID(userID string) (*User, error) {
+	query := `SELECT id, username, email, password_hash, first_name, last_name, organization, role, active, created_at, updated_at, last_login_at 
+			  FROM users WHERE id = ?`
+
+	var user User
+	var createdAt, updatedAt, lastLoginAt sql.NullString
+	err := dm.DB.QueryRow(query, userID).Scan(
+		&user.ID, &user.Username, &user.Email, &user.PasswordHash,
+		&user.FirstName, &user.LastName, &user.Organization, &user.Role,
+		&user.Active, &createdAt, &updatedAt, &lastLoginAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+
+	user.CreatedAt = createdAt.String
+	user.UpdatedAt = updatedAt.String
+	if lastLoginAt.Valid {
+		user.LastLoginAt = lastLoginAt.String
+	}
+
+	return &user, nil
+}
+
 // ValidatePassword validates user password
 func (dm *SQLiteManager) ValidatePassword(user *User, password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) == nil

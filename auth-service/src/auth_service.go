@@ -120,7 +120,7 @@ func (s *AuthServiceServer) Login(ctx context.Context, req *auth.LoginRequest) (
 		return nil, status.Error(codes.Internal, "failed to generate access token")
 	}
 
-	refreshToken, err := s.generateRefreshToken(user.ID)
+	refreshToken, err := s.generateRefreshToken(user.ID, user.Username)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate refresh token")
 	}
@@ -210,16 +210,21 @@ func (s *AuthServiceServer) RefreshToken(ctx context.Context, req *auth.RefreshT
 	}
 
 	userID := claims["sub"].(string)
-	username := claims["username"].(string)
+	
+	// Get user by ID to retrieve username
+	user, err := s.dbManager.GetUserByID(userID)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
 
 	// Generate new access token
-	accessToken, err := s.generateAccessToken(userID, username)
+	accessToken, err := s.generateAccessToken(userID, user.Username)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate access token")
 	}
 
 	// Generate new refresh token
-	newRefreshToken, err := s.generateRefreshToken(userID)
+	newRefreshToken, err := s.generateRefreshToken(userID, user.Username)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to generate refresh token")
 	}
@@ -440,12 +445,13 @@ func (s *AuthServiceServer) generateAccessToken(userID, username string) (string
 	return token.SignedString(s.privateKey)
 }
 
-func (s *AuthServiceServer) generateRefreshToken(userID string) (string, error) {
+func (s *AuthServiceServer) generateRefreshToken(userID, username string) (string, error) {
 	claims := jwt.MapClaims{
-		"sub":  userID,
-		"exp":  time.Now().Add(7 * 24 * time.Hour).Unix(), // 7 days
-		"iat":  time.Now().Unix(),
-		"type": "refresh",
+		"sub":      userID,
+		"username": username,
+		"exp":      time.Now().Add(7 * 24 * time.Hour).Unix(), // 7 days
+		"iat":      time.Now().Unix(),
+		"type":     "refresh",
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
