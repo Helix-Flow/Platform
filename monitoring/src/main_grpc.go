@@ -29,146 +29,243 @@ func NewMonitoringServiceServer() *MonitoringServiceServer {
 	}
 }
 
-// RecordMetrics records system metrics
-func (s *MonitoringServiceServer) RecordMetrics(ctx context.Context, req *monitoring.RecordMetricsRequest) (*monitoring.RecordMetricsResponse, error) {
-	if req == nil {
-		return nil, fmt.Errorf("request cannot be nil")
-	}
-
-	// Record API metrics
-	if req.ApiMetrics != nil {
-		fmt.Printf("[METRICS] API - User: %s, Method: %s, Path: %s, Status: %d, Latency: %dms\n",
-			req.ApiMetrics.UserId,
-			req.ApiMetrics.Method,
-			req.ApiMetrics.Path,
-			req.ApiMetrics.StatusCode,
-			req.ApiMetrics.LatencyMs)
-	}
-
-	// Record inference metrics
-	if req.InferenceMetrics != nil {
-		fmt.Printf("[METRICS] Inference - Model: %s, User: %s, Latency: %dms, Tokens: %d\n",
-			req.InferenceMetrics.ModelId,
-			req.InferenceMetrics.UserId,
-			req.InferenceMetrics.LatencyMs,
-			req.InferenceMetrics.TokenCount)
-	}
-
-	// Record system metrics
-	if req.SystemMetrics != nil {
-		fmt.Printf("[METRICS] System - CPU: %.2f%%, Memory: %.2f%%, Disk: %.2f%%, Uptime: %s\n",
-			req.SystemMetrics.CpuUsage,
-			req.SystemMetrics.MemoryUsage,
-			req.SystemMetrics.DiskUsage,
-			req.SystemMetrics.Uptime)
-	}
-
-	return &monitoring.RecordMetricsResponse{
-		Success: true,
-		Message: "Metrics recorded successfully",
-		Timestamp: time.Now().Format(time.RFC3339),
-	}, nil
-}
-
 // GetSystemMetrics retrieves current system metrics
 func (s *MonitoringServiceServer) GetSystemMetrics(ctx context.Context, req *monitoring.GetSystemMetricsRequest) (*monitoring.GetSystemMetricsResponse, error) {
 	// Generate realistic system metrics
-	metrics := &monitoring.SystemMetrics{
-		CpuUsage:    45.2 + (time.Now().UnixNano()%20 - 10), // Simulate variation
-		MemoryUsage: 67.8 + (time.Now().UnixNano()%15 - 7),
-		DiskUsage:   23.1 + (time.Now().UnixNano()%10 - 5),
-		Uptime:      "24h",
+	metrics := []*monitoring.MetricData{
+		{
+			Name:      "cpu_usage",
+			Value:     45.2 + float64(time.Now().UnixNano()%20-10),
+			Timestamp: time.Now().Format(time.RFC3339),
+			Unit:      "percent",
+		},
+		{
+			Name:      "memory_usage",
+			Value:     67.8 + float64(time.Now().UnixNano()%15-7),
+			Timestamp: time.Now().Format(time.RFC3339),
+			Unit:      "percent",
+		},
+		{
+			Name:      "disk_usage",
+			Value:     23.1 + float64(time.Now().UnixNano()%10-5),
+			Timestamp: time.Now().Format(time.RFC3339),
+			Unit:      "percent",
+		},
 	}
 
 	return &monitoring.GetSystemMetricsResponse{
 		Success: true,
 		Metrics: metrics,
+		Message: "System metrics retrieved successfully",
+	}, nil
+}
+
+// GetServiceMetrics retrieves service-specific metrics
+func (s *MonitoringServiceServer) GetServiceMetrics(ctx context.Context, req *monitoring.GetServiceMetricsRequest) (*monitoring.GetServiceMetricsResponse, error) {
+	// Generate service metrics based on service name
+	serviceMetrics := []*monitoring.MetricData{
+		{
+			Name:      "request_count",
+			Value:     1250 + float64(time.Now().Unix()%100),
+			Timestamp: time.Now().Format(time.RFC3339),
+			Unit:      "count",
+		},
+		{
+			Name:      "response_time",
+			Value:     45.2 + float64(time.Now().UnixNano()%20-10),
+			Timestamp: time.Now().Format(time.RFC3339),
+			Unit:      "ms",
+		},
+		{
+			Name:      "error_rate",
+			Value:     0.5 + float64(time.Now().UnixNano()%5),
+			Timestamp: time.Now().Format(time.RFC3339),
+			Unit:      "percent",
+		},
+	}
+
+	serviceInfo := &monitoring.ServiceInfo{
+		Name:        req.ServiceName,
+		Status:      "healthy",
+		Uptime:      "24h",
+		Version:     "1.0.0",
+		LastRestart: time.Now().Add(-24 * time.Hour).Format(time.RFC3339),
+	}
+
+	return &monitoring.GetServiceMetricsResponse{
+		Success:     true,
+		Metrics:     serviceMetrics,
+		ServiceInfo: serviceInfo,
+		Message:     fmt.Sprintf("Service metrics for %s retrieved successfully", req.ServiceName),
+	}, nil
+}
+
+// GetGPUMetrics retrieves GPU metrics
+func (s *MonitoringServiceServer) GetGPUMetrics(ctx context.Context, req *monitoring.GetGPUMetricsRequest) (*monitoring.GetGPUMetricsResponse, error) {
+	// Generate mock GPU metrics
+	gpuMetrics := []*monitoring.GPUMetricData{
+		{
+			GpuId: 0,
+			Metrics: []*monitoring.MetricData{
+				{
+					Name:      "gpu_utilization",
+					Value:     75.3 + float64(time.Now().UnixNano()%20-10),
+					Timestamp: time.Now().Format(time.RFC3339),
+					Unit:      "percent",
+				},
+				{
+					Name:      "gpu_memory_usage",
+					Value:     45.2 + float64(time.Now().UnixNano()%15-7),
+					Timestamp: time.Now().Format(time.RFC3339),
+					Unit:      "percent",
+				},
+				{
+					Name:      "gpu_temperature",
+					Value:     65.0 + float64(time.Now().UnixNano()%10-5),
+					Timestamp: time.Now().Format(time.RFC3339),
+					Unit:      "celsius",
+				},
+			},
+		},
+	}
+
+	return &monitoring.GetGPUMetricsResponse{
+		Success:   true,
+		GpuMetrics: gpuMetrics,
+		Message:   "GPU metrics retrieved successfully",
+	}, nil
+}
+
+// GetApplicationMetrics retrieves application-specific metrics
+func (s *MonitoringServiceServer) GetApplicationMetrics(ctx context.Context, req *monitoring.GetApplicationMetricsRequest) (*monitoring.GetApplicationMetricsResponse, error) {
+	// Generate application metrics
+	appMetrics := []*monitoring.MetricData{
+		{
+			Name:      "active_users",
+			Value:     150 + float64(time.Now().Unix()%50),
+			Timestamp: time.Now().Format(time.RFC3339),
+			Unit:      "count",
+		},
+		{
+			Name:      "requests_per_second",
+			Value:     25.5 + float64(time.Now().UnixNano()%10-5),
+			Timestamp: time.Now().Format(time.RFC3339),
+			Unit:      "rps",
+		},
+		{
+			Name:      "average_response_time",
+			Value:     125.3 + float64(time.Now().UnixNano()%20-10),
+			Timestamp: time.Now().Format(time.RFC3339),
+			Unit:      "ms",
+		},
+	}
+
+	return &monitoring.GetApplicationMetricsResponse{
+		Success: true,
+		Metrics: appMetrics,
+		Message: fmt.Sprintf("Application metrics for %s retrieved successfully", req.ApplicationName),
+	}, nil
+}
+
+// CreateAlertRule creates a new alert rule
+func (s *MonitoringServiceServer) CreateAlertRule(ctx context.Context, req *monitoring.CreateAlertRuleRequest) (*monitoring.CreateAlertRuleResponse, error) {
+	if req.Rule == nil {
+		return nil, fmt.Errorf("alert rule cannot be nil")
+	}
+
+	fmt.Printf("[ALERT_RULE] Created alert rule: %s - %s (Severity: %v)\n",
+		req.Rule.Name, req.Rule.Description, req.Rule.Severity)
+
+	return &monitoring.CreateAlertRuleResponse{
+		Success:   true,
+		RuleId:    fmt.Sprintf("rule_%d", time.Now().Unix()),
+		Message:   "Alert rule created successfully",
 		Timestamp: time.Now().Format(time.RFC3339),
 	}, nil
 }
 
-// GetHealthStatus retrieves health status of services
-func (s *MonitoringServiceServer) GetHealthStatus(ctx context.Context, req *monitoring.GetHealthStatusRequest) (*monitoring.GetHealthStatusResponse, error) {
-	// Check health of various services
-	services := []*monitoring.ServiceHealth{
-		{
-			ServiceName: "api-gateway",
-			Status:      "healthy",
-			LastChecked: time.Now().Format(time.RFC3339),
-			ResponseTime: 45,
-		},
-		{
-			ServiceName: "auth-service",
-			Status:      "healthy", 
-			LastChecked: time.Now().Format(time.RFC3339),
-			ResponseTime: 32,
-		},
-		{
-			ServiceName: "inference-pool",
-			Status:      "healthy",
-			LastChecked: time.Now().Format(time.RFC3339),
-			ResponseTime: 78,
-		},
-		{
-			ServiceName: "monitoring",
-			Status:      "healthy",
-			LastChecked: time.Now().Format(time.RFC3339),
-			ResponseTime: 23,
-		},
+// UpdateAlertRule updates an existing alert rule
+func (s *MonitoringServiceServer) UpdateAlertRule(ctx context.Context, req *monitoring.UpdateAlertRuleRequest) (*monitoring.UpdateAlertRuleResponse, error) {
+	if req.Rule == nil || req.RuleId == "" {
+		return nil, fmt.Errorf("rule ID and rule cannot be nil")
 	}
 
-	return &monitoring.GetHealthStatusResponse{
-		Success: true,
-		Services: services,
-		OverallStatus: "healthy",
+	fmt.Printf("[ALERT_RULE] Updated alert rule: %s\n", req.RuleId)
+
+	return &monitoring.UpdateAlertRuleResponse{
+		Success:   true,
+		Message:   "Alert rule updated successfully",
 		Timestamp: time.Now().Format(time.RFC3339),
 	}, nil
 }
 
-// CreateAlert creates a new alert
-func (s *MonitoringServiceServer) CreateAlert(ctx context.Context, req *monitoring.CreateAlertRequest) (*monitoring.CreateAlertResponse, error) {
-	if req.Alert == nil {
-		return nil, fmt.Errorf("alert cannot be nil")
+// DeleteAlertRule deletes an alert rule
+func (s *MonitoringServiceServer) DeleteAlertRule(ctx context.Context, req *monitoring.DeleteAlertRuleRequest) (*monitoring.DeleteAlertRuleResponse, error) {
+	if req.RuleId == "" {
+		return nil, fmt.Errorf("rule ID is required")
 	}
 
-	// In a real implementation, this would:
-	// 1. Validate the alert configuration
-	// 2. Store the alert in the database
-	// 3. Set up monitoring for the alert condition
-	// 4. Send initial notifications if needed
+	fmt.Printf("[ALERT_RULE] Deleted alert rule: %s\n", req.RuleId)
 
-	fmt.Printf("[ALERT] Created alert: %s - %s (Severity: %s)\n",
-		req.Alert.Name,
-		req.Alert.Description,
-		req.Alert.Severity)
-
-	return &monitoring.CreateAlertResponse{
-		Success: true,
-		AlertId: fmt.Sprintf("alert_%d", time.Now().Unix()),
-		Message: "Alert created successfully",
+	return &monitoring.DeleteAlertRuleResponse{
+		Success:   true,
+		Message:   "Alert rule deleted successfully",
 		Timestamp: time.Now().Format(time.RFC3339),
+	}, nil
+}
+
+// ListAlertRules lists all alert rules
+func (s *MonitoringServiceServer) ListAlertRules(ctx context.Context, req *monitoring.ListAlertRulesRequest) (*monitoring.ListAlertRulesResponse, error) {
+	// Mock alert rules
+	rules := []*monitoring.AlertRule{
+		{
+			RuleId:      "rule_1",
+			Name:        "High CPU Usage",
+			Description: "CPU usage exceeds 80%",
+			Severity:    monitoring.AlertSeverity_ALERT_SEVERITY_WARNING,
+			Condition:   "cpu_usage > 80",
+			Enabled:     true,
+			CreatedAt:   time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+		},
+		{
+			RuleId:      "rule_2",
+			Name:        "Database Connection Pool",
+			Description: "Connection pool utilization above 90%",
+			Severity:    monitoring.AlertSeverity_ALERT_SEVERITY_INFO,
+			Condition:   "db_connections > 90",
+			Enabled:     true,
+			CreatedAt:   time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+		},
+	}
+
+	return &monitoring.ListAlertRulesResponse{
+		Success: true,
+		Rules:   rules,
+		Total:   int32(len(rules)),
 	}, nil
 }
 
 // GetAlerts retrieves active alerts
 func (s *MonitoringServiceServer) GetAlerts(ctx context.Context, req *monitoring.GetAlertsRequest) (*monitoring.GetAlertsResponse, error) {
-	// Mock alerts for demonstration
+	// Mock alerts
 	alerts := []*monitoring.Alert{
 		{
-			AlertId:   "alert_1",
-			Name:      "High CPU Usage",
+			AlertId:     "alert_1",
+			RuleId:      "rule_1",
+			Name:        "High CPU Usage",
 			Description: "CPU usage exceeds 80%",
-			Severity:  monitoring.Severity_WARNING,
-			Status:    monitoring.AlertStatus_ACTIVE,
-			CreatedAt: time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+			Severity:    monitoring.AlertSeverity_ALERT_SEVERITY_WARNING,
+			Status:      monitoring.AlertStatus_ACTIVE,
+			CreatedAt:   time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
 		},
 		{
-			AlertId:   "alert_2",
-			Name:      "Database Connection Pool",
+			AlertId:     "alert_2",
+			RuleId:      "rule_2",
+			Name:        "Database Connection Pool",
 			Description: "Connection pool utilization above 90%",
-			Severity:  monitoring.Severity_INFO,
-			Status:    monitoring.AlertStatus_RESOLVED,
-			CreatedAt: time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+			Severity:    monitoring.AlertSeverity_ALERT_SEVERITY_INFO,
+			Status:      monitoring.AlertStatus_RESOLVED,
+			CreatedAt:   time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
 		},
 	}
 
@@ -176,37 +273,72 @@ func (s *MonitoringServiceServer) GetAlerts(ctx context.Context, req *monitoring
 		Success: true,
 		Alerts:  alerts,
 		Total:   int32(len(alerts)),
+	}, nil
+}
+
+// AcknowledgeAlert acknowledges an alert
+func (s *MonitoringServiceServer) AcknowledgeAlert(ctx context.Context, req *monitoring.AcknowledgeAlertRequest) (*monitoring.AcknowledgeAlertResponse, error) {
+	if req.AlertId == "" {
+		return nil, fmt.Errorf("alert ID is required")
+	}
+
+	fmt.Printf("[ALERT] Acknowledged alert: %s by user %s\n", req.AlertId, req.UserId)
+
+	return &monitoring.AcknowledgeAlertResponse{
+		Success:   true,
+		Message:   "Alert acknowledged successfully",
 		Timestamp: time.Now().Format(time.RFC3339),
 	}, nil
 }
 
-// GetMetricsHistory retrieves historical metrics
-func (s *MonitoringServiceServer) GetMetricsHistory(ctx context.Context, req *monitoring.GetMetricsHistoryRequest) (*monitoring.GetMetricsHistoryResponse, error) {
-	if req.MetricName == "" {
-		return nil, fmt.Errorf("metric name is required")
+// GetScalingRecommendations retrieves predictive scaling recommendations
+func (s *MonitoringServiceServer) GetScalingRecommendations(ctx context.Context, req *monitoring.GetScalingRecommendationsRequest) (*monitoring.GetScalingRecommendationsResponse, error) {
+	// Mock scaling recommendations
+	recommendations := []*monitoring.ScalingRecommendation{
+		{
+			ServiceName:      "api-gateway",
+			CurrentInstances: 2,
+			RecommendedInstances: 3,
+			Reason:           "CPU usage trending upward",
+			Confidence:       0.85,
+			Priority:         monitoring.ScalingPriority_MEDIUM,
+		},
+		{
+			ServiceName:      "inference-pool",
+			CurrentInstances: 1,
+			RecommendedInstances: 2,
+			Reason:           "Increased inference requests",
+			Confidence:       0.72,
+			Priority:         monitoring.ScalingPriority_HIGH,
+		},
 	}
 
-	// Generate mock historical data
-	history := []*monitoring.MetricPoint{}
-	now := time.Now()
-	
-	// Generate 24 hours of data points
-	for i := 0; i < 24; i++ {
-		timestamp := now.Add(-time.Duration(i) * time.Hour)
-		value := 50.0 + float64(i%20) + (float64(i) * 0.5)
-		
-		history = append(history, &monitoring.MetricPoint{
-			Timestamp: timestamp.Format(time.RFC3339),
-			Value:     value,
-		})
-	}
-
-	return &monitoring.GetMetricsHistoryResponse{
-		Success: true,
-		MetricName: req.MetricName,
-		History: history,
-		Timestamp: time.Now().Format(time.RFC3339),
+	return &monitoring.GetScalingRecommendationsResponse{
+		Success:           true,
+		Recommendations:   recommendations,
+		Message:           "Scaling recommendations generated successfully",
 	}, nil
+}
+
+// StreamMetrics streams metrics in real-time
+func (s *MonitoringServiceServer) StreamMetrics(req *monitoring.StreamMetricsRequest, stream monitoring.MonitoringService_StreamMetricsServer) error {
+	// Stream metrics for 10 iterations
+	for i := 0; i < 10; i++ {
+		metric := &monitoring.MetricData{
+			Name:      "cpu_usage",
+			Value:     45.2 + float64(time.Now().UnixNano()%20-10),
+			Timestamp: time.Now().Format(time.RFC3339),
+			Unit:      "percent",
+		}
+
+		if err := stream.Send(metric); err != nil {
+			return err
+		}
+
+		time.Sleep(1 * time.Second)
+	}
+
+	return nil
 }
 
 // StartGRPCServer starts the gRPC monitoring service
@@ -253,9 +385,4 @@ func StartGRPCServer() error {
 	}
 
 	return nil
-}
-
-// Helper function to convert user to proto
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && s[:len(substr)] == substr
 }
