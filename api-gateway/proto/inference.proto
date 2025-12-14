@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package helixflow.inference;
+
+option go_package = "helixflow/inference";
+
+// Inference service definition
+service InferenceService {
+  // Generate completion for chat messages
+  rpc GenerateCompletion(InferenceRequest) returns (InferenceResponse);
+  
+  // Generate streaming completion
+  rpc GenerateStreamingCompletion(InferenceRequest) returns (stream InferenceResponse);
+  
+  // Get model information
+  rpc GetModelInfo(ModelInfoRequest) returns (ModelInfoResponse);
+  
+  // List available models
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+  
+  // Health check
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+// Message structure
+message Message {
+  string role = 1;
+  string content = 2;
+  string name = 3;
+}
+
+// Inference request
+message InferenceRequest {
+  string model = 1;
+  repeated Message messages = 2;
+  int32 max_tokens = 3;
+  float temperature = 4;
+  float top_p = 5;
+  int32 top_k = 6;
+  bool stream = 7;
+  string user_id = 8;
+  map<string, string> metadata = 9;
+}
+
+// Inference response
+message InferenceResponse {
+  string content = 1;
+  string finish_reason = 2;
+  Usage usage = 3;
+  string model = 4;
+  int64 created = 5;
+  string id = 6;
+  map<string, string> metadata = 7;
+}
+
+// Usage information
+message Usage {
+  int32 prompt_tokens = 1;
+  int32 completion_tokens = 2;
+  int32 total_tokens = 3;
+}
+
+// Model info request
+message ModelInfoRequest {
+  string model_id = 1;
+}
+
+// Model info response
+message ModelInfoResponse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string provider = 4;
+  int64 created = 5;
+  map<string, string> capabilities = 6;
+  bool active = 7;
+}
+
+// List models request
+message ListModelsRequest {
+  string user_id = 1;
+  bool include_inactive = 2;
+}
+
+// List models response
+message ListModelsResponse {
+  repeated ModelInfoResponse models = 1;
+  int32 total_count = 2;
+}
+
+// Health check request
+message HealthRequest {}
+
+// Health check response
+message HealthResponse {
+  string status = 1;
+  string version = 2;
+  int64 timestamp = 3;
+  map<string, string> details = 4;
+}

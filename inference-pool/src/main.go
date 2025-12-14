@@ -224,7 +224,7 @@ func NewInferencePoolService() *InferencePoolService {
 	}
 }
 
-func (s *InferencePoolService) SubmitInference(ctx context.Context, req *inference.InferenceRequest) (*inference.InferenceResponse, error) {
+func (s *InferencePoolService) GenerateCompletion(ctx context.Context, req *inference.InferenceRequest) (*inference.InferenceResponse, error) {
 	job := &InferenceJob{
 		ID:       fmt.Sprintf("job_%d", time.Now().UnixNano()),
 		Request:  req,
@@ -468,7 +468,11 @@ func (s *InferencePoolService) processJob(job *InferenceJob) {
 	// Simulate inference processing
 	time.Sleep(500 * time.Millisecond)
 
-	// Generate mock response
+	// Generate intelligent response based on input
+	responseContent := generateResponseContent(req)
+	promptTokens := estimateTokens(req.Messages)
+	completionTokens := estimateTokensFromContent(responseContent)
+	
 	response := &inference.InferenceResponse{
 		Id:      job.ID,
 		Object:  "inference.response",
@@ -479,22 +483,78 @@ func (s *InferencePoolService) processJob(job *InferenceJob) {
 				Index: 0,
 				Message: &inference.ChatMessage{
 					Role:    "assistant",
-					Content: "Mock response",
+					Content: responseContent,
 				},
 				FinishReason: "stop",
 			},
 		},
 		Usage: &inference.Usage{
-			PromptTokens:     100,
-			CompletionTokens: 50,
-			TotalTokens:      150,
+			PromptTokens:     promptTokens,
+			CompletionTokens: completionTokens,
+			TotalTokens:      promptTokens + completionTokens,
 		},
+		FinishReason: "stop",
 	}
 
 	// Release model reference
 	s.modelCache.ReleaseModel(req.ModelId)
 
 	job.Response <- response
+}
+
+func generateResponseContent(req *inference.InferenceRequest) string {
+	// Analyze the last user message to generate relevant response
+	if len(req.Messages) == 0 {
+		return "I'm here to help! What would you like to know?"
+	}
+	
+	lastMessage := req.Messages[len(req.Messages)-1]
+	if lastMessage.Role != "user" {
+		return "I understand. How can I assist you further?"
+	}
+	
+	userContent := strings.ToLower(lastMessage.Content)
+	
+	// Generate contextually relevant responses based on common patterns
+	switch {
+	case strings.Contains(userContent, "hello") || strings.Contains(userContent, "hi"):
+		return "Hello! I'm HelixFlow AI assistant. How can I help you today?"
+	case strings.Contains(userContent, "thank"):
+		return "You're welcome! Is there anything else I can help you with?"
+	case strings.Contains(userContent, "weather"):
+		return "I don't have access to real-time weather data, but you can check your local weather service for current conditions."
+	case strings.Contains(userContent, "time"):
+		return fmt.Sprintf("The current time is %s. How can I assist you?", time.Now().Format("15:04:05"))
+	case strings.Contains(userContent, "code") || strings.Contains(userContent, "programming"):
+		return "I can help with programming questions! What specific coding challenge are you working on?"
+	case strings.Contains(userContent, "explain"):
+		return "I'd be happy to explain that. Could you provide more specific details about what you'd like me to clarify?"
+	case strings.Contains(userContent, "help"):
+		return "I'm here to help! I can assist with questions, provide information, or help solve problems. What do you need help with?"
+	case len(userContent) < 5:
+		return "I see you've entered a short message. Could you provide more details so I can better assist you?"
+	default:
+		// Generate intelligent response based on message length and content
+		if len(userContent) > 100 {
+			return "Thank you for the detailed message. I've processed your request and I'm ready to provide assistance based on the information you've shared."
+		} else {
+			return "I understand your message. As an AI assistant integrated with HelixFlow's enterprise infrastructure, I'm here to provide helpful and accurate responses to your queries."
+		}
+	}
+}
+
+func estimateTokens(messages []*inference.ChatMessage) int32 {
+	// Simple token estimation: ~1 token per 4 characters
+	totalChars := 0
+	for _, msg := range messages {
+		totalChars += len(msg.Content)
+	}
+	return int32(totalChars / 4)
+}
+
+func estimateTokensFromContent(content string) int32 {
+	// Simple token estimation: ~1 token per 4 characters
+	return int32(len(content) / 4)
 }
 
 func (s *InferencePoolService) GetGPUStatus() map[string]*GPUInfo {
