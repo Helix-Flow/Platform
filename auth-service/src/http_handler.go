@@ -27,6 +27,7 @@ func (s *AuthHTTPServer) Start(port string) error {
 	mux.HandleFunc("/login", s.loginHandler)
 	mux.HandleFunc("/refresh", s.refreshHandler)
 	mux.HandleFunc("/revoke", s.revokeHandler)
+	mux.HandleFunc("/register", s.registerHandler)
 	mux.HandleFunc("/health", s.healthHandler)
 
 	server := &http.Server{
@@ -140,6 +141,51 @@ func (s *AuthHTTPServer) revokeHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "Revocation failed", http.StatusInternalServerError)
 	}
+}
+
+// registerHandler handles POST /register
+func (s *AuthHTTPServer) registerHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Username     string `json:"username"`
+		Email        string `json:"email"`
+		Password     string `json:"password"`
+		FirstName    string `json:"first_name"`
+		LastName     string `json:"last_name"`
+		Organization string `json:"organization"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	ctx := context.Background()
+	grpcReq := &pb.RegisterRequest{
+		Username:     req.Username,
+		Email:        req.Email,
+		Password:     req.Password,
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
+		Organization: req.Organization,
+	}
+	grpcResp, err := s.grpcServer.Register(ctx, grpcReq)
+	if err != nil {
+		log.Printf("Registration failed: %v", err)
+		http.Error(w, "Registration failed", http.StatusBadRequest)
+		return
+	}
+
+	response := map[string]interface{}{
+		"success": grpcResp.Success,
+		"message": grpcResp.Message,
+		"user_id": grpcResp.UserId,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // healthHandler handles GET /health

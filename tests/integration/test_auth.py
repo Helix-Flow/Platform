@@ -38,7 +38,7 @@ class TestAuthIntegration:
     def test_jwt_token_generation_and_validation(self, auth_service_url):
         """Test JWT token generation and validation flow."""
         # Register/login user
-        login_payload = {"email": "test@example.com", "password": "password123"}
+        login_payload = {"email": "test@example.com", "password": "password"}
 
         response = requests.post(
             f"{auth_service_url}/login", json=login_payload, verify=False
@@ -69,7 +69,7 @@ class TestAuthIntegration:
         # First get tokens
         login_response = requests.post(
             f"{auth_service_url}/login",
-            json={"email": "test@example.com", "password": "password123"},
+            json={"email": "test@example.com", "password": "password"},
             verify=False,
         )
 
@@ -93,7 +93,7 @@ class TestAuthIntegration:
         # Get token from auth service
         login_response = requests.post(
             f"{auth_service_url}/login",
-            json={"email": "test@example.com", "password": "password123"},
+            json={"email": "test@example.com", "password": "password"},
             verify=False,
         )
 
@@ -187,7 +187,7 @@ class TestAuthIntegration:
         # Get token
         login_response = requests.post(
             f"{auth_service_url}/login",
-            json={"email": "test@example.com", "password": "password123"},
+            json={"email": "test@example.com", "password": "password"},
             verify=False,
         )
 

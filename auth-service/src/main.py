@@ -92,11 +92,11 @@ def main():
     print(f"Health Check: {json.dumps(health, indent=2)}")
     
     # Test user registration
-    reg_result = auth.register_user("testuser", "test@example.com", "password123")
+    reg_result = auth.register_user("testuser", "test@example.com", "password")
     print(f"Registration: {json.dumps(reg_result, indent=2)}")
     
     # Test user login
-    login_result = auth.login_user("testuser", "password123")
+    login_result = auth.login_user("testuser", "password")
     print(f"Login: {json.dumps(login_result, indent=2)}")
 
 if __name__ == "__main__":

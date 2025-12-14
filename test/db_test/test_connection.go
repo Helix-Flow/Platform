@@ -23,7 +23,7 @@ func main() {
 	fmt.Println("✅ SQLite connection successful")
 	
 	// Test basic operations
-	userID, err := sqliteManager.CreateUser("testuser", "test@example.com", "password123", "Test", "User", "HelixFlow")
+	userID, err := sqliteManager.CreateUser("testuser", "test@example.com", "password", "Test", "User", "HelixFlow")
 	if err != nil {
 		log.Printf("Failed to create test user: %v", err)
 	} else {

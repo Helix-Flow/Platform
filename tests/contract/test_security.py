@@ -70,7 +70,7 @@ class TestSecurityContract:
         # Get a token and verify algorithm
         response = requests.post(
             f"{auth_service_url}/login",
-            json={"email": "test@example.com", "password": "password123"},
+            json={"email": "test@example.com", "password": "password"},
             verify=False,
         )
 
