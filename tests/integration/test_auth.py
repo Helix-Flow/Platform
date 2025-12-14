@@ -22,12 +22,12 @@ class TestAuthIntegration:
     @pytest.fixture
     def auth_service_url(self):
         """Auth service URL."""
-        return "https://auth-service.helixflow.svc.cluster.local"
+        return "https://localhost:8081"
 
     @pytest.fixture
     def api_gateway_url(self):
         """API gateway URL."""
-        return "https://api-gateway.helixflow.svc.cluster.local"
+        return "https://localhost:8443"
 
     @pytest.fixture
     def client_cert(self):

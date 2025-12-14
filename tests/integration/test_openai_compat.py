@@ -21,14 +21,14 @@ class TestOpenAICompatibility:
         # Configure to use HelixFlow instead of OpenAI
         import os
 
-        os.environ["OPENAI_API_BASE"] = "https://api.helixflow.ai"
+        os.environ["OPENAI_API_BASE"] = "https://localhost:8443"
         os.environ["OPENAI_API_KEY"] = "test-key"
 
         try:
             import openai
 
             client = openai.OpenAI(
-                api_key="test-key", base_url="https://api.helixflow.ai"
+                api_key="test-key", base_url="https://localhost:8443"
             )
             return client
         except ImportError:
@@ -37,7 +37,7 @@ class TestOpenAICompatibility:
     @pytest.fixture
     def api_base_url(self):
         """HelixFlow API base URL."""
-        return "https://api.helixflow.ai"
+        return "https://localhost:8443"
 
     @pytest.fixture
     def auth_headers(self):

@@ -18,12 +18,12 @@ class TestComplianceIntegration:
     @pytest.fixture
     def api_gateway_url(self):
         """API gateway URL."""
-        return "https://api-gateway.helixflow.svc.cluster.local"
+        return "https://localhost:8443"
 
     @pytest.fixture
     def monitoring_url(self):
         """Monitoring service URL."""
-        return "https://monitoring.helixflow.svc.cluster.local"
+        return "http://localhost:8083"
 
     def test_gdpr_data_portability(self, api_gateway_url):
         """Test GDPR data portability - users can export their data."""

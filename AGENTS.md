@@ -31,6 +31,21 @@ python -m pytest tests/security/       # Security tests
 python -m pytest tests/performance/    # Load tests
 ```
 
+### Local Development
+```bash
+# Start all services locally
+./start_all_services.sh
+
+# Stop all services
+kill $(cat logs/service_pids.txt) 2>/dev/null
+
+# Test API Gateway health
+curl -k https://localhost:8443/health
+
+# Test with updated URLs (local Kubernetes service URLs replaced with localhost)
+# All integration tests now target localhost instead of *.svc.cluster.local
+```
+
 ## Code Style Guidelines
 
 ### Go (1.21)

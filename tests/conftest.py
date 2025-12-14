@@ -26,9 +26,9 @@ def pytest_configure(config):
 def test_config():
     """Test configuration."""
     return {
-        "api_gateway_url": "http://localhost:8080",
-        "auth_service_url": "http://localhost:8081",
-        "inference_pool_url": "http://localhost:8082",
+        "api_gateway_url": "https://localhost:8443",
+        "auth_service_url": "https://localhost:8081",
+        "inference_pool_url": "http://localhost:50051",
         "monitoring_url": "http://localhost:8083",
         "test_timeout": 30,
         "max_retries": 3

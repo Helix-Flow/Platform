@@ -18,7 +18,7 @@ class TestPerformanceContract:
     @pytest.fixture
     def api_gateway_url(self):
         """API gateway URL."""
-        return "https://api-gateway.helixflow.svc.cluster.local"
+        return "https://localhost:8443"
 
     @pytest.fixture
     def auth_headers(self):
@@ -187,7 +187,7 @@ class TestPerformanceContract:
         """Test that memory usage remains stable under load."""
         # This would monitor memory usage during load tests
         # In real implementation, integrate with monitoring service
-        monitoring_url = "https://monitoring.helixflow.svc.cluster.local"
+        monitoring_url = "http://localhost:8083"
 
         response = requests.get(f"{monitoring_url}/api/metrics/memory", verify=False)
 
@@ -198,7 +198,7 @@ class TestPerformanceContract:
 
     def test_gpu_utilization_efficiency(self):
         """Test that GPU utilization is efficient."""
-        monitoring_url = "https://monitoring.helixflow.svc.cluster.local"
+        monitoring_url = "http://localhost:8083"
 
         response = requests.get(f"{monitoring_url}/api/metrics/gpu", verify=False)
 

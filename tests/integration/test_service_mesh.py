@@ -56,7 +56,7 @@ class TestServiceMeshIntegration:
         # Test api-gateway to auth-service communication
         try:
             response = requests.get(
-                "http://api-gateway.helixflow.svc.cluster.local/health", timeout=10
+                "https://localhost:8443/health", timeout=10, verify=False
             )
             assert response.status_code == 200
         except requests.RequestException:
@@ -65,7 +65,7 @@ class TestServiceMeshIntegration:
         # Test auth-service to inference-pool communication
         try:
             response = requests.get(
-                "http://auth-service.helixflow.svc.cluster.local/health", timeout=10
+                "https://localhost:8081/health", timeout=10, verify=False
             )
             assert response.status_code == 200
         except requests.RequestException:
@@ -113,7 +113,7 @@ class TestServiceMeshIntegration:
         # Check if Prometheus can scrape Istio metrics
         try:
             response = requests.get(
-                "http://prometheus.helixflow.svc.cluster.local/api/v1/query?query=istio_requests_total",
+                "http://localhost:8083/api/v1/query?query=istio_requests_total",
                 timeout=10,
             )
             assert response.status_code == 200

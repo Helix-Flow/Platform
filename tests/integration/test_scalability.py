@@ -29,7 +29,7 @@ class TestScalabilityIntegration:
     @pytest.fixture
     def api_gateway_url(self):
         """API gateway URL."""
-        return "https://api-gateway.helixflow.svc.cluster.local"
+        return "https://localhost:8443"
 
     @pytest.fixture
     def auth_headers(self):
@@ -166,7 +166,7 @@ class TestScalabilityIntegration:
 
     def test_monitoring_scales_with_system(self):
         """Test that monitoring system scales with platform growth."""
-        monitoring_url = "https://monitoring.helixflow.svc.cluster.local"
+        monitoring_url = "http://localhost:8083"
 
         # Check monitoring endpoints
         endpoints = [
