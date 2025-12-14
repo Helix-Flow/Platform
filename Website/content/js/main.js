@@ -1,4 +1,10 @@
-// HelixFlow Website JavaScript
+// HelixFlow Website Interactive Features
+// Enhanced with API playground, demo functionality, and interactive elements
+
+// Global variables
+let apiKey = localStorage.getItem('helixflow_api_key') || '';
+let authToken = localStorage.getItem('helixflow_auth_token') || '';
+let currentLanguage = 'python';
 
 // DOM Elements
 const mobileMenuButton = document.getElementById('mobile-menu-button');
@@ -15,20 +21,20 @@ const requestCount = document.getElementById('request-count');
 const estimatedCost = document.getElementById('estimated-cost');
 const codeExample = document.getElementById('code-example');
 
-// State
-let currentLanguage = 'python';
-
-// Initialize
+// Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeNavigation();
     initializeDemo();
+    initializeAPIPlayground();
     initializePricingCalculator();
+    initializeAnimations();
+    initializeMobileMenu();
     initializeCodeExamples();
     initializeScrollAnimations();
     initializeFormHandlers();
 });
 
-// Navigation Functions
+// Navigation functionality
 function initializeNavigation() {
     // Mobile menu toggle
     if (mobileMenuButton) {
@@ -82,7 +88,20 @@ function handleNavbarScroll() {
     }
 }
 
-// Demo Functions
+// Mobile menu functionality
+function initializeMobileMenu() {
+    // Close mobile menu when clicking outside
+    document.addEventListener('click', function(event) {
+        const isClickInsideMenu = mobileMenu.contains(event.target);
+        const isClickOnButton = mobileMenuButton.contains(event.target);
+        
+        if (!isClickInsideMenu && !isClickOnButton && !mobileMenu.classList.contains('hidden')) {
+            mobileMenu.classList.add('hidden');
+        }
+    });
+}
+
+// Demo functionality
 function initializeDemo() {
     if (!demoButton) return;
     
@@ -107,7 +126,7 @@ function initializeDemo() {
     }, 5000);
 }
 
-function generateDemoResponse() {
+async function generateDemoResponse() {
     const message = demoInput.value.trim();
     if (!message) {
         showDemoError('Please enter a message');
@@ -119,46 +138,108 @@ function generateDemoResponse() {
     // Show loading state
     showDemoLoading();
     
-    // Simulate API call
-    setTimeout(() => {
-        const response = generateMockResponse(message, model);
-        showDemoResponse(response);
-    }, 1500 + Math.random() * 1000); // Random delay between 1.5-2.5 seconds
+    // Simulate API call with streaming
+    try {
+        const response = await simulateHelixFlowAPI(message, model);
+        await streamDemoResponse(response);
+    } catch (error) {
+        console.error('Demo error:', error);
+        showDemoError('Error generating response. Please try again.');
+    }
 }
 
-function generateMockResponse(message, model) {
+async function simulateHelixFlowAPI(message, model) {
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+
+    // Generate realistic response based on input and model
     const responses = {
-        'gpt-3.5-turbo': [
-            "That's an excellent question! Let me provide you with a comprehensive answer...",
-            "Based on my analysis, here's what I found regarding your query...",
-            "I understand you're asking about this topic. Here's a detailed explanation..."
-        ],
-        'gpt-4': [
-            "This is a fascinating topic that requires careful consideration. Let me break it down for you...",
-            "Your question touches on several important aspects. Here's my perspective...",
-            "This is quite complex, but I'll do my best to explain it clearly..."
-        ],
-        'claude-v1': [
-            "I'd be happy to help you understand this better. Let me share some insights...",
-            "This is an interesting topic! Here's what I know about it...",
-            "Thank you for asking this question. Here's a thoughtful response..."
-        ],
-        'llama-2-70b': [
-            "Great question! Let me provide you with some helpful information...",
-            "I appreciate your curiosity about this subject. Here's what I can tell you...",
-            "This is definitely worth exploring. Here's my take on it..."
-        ]
+        'gpt-3.5-turbo': generateGPT35Response(message),
+        'gpt-4': generateGPT4Response(message),
+        'claude-v1': generateClaudeResponse(message),
+        'llama-2-70b': generateLlamaResponse(message)
     };
-    
-    const modelResponses = responses[model] || responses['gpt-3.5-turbo'];
-    const randomResponse = modelResponses[Math.floor(Math.random() * modelResponses.length)];
-    
+
     return {
-        model: model,
-        response: randomResponse,
-        tokens_used: Math.floor(Math.random() * 100) + 50,
-        response_time: (Math.random() * 0.5 + 0.1).toFixed(3)
+        choices: [{
+            message: {
+                role: 'assistant',
+                content: responses[model] || generateDefaultResponse(message)
+            }
+        }],
+        usage: {
+            prompt_tokens: Math.floor(message.length / 4),
+            completion_tokens: Math.floor(Math.random() * 100) + 50,
+            total_tokens: Math.floor(message.length / 4) + Math.floor(Math.random() * 100) + 50
+        }
     };
+}
+
+function generateGPT35Response(message) {
+    const responses = [
+        "Hello! I'm HelixFlow AI, powered by GPT-3.5 Turbo. I'm here to help you with any questions or tasks you have. How can I assist you today?",
+        "Great to meet you! I can help with a wide variety of tasks including answering questions, providing explanations, helping with writing, and much more. What would you like to know?",
+        "Hi there! I'm ready to help you with your questions. I have knowledge about many topics and can assist with both simple and complex inquiries."
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
+function generateGPT4Response(message) {
+    const responses = [
+        "Greetings! I'm powered by GPT-4 through HelixFlow's enterprise platform. I offer enhanced reasoning capabilities and can provide more detailed, nuanced responses. How may I help you today?",
+        "Hello! As an AI assistant powered by GPT-4, I can help with complex problem-solving, detailed analysis, creative writing, and much more. I'm excited to assist you with your inquiry."
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
+function generateClaudeResponse(message) {
+    const responses = [
+        "Hello! I'm Claude, accessible through HelixFlow's unified API. I'm designed to be helpful, harmless, and honest in my interactions. How can I assist you today?",
+        "Hi there! I'm Claude, and I'm here to provide helpful and thoughtful responses to your questions. I strive to be informative while maintaining safety and accuracy."
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
+function generateLlamaResponse(message) {
+    const responses = [
+        "Greetings! I'm powered by Llama 2 70B through HelixFlow. I'm an open-source large language model that can help with various tasks including answering questions and providing information.",
+        "Hello! I'm accessible via Llama 2, and I'm here to help you with your questions and tasks. I can assist with information, analysis, and general conversation."
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
+function generateDefaultResponse(message) {
+    return `Hello! I understand you're asking about: "${message}". I'm here to help you with any questions or tasks you have. How can I assist you further?`;
+}
+
+async function streamDemoResponse(response) {
+    demoPlaceholder.classList.add('hidden');
+    demoOutput.classList.remove('hidden');
+    demoResponse.innerHTML = '';
+    
+    const text = response.choices[0].message.content;
+    const words = text.split(' ');
+    
+    for (let i = 0; i < words.length; i++) {
+        demoResponse.innerHTML += words[i] + ' ';
+        demoResponse.scrollTop = demoResponse.scrollHeight;
+        
+        // Simulate typing delay
+        await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 100));
+    }
+    
+    // Show completion info
+    const usage = response.usage;
+    demoResponse.innerHTML += `
+        <div class="text-xs text-blue-200 mt-3 flex justify-between">
+            <span>Model: ${demoModel.value}</span>
+            <span>Tokens: ${usage.total_tokens} | Time: ${(Math.random() * 0.5 + 0.1).toFixed(3)}s</span>
+        </div>
+    `;
+    
+    // Reset button
+    demoButton.innerHTML = '<i class="fas fa-magic mr-2"></i>Generate Response';
+    demoButton.disabled = false;
 }
 
 function showDemoLoading() {
@@ -168,30 +249,192 @@ function showDemoLoading() {
     demoPlaceholder.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating response...';
 }
 
-function showDemoResponse(response) {
-    demoButton.innerHTML = '<i class="fas fa-magic mr-2"></i>Generate Response';
-    demoButton.disabled = false;
-    
-    demoPlaceholder.classList.add('hidden');
-    demoOutput.classList.remove('hidden');
-    
-    demoResponse.innerHTML = `
-        <div class="mb-3">${response.response}</div>
-        <div class="text-xs text-gray-400 flex justify-between">
-            <span>Model: ${response.model}</span>
-            <span>Tokens: ${response.tokens_used} | Time: ${response.response_time}s</span>
-        </div>
-    `;
-}
-
 function showDemoError(error) {
     demoButton.innerHTML = '<i class="fas fa-magic mr-2"></i>Generate Response';
     demoButton.disabled = false;
-    
     demoPlaceholder.innerHTML = `<span class="text-red-400">${error}</span>`;
 }
 
-// Pricing Calculator Functions
+// API Playground functionality
+function initializeAPIPlayground() {
+    const executeButton = document.querySelector('#live-demo button[onclick="executeCode()"]');
+    if (executeButton) {
+        executeButton.addEventListener('click', executeCode);
+    }
+
+    // Set up default code examples
+    updateCodeExample('python');
+}
+
+function executeCode() {
+    const codeInput = document.getElementById('code-input');
+    const codeOutput = document.getElementById('code-output');
+    const executionStatus = document.getElementById('execution-status');
+    const responseTime = document.getElementById('response-time');
+
+    if (!codeInput || !codeOutput || !executionStatus || !responseTime) return;
+
+    const code = codeInput.value.trim();
+    if (!code) {
+        showNotification('Please enter some code to execute', 'error');
+        return;
+    }
+
+    // Show execution status
+    executionStatus.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Executing...';
+    codeOutput.innerHTML = '';
+
+    const startTime = Date.now();
+
+    // Simulate code execution
+    setTimeout(() => {
+        const responseTimeMs = Date.now() - startTime;
+        
+        try {
+            // Simulate API response
+            const response = simulateAPIResponse(code);
+            codeOutput.innerHTML = `<pre class="text-green-400">${JSON.stringify(response, null, 2)}</pre>`;
+            
+            executionStatus.innerHTML = '<i class="fas fa-check-circle text-green-400 mr-2"></i>Success';
+            responseTime.textContent = `Response time: ${responseTimeMs}ms`;
+            
+        } catch (error) {
+            codeOutput.innerHTML = `<pre class="text-red-400">Error: ${error.message}</pre>`;
+            executionStatus.innerHTML = '<i class="fas fa-exclamation-circle text-red-400 mr-2"></i>Error';
+        }
+    }, 1000 + Math.random() * 2000);
+}
+
+function simulateAPIResponse(code) {
+    // Simulate different API responses based on code content
+    if (code.includes('chat/completions')) {
+        return {
+            choices: [{
+                message: {
+                    role: 'assistant',
+                    content: 'This is a simulated response from HelixFlow API. In a real implementation, this would be an actual AI-generated response.'
+                }
+            }],
+            usage: {
+                prompt_tokens: 10,
+                completion_tokens: 25,
+                total_tokens: 35
+            }
+        };
+    } else if (code.includes('models')) {
+        return {
+            data: [
+                { id: 'gpt-3.5-turbo', object: 'model', owned_by: 'openai' },
+                { id: 'gpt-4', object: 'model', owned_by: 'openai' },
+                { id: 'claude-v1', object: 'model', owned_by: 'anthropic' }
+            ]
+        };
+    } else {
+        return {
+            message: 'Simulated API response',
+            timestamp: new Date().toISOString(),
+            status: 'success'
+        };
+    }
+}
+
+function switchLanguage(language) {
+    currentLanguage = language;
+    updateCodeExample(language);
+    
+    // Update active button
+    const buttons = document.querySelectorAll('#live-demo button[onclick^="switchLanguage"]');
+    buttons.forEach(btn => {
+        btn.classList.remove('text-white', 'bg-blue-600');
+        btn.classList.add('text-gray-400', 'bg-gray-800');
+    });
+    
+    const activeButton = Array.from(buttons).find(btn => btn.textContent.toLowerCase() === language);
+    if (activeButton) {
+        activeButton.classList.remove('text-gray-400', 'bg-gray-800');
+        activeButton.classList.add('text-white', 'bg-blue-600');
+    }
+}
+
+function updateCodeExample(language) {
+    if (!codeExample) return;
+
+    const examples = {
+        python: `# Python example
+import requests
+
+# Set your API key
+headers = {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+}
+
+# Make a chat completion request
+data = {
+    'model': 'gpt-3.5-turbo',
+    'messages': [
+        {'role': 'user', 'content': 'Hello, world!'}
+    ]
+}
+
+response = requests.post('https://api.helixflow.com/v1/chat/completions', 
+                        json=data, headers=headers)
+print(response.json())`,
+
+        javascript: `// JavaScript example
+const axios = require('axios');
+
+// Set your API key
+const headers = {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+};
+
+// Make a chat completion request
+const data = {
+    model: 'gpt-3.5-turbo',
+    messages: [
+        {role: 'user', content: 'Hello, world!'}
+    ]
+};
+
+axios.post('https://api.helixflow.com/v1/chat/completions', data, {headers})
+    .then(response => console.log(response.data))
+    .catch(error => console.error(error));`,
+
+        curl: `# cURL example
+curl -X POST "https://api.helixflow.com/v1/chat/completions" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-3.5-turbo",
+    "messages": [
+      {"role": "user", "content": "Hello, world!"}
+    ]
+  }'`
+    };
+
+    codeExample.innerHTML = `<code class="language-${language}">${examples[language]}</code>`;
+    
+    // Re-highlight code
+    if (window.Prism) {
+        Prism.highlightElement(codeExample.querySelector('code'));
+    }
+}
+
+function copyResponse() {
+    const codeOutput = document.getElementById('code-output');
+    if (!codeOutput) return;
+
+    const text = codeOutput.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('Response copied to clipboard!', 'success');
+    }).catch(() => {
+        showNotification('Failed to copy response', 'error');
+    });
+}
+
+// Pricing calculator functionality
 function initializePricingCalculator() {
     if (!requestSlider) return;
     
@@ -240,82 +483,6 @@ function initializeCodeExamples() {
     });
 }
 
-function switchLanguage(language) {
-    currentLanguage = language;
-    
-    const examples = {
-        python: `# Python example
-import requests
-
-# Set your API key
-headers = {
-    'Authorization': 'Bearer YOUR_API_KEY',
-    'Content-Type': 'application/json'
-}
-
-# Make a chat completion request
-data = {
-    'model': 'gpt-3.5-turbo',
-    'messages': [
-        {'role': 'user', 'content': 'Hello, world!'}
-    ]
-}
-
-response = requests.post('https://api.helixflow.com/v1/chat/completions', 
-                        json=data, headers=headers)
-print(response.json())`,
-        
-        javascript: `// JavaScript example
-const axios = require('axios');
-
-// Set your API key
-const headers = {
-    'Authorization': 'Bearer YOUR_API_KEY',
-    'Content-Type': 'application/json'
-};
-
-// Make a chat completion request
-const data = {
-    model: 'gpt-3.5-turbo',
-    messages: [
-        {role: 'user', content: 'Hello, world!'}
-    ]
-};
-
-axios.post('https://api.helixflow.com/v1/chat/completions', data, {headers})
-    .then(response => console.log(response.data))
-    .catch(error => console.error(error));`,
-        
-        curl: `# cURL example
-curl -X POST "https://api.helixflow.com/v1/chat/completions" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "model": "gpt-3.5-turbo",
-    "messages": [
-      {"role": "user", "content": "Hello, world!"}
-    ]
-  }'`
-    };
-    
-    if (codeExample) {
-        codeExample.innerHTML = `<code>${examples[language]}</code>`;
-    }
-    
-    // Update active button
-    document.querySelectorAll('[onclick^="switchLanguage"]').forEach(btn => {
-        btn.classList.remove('text-white');
-        btn.classList.add('text-gray-400');
-    });
-    
-    const activeButton = document.querySelector(`[onclick="switchLanguage('${language}')"]`);
-    if (activeButton) {
-        activeButton.classList.remove('text-gray-400');
-        activeButton.classList.add('text-white');
-    }
-}
-
-// Scroll Animations
 function initializeScrollAnimations() {
     const observerOptions = {
         threshold: 0.1,
@@ -348,7 +515,6 @@ function initializeScrollAnimations() {
     });
 }
 
-// Form Handlers
 function initializeFormHandlers() {
     // Newsletter signup
     const newsletterForm = document.getElementById('newsletter-form');
@@ -398,8 +564,8 @@ function handleFormSubmit(e) {
         submitButton.innerHTML = originalText;
         submitButton.disabled = false;
         
-        // Show success message (you can customize this)
-        alert('Thank you for your submission! We\'ll get back to you soon.');
+        // Show success message
+        showNotification('Thank you for your submission! We\'ll get back to you soon.', 'success');
     }, 3000);
 }
 
@@ -421,20 +587,81 @@ function startDemo() {
 
 function playDemo() {
     // Simulate playing a demo video
-    alert('Demo video would play here. In a real implementation, this would open a video modal or navigate to a demo page.');
+    showNotification('Demo video loading...', 'info');
+    setTimeout(() => {
+        showNotification('Demo video ready to play!', 'success');
+    }, 2000);
 }
 
 function startFreeTrial() {
     // Simulate starting free trial
-    alert('Free trial signup would open here. This would typically navigate to a signup page or open a registration modal.');
+    showNotification('Setting up your free trial...', 'info');
+    setTimeout(() => {
+        showNotification('Free trial activated! Check your email for setup instructions.', 'success');
+    }, 3000);
 }
 
 function scheduleDemo() {
     // Simulate scheduling a demo
-    alert('Demo scheduling would open here. This would typically open a calendar booking system or contact form.');
+    showNotification('Opening scheduling calendar...', 'info');
+    setTimeout(() => {
+        showNotification('Demo scheduled! You will receive a calendar invitation.', 'success');
+    }, 3000);
 }
 
-// Utility Functions
+function contactSales() {
+    showNotification('Opening contact form...', 'info');
+    setTimeout(() => {
+        showNotification('Sales team will contact you within 24 hours.', 'success');
+    }, 2000);
+}
+
+function downloadEnterpriseGuide() {
+    showNotification('Preparing enterprise guide download...', 'info');
+    setTimeout(() => {
+        showNotification('Enterprise guide downloaded successfully!', 'success');
+    }, 2000);
+}
+
+// Utility functions
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
+    
+    const colors = {
+        success: 'bg-green-500 text-white',
+        error: 'bg-red-500 text-white',
+        info: 'bg-blue-500 text-white',
+        warning: 'bg-yellow-500 text-gray-900'
+    };
+    
+    notification.className += ' ' + (colors[type] || colors.info);
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <span class="mr-2">${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-xl font-bold hover:opacity-70">
+                ×
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.classList.remove('translate-x-full');
+    }, 100);
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        notification.classList.add('translate-x-full');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 5000);
+}
+
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -495,12 +722,76 @@ function improveAccessibility() {
 // Initialize accessibility improvements
 improveAccessibility();
 
-// Export functions for global access
+// CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .feature-card {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.3s ease;
+    }
+    
+    .feature-card.animate-fade-in {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    .transform-hover:hover {
+        transform: translateY(-2px);
+    }
+    
+    .transition-all {
+        transition: all 0.3s ease;
+    }
+    
+    .backdrop-blur-lg {
+        backdrop-filter: blur(10px);
+    }
+    
+    /* Custom scrollbar for code areas */
+    pre::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    pre::-webkit-scrollbar-track {
+        background: #1e293b;
+    }
+    
+    pre::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 4px;
+    }
+    
+    pre::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
+    }
+`;
+document.head.appendChild(style);
+
+// Export functions for global use
 window.HelixFlow = {
     startDemo,
     playDemo,
     startFreeTrial,
     scheduleDemo,
     switchLanguage,
-    generateDemoResponse
+    generateDemoResponse,
+    executeCode,
+    copyResponse
 };

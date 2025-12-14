@@ -34,6 +34,9 @@
     <!-- Custom CSS -->
     <link href="css/custom.css" rel="stylesheet">
     
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    
     <!-- Structured Data -->
     <script type="application/ld+json">
     {
@@ -80,12 +83,15 @@
                     <a href="#pricing" class="text-gray-600 hover:text-blue-600 transition font-medium">Pricing</a>
                     <a href="#docs" class="text-gray-600 hover:text-blue-600 transition font-medium">Documentation</a>
                     <a href="#enterprise" class="text-gray-600 hover:text-blue-600 transition font-medium">Enterprise</a>
+                    <a href="#courses" class="text-gray-600 hover:text-blue-600 transition font-medium">Courses</a>
                 </div>
                 
                 <!-- Auth Buttons -->
                 <div class="hidden lg:flex items-center space-x-4">
                     <a href="#login" class="text-gray-600 hover:text-blue-600 transition font-medium">Sign In</a>
-                    <a href="#signup" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-medium shadow-lg hover:shadow-xl">Get Started Free</a>
+                    <button onclick="startDemo()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition font-semibold shadow-lg hover:shadow-xl">
+                        Get Started Free
+                    </button>
                 </div>
                 
                 <!-- Mobile Menu Button -->
@@ -102,9 +108,12 @@
                     <a href="#pricing" class="text-gray-600 hover:text-blue-600 transition font-medium">Pricing</a>
                     <a href="#docs" class="text-gray-600 hover:text-blue-600 transition font-medium">Documentation</a>
                     <a href="#enterprise" class="text-gray-600 hover:text-blue-600 transition font-medium">Enterprise</a>
+                    <a href="#courses" class="text-gray-600 hover:text-blue-600 transition font-medium">Courses</a>
                     <div class="flex flex-col space-y-2 pt-4 border-t border-gray-200">
                         <a href="#login" class="text-gray-600 hover:text-blue-600 transition font-medium">Sign In</a>
-                        <a href="#signup" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium text-center">Get Started Free</a>
+                        <button onclick="startDemo()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium text-center">
+                            Get Started Free
+                        </button>
                     </div>
                 </div>
             </div>
@@ -138,10 +147,10 @@
                     
                     <!-- CTA Buttons -->
                     <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
-                        <button class="bg-white text-blue-900 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1" onclick="startDemo()">
+                        <button onclick="startDemo()" class="bg-white text-blue-900 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                             <i class="fas fa-rocket mr-2"></i>Start Free Trial
                         </button>
-                        <button class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition text-lg" onclick="playDemo()">
+                        <button onclick="playDemo()" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition text-lg">
                             <i class="fas fa-play mr-2"></i>Watch Demo
                         </button>
                     </div>
@@ -195,7 +204,7 @@
                                     <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
                                     <span class="text-sm font-medium">AI Response</span>
                                 </div>
-                                <div id="demo-response" class="bg-blue-900 bg-opacity-30 rounded-lg p-4 text-sm"></div>
+                                <div id="demo-response" class="bg-blue-900 bg-opacity-30 rounded-lg p-4 text-sm max-h-40 overflow-y-auto"></div>
                             </div>
                             <div id="demo-placeholder" class="text-blue-100 text-sm">
                                 Response will appear here... Try asking about AI, coding, or business insights!
@@ -216,6 +225,75 @@
                         <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg p-4">
                             <div class="text-2xl font-bold">50ms</div>
                             <div class="text-sm text-blue-200">Avg Latency</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive API Playground -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <span class="text-blue-600 font-semibold text-sm uppercase tracking-wider">Interactive Demo</span>
+                <h2 class="text-4xl font-bold text-gray-800 mb-4 mt-2">Try Our API in Real-Time</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">Experience the power of HelixFlow with our interactive API playground</p>
+            </div>
+            
+            <div class="bg-gray-900 rounded-xl p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">API Playground</h3>
+                    <div class="flex space-x-2">
+                        <button class="text-gray-400 hover:text-white transition bg-gray-800 px-3 py-1 rounded" onclick="switchLanguage('python')">Python</button>
+                        <button class="text-gray-400 hover:text-white transition bg-gray-800 px-3 py-1 rounded" onclick="switchLanguage('javascript')">JavaScript</button>
+                        <button class="text-gray-400 hover:text-white transition bg-gray-800 px-3 py-1 rounded" onclick="switchLanguage('curl')">cURL</button>
+                    </div>
+                </div>
+                
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <!-- Code Input -->
+                    <div>
+                        <h4 class="text-sm font-medium mb-2">Request</h4>
+                        <textarea id="code-input" class="w-full h-64 bg-gray-800 rounded p-4 text-sm font-mono resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your code here..."># Python example
+import requests
+
+# Set your API key
+headers = {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+}
+
+# Make a chat completion request
+data = {
+    'model': 'gpt-3.5-turbo',
+    'messages': [
+        {'role': 'user', 'content': 'Hello, world!'}
+    ]
+}
+
+response = requests.post('https://api.helixflow.com/v1/chat/completions', 
+                        json=data, headers=headers)
+print(response.json())</textarea>
+                        
+                        <div class="flex justify-between items-center mt-4">
+                            <button onclick="executeCode()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                                <i class="fas fa-play mr-2"></i>Execute
+                            </button>
+                            <div id="execution-status" class="text-sm"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Response Output -->
+                    <div>
+                        <h4 class="text-sm font-medium mb-2">Response</h4>
+                        <div id="code-output" class="w-full h-64 bg-gray-800 rounded p-4 text-sm font-mono overflow-auto"></div>
+                        
+                        <div class="mt-4 flex justify-between items-center">
+                            <button onclick="copyResponse()" class="text-gray-400 hover:text-white transition">
+                                <i class="fas fa-copy mr-2"></i>Copy
+                            </button>
+                            <div id="response-time" class="text-sm text-gray-400"></div>
                         </div>
                     </div>
                 </div>
@@ -412,8 +490,60 @@
         </div>
     </section>
 
+    <!-- Live Demo Section -->
+    <section id="live-demo" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <span class="text-blue-600 font-semibold text-sm uppercase tracking-wider">Live Demo</span>
+                <h2 class="text-4xl font-bold text-gray-800 mb-4 mt-2">See HelixFlow in Action</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">Watch our comprehensive platform demonstration</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+                    <div class="aspect-video bg-gray-900 flex items-center justify-center">
+                        <div class="text-center text-white">
+                            <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-play text-2xl ml-1"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-2">Platform Overview Demo</h3>
+                            <p class="text-gray-300 mb-4">Complete walkthrough of enterprise features</p>
+                            <button onclick="playDemo()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-play mr-2"></i>Play Demo Video
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 grid md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-clock text-blue-600"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">15 Minutes</h4>
+                        <p class="text-gray-600 text-sm">Complete platform overview</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-code text-green-600"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Live Coding</h4>
+                        <p class="text-gray-600 text-sm">Real implementation examples</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-question text-purple-600"></i>
+                        </div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Q&A Session</h4>
+                        <p class="text-gray-600 text-sm">Get your questions answered</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Solutions Section -->
-    <section id="solutions" class="py-20 bg-gray-50">
+    <section id="solutions" class="py-20 bg-white">
         <div class="container mx-auto px-6">
             <div class="text-center mb-16">
                 <span class="text-blue-600 font-semibold text-sm uppercase tracking-wider">Solutions</span>
@@ -542,7 +672,7 @@
     </section>
 
     <!-- Pricing Section -->
-    <section id="pricing" class="py-20 bg-white">
+    <section id="pricing" class="py-20 bg-gray-50">
         <div class="container mx-auto px-6">
             <div class="text-center mb-16">
                 <span class="text-blue-600 font-semibold text-sm uppercase tracking-wider">Pricing</span>
@@ -552,7 +682,7 @@
             
             <div class="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
                 <!-- Starter Plan -->
-                <div class="bg-gray-50 rounded-xl p-8 border border-gray-200 hover:border-blue-300 transition">
+                <div class="bg-white rounded-xl p-8 border border-gray-200 hover:border-blue-300 transition">
                     <div class="text-center mb-8">
                         <h3 class="text-2xl font-bold text-gray-800 mb-2">Starter</h3>
                         <div class="text-4xl font-bold text-gray-800 mb-2">Free</div>
@@ -580,7 +710,7 @@
                             <span>GPT-3.5 Turbo access</span>
                         </li>
                     </ul>
-                    <button class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
+                    <button onclick="startFreeTrial()" class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition">
                         Get Started Free
                     </button>
                 </div>
@@ -621,13 +751,13 @@
                             <span>GPT-4 & Claude access</span>
                         </li>
                     </ul>
-                    <button class="w-full bg-white text-blue-600 py-3 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg">
+                    <button onclick="startProTrial()" class="w-full bg-white text-blue-600 py-3 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg">
                         Start Pro Trial
                     </button>
                 </div>
 
                 <!-- Enterprise Plan -->
-                <div class="bg-gray-50 rounded-xl p-8 border border-gray-200 hover:border-blue-300 transition">
+                <div class="bg-white rounded-xl p-8 border border-gray-200 hover:border-blue-300 transition">
                     <div class="text-center mb-8">
                         <h3 class="text-2xl font-bold text-gray-800 mb-2">Enterprise</h3>
                         <div class="text-4xl font-bold text-gray-800 mb-2">Custom</div>
@@ -659,14 +789,14 @@
                             <span>Custom model training</span>
                         </li>
                     </ul>
-                    <button class="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 transition">
+                    <button onclick="contactSales()" class="w-full bg-gray-800 text-white py-3 rounded-lg font-semibold hover:bg-gray-900 transition">
                         Contact Sales
                     </button>
                 </div>
             </div>
             
             <!-- Pricing Calculator -->
-            <div class="mt-16 bg-gray-50 rounded-xl p-8 max-w-2xl mx-auto">
+            <div class="mt-16 bg-white rounded-xl p-8 max-w-2xl mx-auto">
                 <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">Estimate Your Costs</h3>
                 <div class="space-y-6">
                     <div>
@@ -678,7 +808,7 @@
                             <span>1M+</span>
                         </div>
                     </div>
-                    <div class="text-center p-4 bg-white rounded-lg">
+                    <div class="text-center p-4 bg-gray-50 rounded-lg">
                         <div class="text-sm text-gray-600 mb-1">Estimated Monthly Cost</div>
                         <div id="estimated-cost" class="text-3xl font-bold text-blue-600">$99</div>
                         <div class="text-sm text-gray-600 mt-2">Perfect for Pro plan</div>
@@ -689,7 +819,7 @@
     </section>
 
     <!-- Documentation Section -->
-    <section id="docs" class="py-20 bg-gray-50">
+    <section id="docs" class="py-20 bg-white">
         <div class="container mx-auto px-6">
             <div class="text-center mb-16">
                 <span class="text-blue-600 font-semibold text-sm uppercase tracking-wider">Documentation</span>
@@ -731,7 +861,7 @@
                     </div>
                     <h3 class="text-lg font-bold text-gray-800 mb-2">Tutorials</h3>
                     <p class="text-gray-600 text-sm mb-4">Learn through practical examples and real-world scenarios.</p>
-                    <a href="#" class="text-blue-600 hover:text-blue-700 font-medium text-sm">Start Learning →</a>
+                    <a href="#courses" class="text-blue-600 hover:text-blue-700 font-medium text-sm">Start Learning →</a>
                 </div>
             </div>
             
@@ -740,12 +870,12 @@
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold">Quick Start Example</h3>
                     <div class="flex space-x-2">
-                        <button class="text-gray-400 hover:text-white transition" onclick="switchLanguage('python')">Python</button>
-                        <button class="text-gray-400 hover:text-white transition" onclick="switchLanguage('javascript')">JavaScript</button>
-                        <button class="text-gray-400 hover:text-white transition" onclick="switchLanguage('curl')">cURL</button>
+                        <button class="text-gray-400 hover:text-white transition bg-gray-800 px-3 py-1 rounded" onclick="switchLanguage('python')">Python</button>
+                        <button class="text-gray-400 hover:text-white transition bg-gray-800 px-3 py-1 rounded" onclick="switchLanguage('javascript')">JavaScript</button>
+                        <button class="text-gray-400 hover:text-white transition bg-gray-800 px-3 py-1 rounded" onclick="switchLanguage('curl')">cURL</button>
                     </div>
                 </div>
-                <pre id="code-example" class="text-sm overflow-x-auto"><code># Python example
+                <pre id="code-example" class="text-sm overflow-x-auto"><code class="language-python"># Python example
 import requests
 
 # Set your API key
@@ -765,6 +895,96 @@ data = {
 response = requests.post('https://api.helixflow.com/v1/chat/completions', 
                         json=data, headers=headers)
 print(response.json())</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Courses Section -->
+    <section id="courses" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <span class="text-blue-600 font-semibold text-sm uppercase tracking-wider">Learning</span>
+                <h2 class="text-4xl lg:text-5xl font-bold text-gray-800 mb-4 mt-2">Master HelixFlow</h2>
+                <p class="text-xl text-gray-600">Comprehensive video courses and hands-on training</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-play-circle text-blue-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Introduction Course</h3>
+                    <p class="text-gray-600 text-sm mb-4">Free 2-hour course covering platform basics and setup.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">2 hours • Free</span>
+                        <a href="#" class="text-blue-600 hover:text-blue-700 font-medium text-sm">Start →</a>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-code text-green-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">API Integration</h3>
+                    <p class="text-gray-600 text-sm mb-4">3-hour course on mastering REST API and SDK integration.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">3 hours • $49</span>
+                        <a href="#" class="text-blue-600 hover:text-blue-700 font-medium text-sm">Enroll →</a>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-cogs text-purple-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Advanced Features</h3>
+                    <p class="text-gray-600 text-sm mb-4">4-hour course on streaming, optimization, and custom integrations.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">4 hours • $99</span>
+                        <a href="#" class="text-blue-600 hover:text-blue-700 font-medium text-sm">Enroll →</a>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition">
+                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-building text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Enterprise Solutions</h3>
+                    <p class="text-gray-600 text-sm mb-4">5-hour course on multi-tenant deployments and compliance.</p>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-gray-500">5 hours • $199</span>
+                        <a href="#" class="text-blue-600 hover:text-blue-700 font-medium text-sm">Enroll →</a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Certification -->
+            <div class="mt-12 bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 text-white rounded-xl p-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-certificate text-yellow-900 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-4">Get Certified</h3>
+                    <p class="text-blue-100 mb-6 max-w-2xl mx-auto">Earn industry-recognized HelixFlow certifications and advance your career in AI and enterprise software.</p>
+                    <div class="flex flex-wrap justify-center gap-4">
+                        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg px-4 py-2">
+                            <div class="text-sm text-blue-200">Bronze</div>
+                            <div class="font-semibold">Foundation</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg px-4 py-2">
+                            <div class="text-sm text-blue-200">Silver</div>
+                            <div class="font-semibold">Professional</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg px-4 py-2">
+                            <div class="text-sm text-blue-200">Gold</div>
+                            <div class="font-semibold">Expert</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 backdrop-blur-lg rounded-lg px-4 py-2">
+                            <div class="text-sm text-blue-200">Platinum</div>
+                            <div class="font-semibold">Enterprise</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -826,10 +1046,10 @@ print(response.json())</code></pre>
                     </div>
                     
                     <div class="mt-8">
-                        <button class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        <button onclick="contactSales()" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition">
                             Talk to Sales
                         </button>
-                        <button class="ml-4 text-blue-600 hover:text-blue-700 font-semibold">
+                        <button onclick="downloadEnterpriseGuide()" class="ml-4 text-blue-600 hover:text-blue-700 font-semibold">
                             Download Enterprise Guide →
                         </button>
                     </div>
@@ -951,10 +1171,10 @@ print(response.json())</code></pre>
                 Join thousands of developers and enterprises who trust HelixFlow for their AI inference needs.
             </p>
             <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center">
-                <button class="bg-white text-blue-900 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1" onclick="startFreeTrial()">
+                <button onclick="startFreeTrial()" class="bg-white text-blue-900 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                     <i class="fas fa-rocket mr-2"></i>Start Free Trial
                 </button>
-                <button class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition text-lg" onclick="scheduleDemo()">
+                <button onclick="scheduleDemo()" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-blue-900 transition text-lg">
                     <i class="fas fa-calendar mr-2"></i>Schedule Demo
                 </button>
             </div>
@@ -1012,7 +1232,7 @@ print(response.json())</code></pre>
                         <li><a href="#docs" class="text-gray-400 hover:text-white transition">Documentation</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-white transition">Tutorials</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-white transition">Blog</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white transition">Community</a></li>
+                        <li><a href="#community" class="text-gray-400 hover:text-white transition">Community</a></li>
                         <li><a href="#" class="text-gray-400 hover:text-white transition">Support</a></li>
                     </ul>
                 </div>
@@ -1049,5 +1269,7 @@ print(response.json())</code></pre>
 
     <!-- JavaScript -->
     <script src="js/main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
 </body>
 </html>
