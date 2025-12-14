@@ -85,11 +85,12 @@ func (s *MonitoringServiceServer) GetServiceMetrics(ctx context.Context, req *mo
 	}
 
 	serviceInfo := &monitoring.ServiceInfo{
-		Name:        req.ServiceName,
-		Status:      "healthy",
-		Uptime:      "24h",
-		Version:     "1.0.0",
-		LastRestart: time.Now().Add(-24 * time.Hour).Format(time.RFC3339),
+		Name:         req.ServiceName,
+		Status:       "healthy",
+		Version:      "1.0.0",
+		ReplicaCount: 2,
+		Endpoints:    []string{"http://localhost:8080", "https://localhost:8443"},
+		Labels:       map[string]string{"environment": "production", "team": "platform"},
 	}
 
 	return &monitoring.GetServiceMetricsResponse{
@@ -169,33 +170,27 @@ func (s *MonitoringServiceServer) GetApplicationMetrics(ctx context.Context, req
 
 // CreateAlertRule creates a new alert rule
 func (s *MonitoringServiceServer) CreateAlertRule(ctx context.Context, req *monitoring.CreateAlertRuleRequest) (*monitoring.CreateAlertRuleResponse, error) {
-	if req.Rule == nil {
-		return nil, fmt.Errorf("alert rule cannot be nil")
-	}
-
 	fmt.Printf("[ALERT_RULE] Created alert rule: %s - %s (Severity: %v)\n",
-		req.Rule.Name, req.Rule.Description, req.Rule.Severity)
+		req.Name, req.Description, req.Severity)
 
 	return &monitoring.CreateAlertRuleResponse{
-		Success:   true,
-		RuleId:    fmt.Sprintf("rule_%d", time.Now().Unix()),
-		Message:   "Alert rule created successfully",
-		Timestamp: time.Now().Format(time.RFC3339),
+		Success: true,
+		RuleId:  fmt.Sprintf("rule_%d", time.Now().Unix()),
+		Message: "Alert rule created successfully",
 	}, nil
 }
 
 // UpdateAlertRule updates an existing alert rule
 func (s *MonitoringServiceServer) UpdateAlertRule(ctx context.Context, req *monitoring.UpdateAlertRuleRequest) (*monitoring.UpdateAlertRuleResponse, error) {
-	if req.Rule == nil || req.RuleId == "" {
-		return nil, fmt.Errorf("rule ID and rule cannot be nil")
+	if req.RuleId == "" {
+		return nil, fmt.Errorf("rule ID is required")
 	}
 
 	fmt.Printf("[ALERT_RULE] Updated alert rule: %s\n", req.RuleId)
 
 	return &monitoring.UpdateAlertRuleResponse{
-		Success:   true,
-		Message:   "Alert rule updated successfully",
-		Timestamp: time.Now().Format(time.RFC3339),
+		Success: true,
+		Message: "Alert rule updated successfully",
 	}, nil
 }
 
@@ -208,9 +203,8 @@ func (s *MonitoringServiceServer) DeleteAlertRule(ctx context.Context, req *moni
 	fmt.Printf("[ALERT_RULE] Deleted alert rule: %s\n", req.RuleId)
 
 	return &monitoring.DeleteAlertRuleResponse{
-		Success:   true,
-		Message:   "Alert rule deleted successfully",
-		Timestamp: time.Now().Format(time.RFC3339),
+		Success: true,
+		Message: "Alert rule deleted successfully",
 	}, nil
 }
 
@@ -219,22 +213,26 @@ func (s *MonitoringServiceServer) ListAlertRules(ctx context.Context, req *monit
 	// Mock alert rules
 	rules := []*monitoring.AlertRule{
 		{
-			RuleId:      "rule_1",
-			Name:        "High CPU Usage",
-			Description: "CPU usage exceeds 80%",
-			Severity:    monitoring.AlertSeverity_ALERT_SEVERITY_WARNING,
-			Condition:   "cpu_usage > 80",
-			Enabled:     true,
-			CreatedAt:   time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+			RuleId:               "rule_1",
+			Name:                 "High CPU Usage",
+			Description:          "CPU usage exceeds 80%",
+			Severity:             monitoring.AlertSeverity_ALERT_SEVERITY_WARNING,
+			Condition:            "cpu_usage > 80",
+			Threshold:            80.0,
+			DurationSeconds:      300,
+			NotificationChannels: []string{"email", "slack"},
+			Enabled:              true,
 		},
 		{
-			RuleId:      "rule_2",
-			Name:        "Database Connection Pool",
-			Description: "Connection pool utilization above 90%",
-			Severity:    monitoring.AlertSeverity_ALERT_SEVERITY_INFO,
-			Condition:   "db_connections > 90",
-			Enabled:     true,
-			CreatedAt:   time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+			RuleId:               "rule_2",
+			Name:                 "Database Connection Pool",
+			Description:          "Connection pool utilization above 90%",
+			Severity:             monitoring.AlertSeverity_ALERT_SEVERITY_INFO,
+			Condition:            "db_connections > 90",
+			Threshold:            90.0,
+			DurationSeconds:      600,
+			NotificationChannels: []string{"email"},
+			Enabled:              true,
 		},
 	}
 
@@ -250,22 +248,26 @@ func (s *MonitoringServiceServer) GetAlerts(ctx context.Context, req *monitoring
 	// Mock alerts
 	alerts := []*monitoring.Alert{
 		{
-			AlertId:     "alert_1",
-			RuleId:      "rule_1",
-			Name:        "High CPU Usage",
-			Description: "CPU usage exceeds 80%",
-			Severity:    monitoring.AlertSeverity_ALERT_SEVERITY_WARNING,
-			Status:      monitoring.AlertStatus_ACTIVE,
-			CreatedAt:   time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+			AlertId:    "alert_1",
+			RuleId:     "rule_1",
+			Name:       "High CPU Usage",
+			Severity:   monitoring.AlertSeverity_ALERT_SEVERITY_WARNING,
+			Status:     monitoring.AlertStatus_ACTIVE,
+			Value:      85.5,
+			Message:    "CPU usage is at 85.5%",
+			CreatedAt:  time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+			UpdatedAt:  time.Now().Format(time.RFC3339),
 		},
 		{
-			AlertId:     "alert_2",
-			RuleId:      "rule_2",
-			Name:        "Database Connection Pool",
-			Description: "Connection pool utilization above 90%",
-			Severity:    monitoring.AlertSeverity_ALERT_SEVERITY_INFO,
-			Status:      monitoring.AlertStatus_RESOLVED,
-			CreatedAt:   time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+			AlertId:    "alert_2",
+			RuleId:     "rule_2",
+			Name:       "Database Connection Pool",
+			Severity:   monitoring.AlertSeverity_ALERT_SEVERITY_INFO,
+			Status:     monitoring.AlertStatus_RESOLVED,
+			Value:      95.2,
+			Message:    "Connection pool utilization was at 95.2%",
+			CreatedAt:  time.Now().Add(-2 * time.Hour).Format(time.RFC3339),
+			UpdatedAt:  time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
 		},
 	}
 
@@ -285,9 +287,8 @@ func (s *MonitoringServiceServer) AcknowledgeAlert(ctx context.Context, req *mon
 	fmt.Printf("[ALERT] Acknowledged alert: %s by user %s\n", req.AlertId, req.UserId)
 
 	return &monitoring.AcknowledgeAlertResponse{
-		Success:   true,
-		Message:   "Alert acknowledged successfully",
-		Timestamp: time.Now().Format(time.RFC3339),
+		Success: true,
+		Message: "Alert acknowledged successfully",
 	}, nil
 }
 
@@ -296,20 +297,20 @@ func (s *MonitoringServiceServer) GetScalingRecommendations(ctx context.Context,
 	// Mock scaling recommendations
 	recommendations := []*monitoring.ScalingRecommendation{
 		{
-			ServiceName:      "api-gateway",
-			CurrentInstances: 2,
-			RecommendedInstances: 3,
-			Reason:           "CPU usage trending upward",
-			Confidence:       0.85,
-			Priority:         monitoring.ScalingPriority_MEDIUM,
+			ServiceName:            "api-gateway",
+			CurrentInstances:       2,
+			RecommendedInstances:   3,
+			Reason:                 "CPU usage trending upward",
+			Confidence:             0.85,
+			Priority:               monitoring.ScalingPriority_MEDIUM,
 		},
 		{
-			ServiceName:      "inference-pool",
-			CurrentInstances: 1,
-			RecommendedInstances: 2,
-			Reason:           "Increased inference requests",
-			Confidence:       0.72,
-			Priority:         monitoring.ScalingPriority_HIGH,
+			ServiceName:            "inference-pool",
+			CurrentInstances:       1,
+			RecommendedInstances:   2,
+			Reason:                 "Increased inference requests",
+			Confidence:             0.72,
+			Priority:               monitoring.ScalingPriority_HIGH,
 		},
 	}
 
