@@ -48,10 +48,19 @@ type DatabaseManager interface {
 	GetUserByEmail(email string) (*User, error)
 	ValidatePassword(user *User, password string) bool
 	UpdateLastLogin(userID string) error
+	UpdateUserProfile(userID, firstName, lastName, organization string) error
+	UpdatePassword(userID, passwordHash string) error
 	
 	// API Key management
 	CreateAPIKey(userID, name, keyHash, keyPrefix string, permissions []string) (string, error)
 	GetUserPermissions(userID string) ([]string, error)
+	GetAPIKeyByHash(keyHash string) (*APIKey, error)
+	UpdateAPIKeyUsage(keyID string) error
+	ListAPIKeys(userID string) ([]*APIKey, error)
+	RevokeAPIKey(keyID string) error
+	
+	// Inference logging
+	LogInferenceRequest(userID, modelID string, requestData, responseData map[string]interface{}, status string, errorMessage *string, tokensUsed, processingTimeMs int, cost float64) error
 }
 
 // DataStore interface for database operations (unified interface)

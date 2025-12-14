@@ -266,10 +266,7 @@ func (s *AuthServiceServer) UpdateUserProfile(ctx context.Context, req *auth.Upd
 	}
 
 	// Update user in database
-	query := `UPDATE users SET first_name = $1, last_name = $2, organization = $3, updated_at = CURRENT_TIMESTAMP 
-			  WHERE id = $4`
-
-	_, err := s.dbManager.Postgres.Exec(query, req.FirstName, req.LastName, req.Organization, req.UserId)
+	err := s.dbManager.UpdateUserProfile(req.UserId, req.FirstName, req.LastName, req.Organization)
 	if err != nil {
 		log.Printf("Failed to update user profile: %v", err)
 		return nil, status.Error(codes.Internal, "failed to update profile")
@@ -305,8 +302,7 @@ func (s *AuthServiceServer) ChangePassword(ctx context.Context, req *auth.Change
 	}
 
 	// Update password
-	query := `UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
-	_, err = s.dbManager.Postgres.Exec(query, string(hashedPassword), user.ID)
+	err = s.dbManager.UpdatePassword(user.ID, string(hashedPassword))
 	if err != nil {
 		log.Printf("Failed to update password: %v", err)
 		return nil, status.Error(codes.Internal, "failed to update password")
@@ -326,7 +322,7 @@ func (s *AuthServiceServer) GenerateAPIKey(ctx context.Context, req *auth.Genera
 	keyPrefix := apiKey[:8]
 
 	// Store in database
-	keyID, err := s.dbManager.CreateAPIKey(req.UserId, req.Name, keyHash, keyPrefix, req.Permissions, nil)
+	keyID, err := s.dbManager.CreateAPIKey(req.UserId, req.Name, keyHash, keyPrefix, req.Permissions)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "failed to create API key")
 	}
@@ -354,39 +350,26 @@ func (s *AuthServiceServer) ListAPIKeys(ctx context.Context, req *auth.ListAPIKe
 		return nil, status.Error(codes.InvalidArgument, "user ID is required")
 	}
 
-	query := `SELECT id, name, key_prefix, permissions, created_at, expires_at, 
-			  last_used_at, usage_count, active 
-			  FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC`
-
-	rows, err := s.dbManager.Postgres.Query(query, req.UserId)
+	dbKeys, err := s.dbManager.ListAPIKeys(req.UserId)
 	if err != nil {
 		log.Printf("Failed to list API keys: %v", err)
 		return nil, status.Error(codes.Internal, "failed to list API keys")
 	}
-	defer rows.Close()
 
 	var apiKeys []*auth.APIKey
-	for rows.Next() {
-		var key auth.APIKey
-		var expiresAt, lastUsedAt sql.NullTime
-
-		err := rows.Scan(
-			&key.Id, &key.Name, &key.KeyPrefix, &key.Permissions,
-			&key.CreatedAt, &expiresAt, &lastUsedAt, &key.UsageCount, &key.Active,
-		)
-		if err != nil {
-			log.Printf("Failed to scan API key: %v", err)
-			continue
+	for _, dbKey := range dbKeys {
+		key := &auth.APIKey{
+			Id:          dbKey.ID,
+			Name:        dbKey.Name,
+			KeyPrefix:   dbKey.KeyPrefix,
+			Permissions: dbKey.Permissions,
+			CreatedAt:   dbKey.CreatedAt,
+			ExpiresAt:   dbKey.ExpiresAt,
+			LastUsedAt:  dbKey.LastUsedAt,
+			UsageCount:  dbKey.UsageCount,
+			Active:      dbKey.Active,
 		}
-
-		if expiresAt.Valid {
-			key.ExpiresAt = expiresAt.Time.Format(time.RFC3339)
-		}
-		if lastUsedAt.Valid {
-			key.LastUsedAt = lastUsedAt.Time.Format(time.RFC3339)
-		}
-
-		apiKeys = append(apiKeys, &key)
+		apiKeys = append(apiKeys, key)
 	}
 
 	return &auth.ListAPIKeysResponse{
@@ -402,8 +385,7 @@ func (s *AuthServiceServer) RevokeAPIKey(ctx context.Context, req *auth.RevokeAP
 		return nil, status.Error(codes.InvalidArgument, "key ID is required")
 	}
 
-	query := `UPDATE api_keys SET active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1`
-	_, err := s.dbManager.Postgres.Exec(query, req.KeyId)
+	err := s.dbManager.RevokeAPIKey(req.KeyId)
 	if err != nil {
 		log.Printf("Failed to revoke API key: %v", err)
 		return nil, status.Error(codes.Internal, "failed to revoke API key")
@@ -474,8 +456,8 @@ func (s *AuthServiceServer) userToProto(user *database.User) *auth.User {
 		FirstName:    user.FirstName,
 		LastName:     user.LastName,
 		Organization: user.Organization,
-		CreatedAt:    user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:    user.UpdatedAt.Format(time.RFC3339),
+		CreatedAt:    user.CreatedAt,
+		UpdatedAt:    user.UpdatedAt,
 		Active:       user.Active,
 	}
 }

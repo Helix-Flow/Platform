@@ -311,3 +311,10 @@ func (dm *LegacyDatabaseManager) LogInferenceRequest(userID, modelID string, req
 
 	return nil
 }
+
+// UpdateUserProfile updates user profile information
+func (dm *LegacyDatabaseManager) UpdateUserProfile(userID, firstName, lastName, organization string) error {
+	query := `UPDATE users SET first_name = $1, last_name = $2, organization = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4`
+	_, err := dm.Postgres.Exec(query, firstName, lastName, organization, userID)
+	return err
+}

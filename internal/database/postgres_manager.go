@@ -36,9 +36,10 @@ func (dm *PostgresManager) Initialize() error {
 		return fmt.Errorf("failed to initialize PostgreSQL: %w", err)
 	}
 
-	// Initialize Redis connection
+	// Initialize Redis connection (optional)
 	if err := dm.initRedis(); err != nil {
-		return fmt.Errorf("failed to initialize Redis: %w", err)
+		log.Printf("Warning: Redis initialization failed: %v. Continuing without Redis.", err)
+		dm.Redis = nil // Set to nil to indicate Redis is not available
 	}
 
 	log.Println("PostgreSQL database connections initialized successfully")
@@ -263,4 +264,118 @@ func (dm *PostgresManager) GetUserPermissions(userID string) ([]string, error) {
 	}
 
 	return allPermissions, nil
+}
+
+// UpdateUserProfile updates user profile information
+func (dm *PostgresManager) UpdateUserProfile(userID, firstName, lastName, organization string) error {
+	query := `UPDATE users SET first_name = $1, last_name = $2, organization = $3, updated_at = CURRENT_TIMESTAMP WHERE id = $4`
+	_, err := dm.DB.Exec(query, firstName, lastName, organization, userID)
+	return err
+}
+
+// UpdatePassword updates user password
+func (dm *PostgresManager) UpdatePassword(userID, passwordHash string) error {
+	query := `UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2`
+	_, err := dm.DB.Exec(query, passwordHash, userID)
+	return err
+}
+
+// GetAPIKeyByHash retrieves API key by hash
+func (dm *PostgresManager) GetAPIKeyByHash(keyHash string) (*APIKey, error) {
+	query := `SELECT id, user_id, name, key_prefix, permissions, created_at, expires_at, 
+			  last_used_at, usage_count, active 
+			  FROM api_keys WHERE key_hash = $1 AND active = true`
+
+	key := &APIKey{}
+	err := dm.DB.QueryRow(query, keyHash).Scan(
+		&key.ID, &key.UserID, &key.Name, &key.KeyPrefix, &key.Permissions,
+		&key.CreatedAt, &key.ExpiresAt, &key.LastUsedAt, &key.UsageCount, &key.Active,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("API key not found")
+		}
+		return nil, fmt.Errorf("failed to get API key: %w", err)
+	}
+
+	return key, nil
+}
+
+// UpdateAPIKeyUsage updates API key usage information
+func (dm *PostgresManager) UpdateAPIKeyUsage(keyID string) error {
+	query := `UPDATE api_keys SET usage_count = usage_count + 1, last_used_at = CURRENT_TIMESTAMP 
+			  WHERE id = $1`
+	_, err := dm.DB.Exec(query, keyID)
+	return err
+}
+
+// ListAPIKeys lists API keys for a user
+func (dm *PostgresManager) ListAPIKeys(userID string) ([]*APIKey, error) {
+	query := `SELECT id, user_id, name, key_prefix, permissions, created_at, expires_at, 
+			  last_used_at, usage_count, active 
+			  FROM api_keys WHERE user_id = $1 ORDER BY created_at DESC`
+
+	rows, err := dm.DB.Query(query, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list API keys: %w", err)
+	}
+	defer rows.Close()
+
+	var apiKeys []*APIKey
+	for rows.Next() {
+		key := &APIKey{}
+		err := rows.Scan(
+			&key.ID, &key.UserID, &key.Name, &key.KeyPrefix, &key.Permissions,
+			&key.CreatedAt, &key.ExpiresAt, &key.LastUsedAt, &key.UsageCount, &key.Active,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan API key: %w", err)
+		}
+		apiKeys = append(apiKeys, key)
+	}
+
+	return apiKeys, nil
+}
+
+// RevokeAPIKey revokes an API key
+func (dm *PostgresManager) RevokeAPIKey(keyID string) error {
+	query := `UPDATE api_keys SET active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1`
+	_, err := dm.DB.Exec(query, keyID)
+	return err
+}
+
+// LogInferenceRequest logs an inference request
+func (dm *PostgresManager) LogInferenceRequest(userID, modelID string, requestData, responseData map[string]interface{}, status string, errorMessage *string, tokensUsed, processingTimeMs int, cost float64) error {
+	// Convert maps to JSON
+	reqJSON, err := json.Marshal(requestData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal request data: %w", err)
+	}
+
+	respJSON, err := json.Marshal(responseData)
+	if err != nil {
+		return fmt.Errorf("failed to marshal response data: %w", err)
+	}
+
+	query := `INSERT INTO inference_requests 
+			  (user_id, model_id, request_data, response_data, status, error_message, tokens_used, processing_time_ms, cost) 
+			  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
+
+	var requestID string
+	err = dm.DB.QueryRow(query, userID, modelID, string(reqJSON), string(respJSON), status, errorMessage, tokensUsed, processingTimeMs, cost).Scan(&requestID)
+	if err != nil {
+		return fmt.Errorf("failed to log inference request: %w", err)
+	}
+
+	// Update status to completed if successful
+	if status == "completed" {
+		updateQuery := `UPDATE inference_requests SET completed_at = CURRENT_TIMESTAMP WHERE id = $1`
+		_, err = dm.DB.Exec(updateQuery, requestID)
+		if err != nil {
+			log.Printf("Failed to update completion time for request %s: %v", requestID, err)
+		}
+	}
+
+	return nil
 }

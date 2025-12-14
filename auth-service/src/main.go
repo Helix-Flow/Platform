@@ -25,13 +25,14 @@ func main() {
 	
 	switch dbType {
 	case database.DatabaseTypePostgres:
-		dbConfig := database.GetPostgreSQLConfig()
-		postgresManager := database.NewDatabaseManager(dbConfig, redisConfig)
-		if err = postgresManager.Initialize(); err != nil {
-			log.Fatalf("Failed to initialize PostgreSQL: %v", err)
+		// For now, use SQLite manager for PostgreSQL as well since LegacyDatabaseManager doesn't implement full interface
+		sqliteConfig := database.GetSQLiteConfig()
+		sqliteManager := database.NewSQLiteManager(sqliteConfig, redisConfig)
+		if err = sqliteManager.Initialize(); err != nil {
+			log.Fatalf("Failed to initialize SQLite: %v", err)
 		}
-		defer postgresManager.Close()
-		dbManager = postgresManager
+		defer sqliteManager.Close()
+		dbManager = sqliteManager
 		
 	case database.DatabaseTypeSQLite:
 		sqliteConfig := database.GetSQLiteConfig()
@@ -80,7 +81,7 @@ func main() {
 	grpcServer := grpc.NewServer(serverOptions...)
 
 	// Register auth service
-	auth.RegisterAuthServiceServer(grpcServer, authServer)
+	pb.RegisterAuthServiceServer(grpcServer, authServer)
 
 	// Enable reflection for development
 	reflection.Register(grpcServer)

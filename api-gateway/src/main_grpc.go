@@ -603,7 +603,7 @@ func (ag *APIGatewayGRPC) Start() error {
 	}
 
 	server := &http.Server{
-		Addr:         ":8443",
+		Addr:         ":9443",
 		Handler:      ag.router,
 		TLSConfig:    &tls.Config{
 			Certificates: []tls.Certificate{cert},
@@ -611,7 +611,7 @@ func (ag *APIGatewayGRPC) Start() error {
 		},
 	}
 
-	log.Println("API Gateway gRPC version starting on :8443")
+	log.Println("API Gateway gRPC version starting on :9443")
 	return server.ListenAndServeTLS("", "")
 }
 
