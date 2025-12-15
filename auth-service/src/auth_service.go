@@ -186,6 +186,20 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Validate JTI is UUID v4
+		if jti, exists := claims["jti"].(string); exists {
+			parsedUUID, err := uuid.Parse(jti)
+			if err != nil || uuid.Version(parsedUUID) != 4 {
+				return nil, errors.New("invalid JTI format")
+			}
+		}
+		// Validate JTI is UUID v4
+		if jti, exists := claims["jti"].(string); exists {
+			parsedUUID, err := uuid.Parse(jti)
+			if err != nil || uuid.Version(parsedUUID) != 4 {
+				return nil, errors.New("invalid JTI format")
+			}
+		}
 		userID := claims["sub"].(string)
 		username := claims["username"].(string)
 		expiresAt := int64(claims["exp"].(float64))
@@ -234,7 +248,13 @@ func (s *AuthServiceServer) RefreshToken(ctx context.Context, req *auth.RefreshT
 	if !ok {
 		return nil, status.Error(codes.Unauthenticated, "invalid token claims")
 	}
-
+	// Validate JTI is UUID v4
+	if jti, exists := claims["jti"].(string); exists {
+		parsedUUID, err := uuid.Parse(jti)
+		if err != nil || uuid.Version(parsedUUID) != 4 {
+			return nil, status.Error(codes.Unauthenticated, "invalid JTI format")
+		}
+	}
 	userID := claims["sub"].(string)
 	
 	// Get user by ID to retrieve username
