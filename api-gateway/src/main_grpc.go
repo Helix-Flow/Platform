@@ -16,6 +16,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 
 	pbInference "helixflow/api-gateway/inference"
 	pbAuth "helixflow/api-gateway/auth"
@@ -113,10 +114,14 @@ func (ag *APIGatewayGRPC) InitializeGRPCClients() error {
 	ag.inferenceClient = pbInference.NewInferenceServiceClient(inferenceConn)
 
 	// Connect to Auth Service
-	authConn, err := grpc.Dial(
-		getEnv("AUTH_SERVICE_GRPC", "auth-service:8443"),
-		grpc.WithTransportCredentials(creds),
-	)
+	authAddr := getEnv("AUTH_SERVICE_GRPC", "auth-service:8443")
+	var authOpt grpc.DialOption
+	if strings.Contains(authAddr, "localhost") || strings.Contains(authAddr, "127.0.0.1") {
+		authOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
+	} else {
+		authOpt = grpc.WithTransportCredentials(creds)
+	}
+	authConn, err := grpc.Dial(authAddr, authOpt)
 	if err != nil {
 		return fmt.Errorf("failed to connect to auth service: %w", err)
 	}
@@ -568,7 +573,7 @@ func (ag *APIGatewayGRPC) Start() error {
 	}
 
 	server := &http.Server{
-		Addr:         ":9443",
+		Addr:         ":8443",
 		Handler:      ag.router,
 		TLSConfig:    &tls.Config{
 			Certificates: []tls.Certificate{cert},
@@ -576,7 +581,7 @@ func (ag *APIGatewayGRPC) Start() error {
 		},
 	}
 
-	log.Println("API Gateway gRPC version starting on :9443")
+	log.Println("API Gateway gRPC version starting on :8443")
 	return server.ListenAndServeTLS("", "")
 }
 
