@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package helixflow.inference;
 
-option go_package = "helixflow/inference";
+option go_package = "helixflow/api-gateway/inference";
 
 // Inference service definition
 service InferenceService {

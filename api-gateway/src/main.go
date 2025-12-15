@@ -15,7 +15,6 @@ import (
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 	pbAuth "helixflow/api-gateway/auth"
 )
 
@@ -536,7 +535,8 @@ func main() {
 	authGRPCAddr := getEnv("AUTH_SERVICE_GRPC", "auth-service:8081")
 	var authOpt grpc.DialOption
 	if strings.Contains(authGRPCAddr, "localhost") || strings.Contains(authGRPCAddr, "127.0.0.1") {
-		authOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
+		creds := credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})
+		authOpt = grpc.WithTransportCredentials(creds)
 	} else {
 		creds := credentials.NewTLS(&tls.Config{})
 		authOpt = grpc.WithTransportCredentials(creds)

@@ -346,7 +346,9 @@ func (dm *SQLiteManager) GetUserByID(userID string) (*User, error) {
 
 // ValidatePassword validates user password
 func (dm *SQLiteManager) ValidatePassword(user *User, password string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) == nil
+	err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+	log.Printf("ValidatePassword: hash=%s, password length=%d, err=%v", user.PasswordHash, len(password), err)
+	return err == nil
 }
 
 // UpdateLastLogin updates user's last login time

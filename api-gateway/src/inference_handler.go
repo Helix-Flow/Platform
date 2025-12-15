@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,7 +11,6 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
 	inference "helixflow/api-gateway/inference"
 )
 
@@ -24,7 +24,7 @@ type InferenceHandler struct {
 func NewInferenceHandler(inferencePoolURL string) (*InferenceHandler, error) {
 	var creds credentials.TransportCredentials
 	if strings.Contains(inferencePoolURL, "localhost") || strings.Contains(inferencePoolURL, "127.0.0.1") {
-		creds = insecure.NewCredentials()
+		creds = credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})
 	} else {
 		// Try to load TLS certificates for secure connections
 		certPath := "./certs/inference-pool.crt"
@@ -52,11 +52,12 @@ func NewInferenceHandler(inferencePoolURL string) (*InferenceHandler, error) {
 func (h *InferenceHandler) HandleChatCompletion(ctx context.Context, req ChatCompletionRequest, userID string) (*ChatCompletionResponse, error) {
 	// Convert request to inference service format
 	inferenceReq := &inference.InferenceRequest{
-		ModelId:     req.Model,
+		Model:       req.Model,
 		MaxTokens:   int32(req.MaxTokens),
 		Temperature: req.Temperature,
 		TopP:        0.9,
 		Stream:      req.Stream,
+		UserId:      userID,
 		Messages:    convertMessages(req.Messages),
 	}
 
@@ -65,7 +66,7 @@ func (h *InferenceHandler) HandleChatCompletion(ctx context.Context, req ChatCom
 	defer cancel()
 
 	// Call inference service
-	response, err := h.inferenceClient.Inference(ctx, inferenceReq)
+	response, err := h.inferenceClient.GenerateCompletion(ctx, inferenceReq)
 	if err != nil {
 		return nil, fmt.Errorf("inference failed: %w", err)
 	}
@@ -83,11 +84,12 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 
 	// Convert request to inference service format
 	inferenceReq := &inference.InferenceRequest{
-		ModelId:     req.Model,
+		Model:       req.Model,
 		MaxTokens:   int32(req.MaxTokens),
 		Temperature: req.Temperature,
 		TopP:        0.9,
 		Stream:      true,
+		UserId:      userID,
 		Messages:    convertMessages(req.Messages),
 	}
 
@@ -96,7 +98,7 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 	defer cancel()
 
 	// Call streaming inference service
-	stream, err := h.inferenceClient.StreamInference(ctx, inferenceReq)
+	stream, err := h.inferenceClient.GenerateStreamingCompletion(ctx, inferenceReq)
 	if err != nil {
 		return fmt.Errorf("streaming inference failed: %w", err)
 	}

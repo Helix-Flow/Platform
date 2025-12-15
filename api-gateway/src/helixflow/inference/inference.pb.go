@@ -768,7 +768,7 @@ const file_inference_proto_rawDesc = "" +
 	"\fGetModelInfo\x12%.helixflow.inference.ModelInfoRequest\x1a&.helixflow.inference.ModelInfoResponse\x12]\n" +
 	"\n" +
 	"ListModels\x12&.helixflow.inference.ListModelsRequest\x1a'.helixflow.inference.ListModelsResponse\x12Q\n" +
-	"\x06Health\x12\".helixflow.inference.HealthRequest\x1a#.helixflow.inference.HealthResponseB!Z\x1fhelixflow/api-gateway/inferenceb\x06proto3"
+	"\x06Health\x12\".helixflow.inference.HealthRequest\x1a#.helixflow.inference.HealthResponseB\x15Z\x13helixflow/inferenceb\x06proto3"
 
 var (
 	file_inference_proto_rawDescOnce sync.Once
