@@ -54,7 +54,7 @@ func (h *InferenceHandler) HandleChatCompletion(ctx context.Context, req ChatCom
 	inferenceReq := &inference.InferenceRequest{
 		Model:       req.Model,
 		MaxTokens:   int32(req.MaxTokens),
-		Temperature: req.Temperature,
+		Temperature: float32(req.Temperature),
 		TopP:        0.9,
 		Stream:      req.Stream,
 		UserId:      userID,
@@ -86,7 +86,7 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 	inferenceReq := &inference.InferenceRequest{
 		Model:       req.Model,
 		MaxTokens:   int32(req.MaxTokens),
-		Temperature: req.Temperature,
+		Temperature: float32(req.Temperature),
 		TopP:        0.9,
 		Stream:      true,
 		UserId:      userID,
@@ -183,17 +183,16 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 }
 
 // convertMessages converts OpenAI format messages to inference format
-func convertMessages(messages []ChatMessage) []*inference.ChatMessage {
-	inferenceMessages := make([]*inference.ChatMessage, len(messages))
+func convertMessages(messages []ChatMessage) []*inference.Message {
+	inferenceMessages := make([]*inference.Message, len(messages))
 	for i, msg := range messages {
-		inferenceMessages[i] = &inference.ChatMessage{
+		inferenceMessages[i] = &inference.Message{
 			Role:    msg.Role,
 			Content: msg.Content,
 		}
 	}
 	return inferenceMessages
 }
-
 // convertToOpenAIFormat converts inference response to OpenAI format
 func (h *InferenceHandler) convertToOpenAIFormat(resp *inference.InferenceResponse, req ChatCompletionRequest) *ChatCompletionResponse {
 	return &ChatCompletionResponse{
