@@ -490,6 +490,7 @@ func (s *AuthServiceServer) generateAccessToken(userID, username string) (string
 	claims := jwt.MapClaims{
 		"sub":      userID,
 		"username": username,
+		"jti":      generateJTI(),
 		"exp":      time.Now().Add(time.Hour).Unix(),
 		"iat":      time.Now().Unix(),
 		"type":     "access",
