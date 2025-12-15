@@ -328,11 +328,10 @@ func (ag *APIGateway) handleStreamingResponse(w http.ResponseWriter, req ChatCom
 
 func (ag *APIGateway) modelsHandler(w http.ResponseWriter, r *http.Request) {
 	// Check authentication (optional for models endpoint)
-	userID, err := ag.authenticateRequest(r)
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid token"})
-		return
+	userID := ""
+	// Try to authenticate but don't require it
+	if id, err := ag.authenticateRequest(r); err == nil {
+		userID = id
 	}
 
 	models := []Model{
@@ -391,14 +390,17 @@ func (ag *APIGateway) authenticateRequest(r *http.Request) (string, error) {
 
 	// If auth client is available, validate with auth service
 	if ag.authClient != nil {
+		log.Printf("Validating token via auth service (length: %d)", len(token))
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
 		req := &pbAuth.ValidateTokenRequest{Token: token}
 		resp, err := ag.authClient.ValidateToken(ctx, req)
 		if err != nil {
+			log.Printf("Token validation error: %v", err)
 			return "", fmt.Errorf("token validation failed: %w", err)
 		}
+		log.Printf("Token validation result: valid=%v, user=%s", resp.Valid, resp.UserId)
 		if !resp.Valid {
 			return "", fmt.Errorf("invalid token")
 		}
@@ -406,6 +408,7 @@ func (ag *APIGateway) authenticateRequest(r *http.Request) (string, error) {
 	}
 
 	// Fallback to simple validation (for backward compatibility)
+	log.Printf("Auth client is nil, using fallback validation")
 	if token == "demo-key" || token == "valid-token" {
 		return "demo-user", nil
 	}
