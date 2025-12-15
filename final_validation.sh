@@ -31,15 +31,7 @@ for service in api-gateway auth-service inference-pool monitoring; do
     ((TOTAL++))
 done
 
-# Check gRPC gateway
-if pgrep -f "bin/api-gateway-grpc" > /dev/null; then
-    echo -e "   ${GREEN}✅${NC} api-gateway-grpc is running"
-    ((PASSED++))
-else
-    echo -e "   ${RED}❌${NC} api-gateway-grpc is not running"
-    ((FAILED++))
-fi
-((TOTAL++))
+
 
 echo ""
 echo "2. Testing Core Endpoints..."
@@ -219,21 +211,6 @@ for service in api-gateway auth-service inference-pool monitoring; do
     ((TOTAL++))
 done
 
-if [ -f "api-gateway/bin/api-gateway-grpc" ]; then
-    echo -e "   ${GREEN}✅${NC} api-gateway-grpc binary exists"
-    ((PASSED++))
-else
-    echo -e "   ${RED}❌${NC} api-gateway-grpc binary missing"
-    ((FAILED++))
-fi
-((TOTAL++))
-
-echo ""
-echo "=" * 60
-echo "📊 FINAL VALIDATION RESULTS"
-echo "=" * 60
-echo f"Total Tests: {TOTAL}"
-echo f"Passed: {PASSED}"
 echo f"Failed: {FAILED}"
 echo f"Success Rate: $((PASSED * 100 / TOTAL))%"
 

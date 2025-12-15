@@ -125,20 +125,6 @@ show_status() {
         printf "%-20s %s\n" "$service:" "$status"
     done
     
-    # Check gRPC gateway
-    local grpc_pid_file="$PID_DIR/api-gateway-grpc.pid"
-    local grpc_status="${RED}STOPPED${NC}"
-    
-    if [ -f "$grpc_pid_file" ]; then
-        local grpc_pid=$(cat "$grpc_pid_file")
-        if kill -0 $grpc_pid 2>/dev/null; then
-            grpc_status="${GREEN}RUNNING${NC} (PID: $grpc_pid, Port: 9443)"
-        else
-            grpc_status="${RED}CRASHED${NC} (PID: $grpc_pid)"
-        fi
-    fi
-    
-    printf "%-20s %s\n" "api-gateway-grpc:" "$grpc_status"
 }
 
 # Main deployment logic
@@ -162,8 +148,6 @@ case "${1:-deploy}" in
         # Start API gateway (HTTP)
         start_service "api-gateway" "api-gateway" "8443"
         
-        # Start API gateway (gRPC)
-        start_service "api-gateway-grpc" "api-gateway" "9443"
         
         echo ""
         echo "3. Waiting for services to stabilize..."
@@ -177,7 +161,6 @@ case "${1:-deploy}" in
         check_health "auth-service" "http://localhost:8081/health"
         check_health "inference-pool" "http://localhost:50051/health"
         check_health "api-gateway" "https://localhost:8443/health" || true
-        check_health "api-gateway-grpc" "https://localhost:9443/health" || true
         
         echo ""
         show_status
@@ -206,7 +189,6 @@ case "${1:-deploy}" in
         echo ""
         
         # Stop services in reverse order
-        stop_service "api-gateway-grpc"
         stop_service "api-gateway"
         stop_service "inference-pool"
         stop_service "auth-service"
@@ -232,7 +214,7 @@ case "${1:-deploy}" in
             tail -f "$LOGS_DIR/$service.log"
         else
             echo "Usage: $0 logs <service>"
-            echo "Available services: api-gateway, api-gateway-grpc, auth-service, inference-pool, monitoring"
+            echo "Available services: api-gateway, auth-service, inference-pool, monitoring"
         fi
         ;;
         

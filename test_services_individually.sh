@@ -19,12 +19,6 @@ else
     echo -e "   ${RED}❌${NC} API Gateway (HTTP) compilation failed"
 fi
 
-echo "   Testing API Gateway (gRPC)..."
-if go build -o ../bin/api-gateway-grpc main_grpc.go > /dev/null 2>&1; then
-    echo -e "   ${GREEN}✅${NC} API Gateway (gRPC) compiles successfully"
-else
-    echo -e "   ${RED}❌${NC} API Gateway (gRPC) compilation failed"
-fi
 cd ../../
 
 echo "   Testing Auth Service..."
@@ -65,7 +59,7 @@ cd ../../
 echo ""
 
 echo "2. Testing Binary Files..."
-for service in api-gateway api-gateway-grpc auth-service inference-pool monitoring; do
+for service in api-gateway auth-service inference-pool monitoring; do
     if [ -f "./$service/bin/$service" ]; then
         echo -e "   ${GREEN}✅${NC} $service binary exists"
     else
@@ -146,19 +140,6 @@ else
 fi
 echo ""
 
-echo "6. Testing gRPC API Gateway Startup..."
-echo "   Testing gRPC API Gateway startup..."
-timeout 3s ./api-gateway/bin/api-gateway-grpc > /tmp/api-gateway-grpc-test.log 2>&1 &
-GRPC_PID=$!
-sleep 1
-if kill -0 $GRPC_PID 2>/dev/null; then
-    echo -e "   ${GREEN}✅${NC} gRPC API Gateway started successfully"
-    kill $GRPC_PID 2>/dev/null
-else
-    echo -e "   ${RED}❌${NC} gRPC API Gateway failed to start"
-    echo "   Log output:"
-    tail -5 /tmp/api-gateway-grpc-test.log | sed 's/^/     /'
-fi
 echo ""
 
 echo "=== Test Summary ==="

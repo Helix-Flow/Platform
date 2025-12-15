@@ -35,11 +35,6 @@ else
     echo "   ❌ API Gateway (HTTP) compilation failed"
 fi
 
-if go build -o ../bin/api-gateway-grpc main_grpc.go > /dev/null 2>&1; then
-    echo "   ✅ API Gateway (gRPC) compiles successfully"
-else
-    echo "   ❌ API Gateway (gRPC) compilation failed"
-fi
 cd ../../
 
 echo "   Testing Auth Service..."

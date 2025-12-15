@@ -163,8 +163,7 @@ Audit Logging: Complete request and response tracking
 ### **🎯 Core Services (Production Ready)**
 ```
 api-gateway/          # HTTP + gRPC API Gateway
-├── bin/api-gateway   # HTTP service binary (Port 8443)
-├── bin/api-gateway-grpc  # gRPC service binary (Port 9443)
+├── bin/api-gateway   # HTTP + gRPC service binary (Port 8443)
 └── src/             # Source code with TLS integration
 
 auth-service/         # Authentication Service

@@ -129,10 +129,12 @@ func (ag *APIGateway) corsMiddleware(next http.Handler) http.Handler {
 }
 
 func (ag *APIGateway) healthHandler(w http.ResponseWriter, r *http.Request) {
+	authConnected := ag.authClient != nil
 	response := map[string]interface{}{
-		"status":    "healthy",
-		"timestamp": time.Now().Format(time.RFC3339),
-		"service":   "api-gateway",
+		"status":                 "healthy",
+		"timestamp":              time.Now().Format(time.RFC3339),
+		"service":                "api-gateway",
+		"auth_service_connected": authConnected,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

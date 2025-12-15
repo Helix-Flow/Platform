@@ -26,7 +26,7 @@
 echo "$(date): Starting daily health check..."
 
 # Check all services
-for service in api-gateway api-gateway-grpc auth-service inference-pool monitoring; do
+for service in api-gateway auth-service inference-pool monitoring; do
     if ! pgrep -f "bin/$service" > /dev/null; then
         echo "$(date): CRITICAL - $service is down" | mail -s "HelixFlow Alert" ops@company.com
         ./production_deployment.sh restart
