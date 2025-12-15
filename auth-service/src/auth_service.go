@@ -31,12 +31,41 @@ type SecurityConfig struct {
 
 // DefaultSecurityConfig returns default security configuration
 func DefaultSecurityConfig() *SecurityConfig {
-	return &SecurityConfig{
+	config := &SecurityConfig{
 		RateLimitMaxAttempts: 5,
 		RateLimitWindow:      5 * time.Minute,
 		TokenExpiryLeeway:    30 * time.Second,
 		EnableUUIDValidation: true,
 		LogSecurityEvents:    true,
+	}
+	
+	// Validate default configuration
+	if err := config.Validate(); err != nil {
+		panic(fmt.Sprintf("Invalid default security configuration: %v", err))
+	}
+	
+	return config
+}
+
+// Validate returns true if the security configuration is valid
+func (c *SecurityConfig) Validate() error {
+	if c.RateLimitMaxAttempts <= 0 {
+		return fmt.Errorf("RateLimitMaxAttempts must be positive, got %d", c.RateLimitMaxAttempts)
+	}
+	if c.RateLimitWindow <= 0 {
+		return fmt.Errorf("RateLimitWindow must be positive, got %v", c.RateLimitWindow)
+	}
+	if c.TokenExpiryLeeway < 0 {
+		return fmt.Errorf("TokenExpiryLeeway must be non-negative, got %v", c.TokenExpiryLeeway)
+	}
+	return nil
+}
+
+// createValidationErrorResponse creates a consistent validation error response
+func (s *AuthServiceServer) createValidationErrorResponse(message string) *auth.ValidateTokenResponse {
+	return &auth.ValidateTokenResponse{
+		Valid:   false,
+		Message: message,
 	}
 }
 
@@ -60,6 +89,11 @@ func NewAuthServiceServer(dbManager database.DatabaseManager, securityConfig *Se
 	// Use default security config if none provided
 	if securityConfig == nil {
 		securityConfig = DefaultSecurityConfig()
+	}
+
+	// Validate security configuration
+	if err := securityConfig.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid security configuration: %w", err)
 	}
 
 	// Generate RSA keys for JWT signing
@@ -174,18 +208,38 @@ func (s *AuthServiceServer) Login(ctx context.Context, req *auth.LoginRequest) (
 
 // ValidateToken validates JWT tokens
 func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.ValidateTokenRequest) (*auth.ValidateTokenResponse, error) {
+	// Input validation
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request is required")
+	}
 	if req.Token == "" {
-		return &auth.ValidateTokenResponse{
-			Valid:   false,
-			Message: "token is required",
-		}, nil
+		return s.createValidationErrorResponse("token is required"), nil
+	}
+	if len(req.Token) > 8192 { // JWT tokens shouldn't be extremely large
+		return s.createValidationErrorResponse("token too large"), nil
+	}
+	if !strings.Contains(req.Token, ".") {
+		return s.createValidationErrorResponse("invalid token format"), nil
+	}
+
+	// Extract client identifier for rate limiting (use token prefix as client ID)
+	clientID := req.Token[:min(10, len(req.Token))]
+
+	// Check rate limit
+	if !s.checkRateLimit(clientID) {
+		if s.securityConfig.LogSecurityEvents {
+			log.Printf("Security Alert: Rate limit exceeded for client %s", clientID)
+		}
+		return s.createValidationErrorResponse("rate limit exceeded"), nil
 	}
 
 	// Check blacklist
 	s.blMutex.RLock()
 	expiry, blacklisted := s.blacklist[req.Token]
 	s.blMutex.RUnlock()
-	log.Printf("ValidateToken: blacklist check, token prefix: %s, blacklisted: %v, map size: %d", req.Token[:10], blacklisted, len(s.blacklist))
+	if s.securityConfig.LogSecurityEvents {
+		log.Printf("ValidateToken: blacklist check, token prefix: %s, blacklisted: %v, map size: %d", req.Token[:10], blacklisted, len(s.blacklist))
+	}
 	if blacklisted {
 		// Clean up if expired
 		if time.Now().After(expiry) {
@@ -202,18 +256,6 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 		}
 	}
 
-	// Extract client identifier for rate limiting (use token prefix as client ID)
-	clientID := req.Token[:min(10, len(req.Token))]
-
-	// Check rate limit
-	if !s.checkRateLimit(clientID) {
-		log.Printf("Security Alert: Rate limit exceeded for client %s", clientID)
-		return &auth.ValidateTokenResponse{
-			Valid:   false,
-			Message: "rate limit exceeded",
-		}, nil
-	}
-
 	// Parse and validate token
 	token, err := jwt.Parse(req.Token, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
@@ -224,10 +266,7 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 
 	if err != nil {
 		s.recordFailedAttempt(clientID)
-		return &auth.ValidateTokenResponse{
-			Valid:   false,
-			Message: "invalid token",
-		}, nil
+		return s.createValidationErrorResponse("invalid token"), nil
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
@@ -256,10 +295,7 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 				log.Printf("Security Alert: Token expired - User ID: %s, Expires: %d, Current: %d", userID, expiresAt, currentTime)
 			}
 			s.recordFailedAttempt(clientID)
-			return &auth.ValidateTokenResponse{
-				Valid:   false,
-				Message: "token expired",
-			}, nil
+			return s.createValidationErrorResponse("token expired"), nil
 		}
 
 		// Log successful validation with user info
@@ -271,29 +307,19 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 			}
 		}
 
-		// Get user permissions
-		permissions, err := s.dbManager.GetUserPermissions(userID)
-		if err != nil {
-			log.Printf("Failed to get user permissions: %v", err)
-			permissions = []string{}
-		}
-
 		return &auth.ValidateTokenResponse{
-			Valid:       true,
-			UserId:      userID,
-			Username:    username,
-			Permissions: permissions,
-			ExpiresAt:   expiresAt,
+			Valid:      true,
+			UserId:     userID,
+			Username:   username,
+			ExpiresAt:  expiresAt,
+			Message:    "token valid",
 		}, nil
 	}
 
 	// Record failed attempt for rate limiting
 	s.recordFailedAttempt(clientID)
 
-	return &auth.ValidateTokenResponse{
-		Valid:   false,
-		Message: "invalid token claims",
-	}, nil
+	return s.createValidationErrorResponse("invalid token claims"), nil
 }
 
 // RefreshToken refreshes an access token
