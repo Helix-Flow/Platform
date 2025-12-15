@@ -14,6 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/google/uuid"
 
 	"helixflow/auth"
 	"helixflow/database"
@@ -504,6 +505,7 @@ func (s *AuthServiceServer) generateRefreshToken(userID, username string) (strin
 	claims := jwt.MapClaims{
 		"sub":      userID,
 		"username": username,
+		"jti":      generateJTI(),
 		"exp":      time.Now().Add(7 * 24 * time.Hour).Unix(), // 7 days
 		"iat":      time.Now().Unix(),
 		"type":     "refresh",
@@ -544,4 +546,8 @@ func hashAPIKey(apiKey string) string {
 
 func contains(s, substr string) bool {
 	return strings.Contains(s, substr)
+}
+
+func generateJTI() string {
+	return uuid.New().String()
 }
