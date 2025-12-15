@@ -189,10 +189,11 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 		// Validate JTI is UUID v4
 		if jti, exists := claims["jti"].(string); exists {
 			parsedUUID, err := uuid.Parse(jti)
-			if err != nil || uuid.Version(parsedUUID) != 4 {
+			if err != nil || parsedUUID.Version() != 4 {
 				return nil, status.Error(codes.InvalidArgument, "invalid JTI format")
 			}
-	
+		}
+
 		userID := claims["sub"].(string)
 		username := claims["username"].(string)
 		expiresAt := int64(claims["exp"].(float64))
