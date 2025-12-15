@@ -5,20 +5,33 @@ import (
 	"encoding/base64"
 	"io"
 	"net/http"
-	"net/http/httptest"
 	"strings"
 	"testing"
-	"github.com/google/uuid"
+	uuid "github.com/google/uuid"
 )
 
 func TestTokenGenerationWithJTI(t *testing.T) {
 	resp, err := http.Post("http://localhost:8082/auth/login", "application/json", strings.NewReader(`{"username":"test", "password":"testpass"}`))
+	if err != nil {
+		t.Fatalf("Failed to make login request: %v", err)
+	}
+	defer resp.Body.Close()
 
-	accessToken, hasAccess := response["access_token"]
-	refreshToken, hasRefresh := response["refresh_token"]
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("Login request failed with status %d: %s", resp.StatusCode, string(body))
+	}
+
+	var responseMap map[string]string
+	if err := json.NewDecoder(resp.Body).Decode(&responseMap); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+
+	accessToken, hasAccess := responseMap["access_token"]
+	refreshToken, hasRefresh := responseMap["refresh_token"]
 
 	if !hasAccess || !hasRefresh {
-		t.Fatalf("Expected both tokens in response, got: %v", response)
+		t.Fatalf("Expected both tokens in response, got: %v", responseMap)
 	}
 
 	verifyJTI(t, accessToken, "access")
@@ -41,8 +54,13 @@ func verifyJTI(t *testing.T, token string, tokenType string) {
 		return
 	}
 
-	_, err := uuid.Parse(jti.(string))
+	parsedUUID, err := uuid.Parse(jti.(string))
 	if err != nil {
 		t.Errorf("%s token JTI is not a valid UUID: %v", tokenType, jti)
+		return
+	}
+
+	if parsedUUID.Version() != 4 {
+		t.Errorf("%s token JTI must be UUID version 4, got version %d", tokenType, parsedUUID.Version())
 	}
 }
