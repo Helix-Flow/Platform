@@ -87,11 +87,12 @@ sleep 2
 
 # Set environment variables
 export HELIXFLOW_ENV=production
-export TLS_CERT=/certs/api-gateway.crt
-export TLS_KEY=/certs/api-gateway-key.pem
-export INFERENCE_POOL_URL=localhost:50052
+export TLS_CERT=$PWD/certs/api-gateway.crt
+export TLS_KEY=$PWD/certs/api-gateway-key.pem
+export INFERENCE_POOL_URL=localhost:50051
 export MONITORING_URL=localhost:8083
-export AUTH_SERVICE_URL=localhost:50051
+export AUTH_SERVICE_URL=localhost:8081
+export AUTH_SERVICE_GRPC=localhost:8081
 
 # Start services in order
 

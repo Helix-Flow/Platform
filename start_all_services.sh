@@ -11,6 +11,11 @@ export DATABASE_PATH=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/data/
 export REDIS_HOST=localhost
 export REDIS_PORT=6379
 export HTTP_PORT=8082
+export TLS_CERT=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/api-gateway.crt
+export TLS_KEY=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/api-gateway-key.pem
+export INFERENCE_POOL_URL=localhost:50051
+export AUTH_SERVICE_GRPC=localhost:8081
+export AUTH_SERVICE_URL=localhost:8081
 
 # Create logs directory
 mkdir -p /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs

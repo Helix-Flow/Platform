@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	inference "helixflow/api-gateway/inference"
 )
 
@@ -20,10 +22,17 @@ type InferenceHandler struct {
 
 // NewInferenceHandler creates a new inference handler
 func NewInferenceHandler(inferencePoolURL string) (*InferenceHandler, error) {
-	// Create gRPC connection to inference pool
-	creds, err := credentials.NewClientTLSFromFile("./certs/inference-pool.crt", "inference-pool")
-	if err != nil {
-		return nil, fmt.Errorf("failed to load certificates: %w", err)
+	var creds credentials.TransportCredentials
+	if strings.Contains(inferencePoolURL, "localhost") || strings.Contains(inferencePoolURL, "127.0.0.1") {
+		creds = insecure.NewCredentials()
+	} else {
+		// Try to load TLS certificates for secure connections
+		certPath := "./certs/inference-pool.crt"
+		loadedCreds, err := credentials.NewClientTLSFromFile(certPath, "inference-pool")
+		if err != nil {
+			return nil, fmt.Errorf("failed to load certificates: %w", err)
+		}
+		creds = loadedCreds
 	}
 
 	conn, err := grpc.Dial(inferencePoolURL, grpc.WithTransportCredentials(creds))

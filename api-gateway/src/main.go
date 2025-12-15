@@ -13,12 +13,17 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/redis/go-redis/v9"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+	pbAuth "helixflow/api-gateway/auth"
 )
 
 type APIGateway struct {
 	redisClient         *redis.Client
 	inferencePoolURL    string
 	authServiceURL      string
+	authClient          pbAuth.AuthServiceClient
 	router              *mux.Router
 	inferenceHandler    *InferenceHandler
 }
@@ -321,7 +326,12 @@ func (ag *APIGateway) handleStreamingResponse(w http.ResponseWriter, req ChatCom
 
 func (ag *APIGateway) modelsHandler(w http.ResponseWriter, r *http.Request) {
 	// Check authentication (optional for models endpoint)
-	userID, _ := ag.authenticateRequest(r)
+	userID, err := ag.authenticateRequest(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid token"})
+		return
+	}
 
 	models := []Model{
 		{
@@ -377,7 +387,23 @@ func (ag *APIGateway) authenticateRequest(r *http.Request) (string, error) {
 
 	token := strings.TrimPrefix(authHeader, "Bearer ")
 
-	// For now, use a simple token validation (will be replaced with gRPC later)
+	// If auth client is available, validate with auth service
+	if ag.authClient != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		req := &pbAuth.ValidateTokenRequest{Token: token}
+		resp, err := ag.authClient.ValidateToken(ctx, req)
+		if err != nil {
+			return "", fmt.Errorf("token validation failed: %w", err)
+		}
+		if !resp.Valid {
+			return "", fmt.Errorf("invalid token")
+		}
+		return resp.UserId, nil
+	}
+
+	// Fallback to simple validation (for backward compatibility)
 	if token == "demo-key" || token == "valid-token" {
 		return "demo-user", nil
 	}
@@ -487,8 +513,8 @@ func main() {
 	gateway := NewAPIGateway()
 	
 	// Load configuration
-	certFile := getEnv("TLS_CERT", "./certs/api-gateway.crt")
-	keyFile := getEnv("TLS_KEY", "./certs/api-gateway-key.pem")
+	certFile := getEnv("TLS_CERT", "../certs/api-gateway.crt")
+	keyFile := getEnv("TLS_KEY", "../certs/api-gateway-key.pem")
 	inferencePoolURL := getEnv("INFERENCE_POOL_URL", "inference-pool:50051")
 	
 	// Initialize inference handler with gRPC connection
@@ -500,7 +526,24 @@ func main() {
 	} else {
 		log.Printf("Inference service connection established successfully")
 	}
-	
+
+	// Initialize auth service gRPC client
+	authGRPCAddr := getEnv("AUTH_SERVICE_GRPC", "auth-service:8081")
+	var authOpt grpc.DialOption
+	if strings.Contains(authGRPCAddr, "localhost") || strings.Contains(authGRPCAddr, "127.0.0.1") {
+		authOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
+	} else {
+		creds := credentials.NewTLS(&tls.Config{})
+		authOpt = grpc.WithTransportCredentials(creds)
+	}
+	authConn, err := grpc.Dial(authGRPCAddr, authOpt)
+	if err != nil {
+		log.Printf("Warning: Failed to connect to auth service gRPC: %v. Token validation will fail.", err)
+	} else {
+		gateway.authClient = pbAuth.NewAuthServiceClient(authConn)
+		log.Printf("Auth service gRPC connection established successfully")
+	}
+
 	// Set inference handler on gateway
 	gateway.inferenceHandler = inferenceHandler
 	

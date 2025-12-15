@@ -114,7 +114,7 @@ func (ag *APIGatewayGRPC) InitializeGRPCClients() error {
 	ag.inferenceClient = pbInference.NewInferenceServiceClient(inferenceConn)
 
 	// Connect to Auth Service
-	authAddr := getEnv("AUTH_SERVICE_GRPC", "auth-service:8443")
+	authAddr := getEnv("AUTH_SERVICE_GRPC", "auth-service:8081")
 	var authOpt grpc.DialOption
 	if strings.Contains(authAddr, "localhost") || strings.Contains(authAddr, "127.0.0.1") {
 		authOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
