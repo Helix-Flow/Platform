@@ -224,7 +224,6 @@ func (s *AuthServiceServer) RefreshToken(ctx context.Context, req *auth.RefreshT
 	if req.RefreshToken == "" {
 		return nil, status.Error(codes.InvalidArgument, "refresh token is required")
 	}
-
 	// Validate refresh token (simplified - in production, store refresh tokens in database)
 	token, err := jwt.Parse(req.RefreshToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
