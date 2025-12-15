@@ -48,7 +48,7 @@ func main() {
 	}
 
 	// Create auth service server
-	authServer, err := NewAuthServiceServer(dbManager)
+	authServer, err := NewAuthServiceServer(dbManager, DefaultSecurityConfig())
 	if err != nil {
 		log.Fatalf("Failed to create auth service: %v", err)
 	}

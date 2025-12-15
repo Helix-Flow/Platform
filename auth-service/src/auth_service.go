@@ -20,18 +20,48 @@ import (
 	"helixflow/database"
 )
 
+// SecurityConfig holds security-related configuration
+type SecurityConfig struct {
+	RateLimitMaxAttempts int           `json:"rate_limit_max_attempts"`
+	RateLimitWindow      time.Duration `json:"rate_limit_window"`
+	TokenExpiryLeeway    time.Duration `json:"token_expiry_leeway"`
+	EnableUUIDValidation bool          `json:"enable_uuid_validation"`
+	LogSecurityEvents    bool          `json:"log_security_events"`
+}
+
+// DefaultSecurityConfig returns default security configuration
+func DefaultSecurityConfig() *SecurityConfig {
+	return &SecurityConfig{
+		RateLimitMaxAttempts: 5,
+		RateLimitWindow:      5 * time.Minute,
+		TokenExpiryLeeway:    30 * time.Second,
+		EnableUUIDValidation: true,
+		LogSecurityEvents:    true,
+	}
+}
+
 // AuthServiceServer implements the gRPC AuthService
 type AuthServiceServer struct {
 	auth.UnimplementedAuthServiceServer
-	dbManager  database.DatabaseManager
-	privateKey *rsa.PrivateKey
-	publicKey  *rsa.PublicKey
-	blacklist  map[string]time.Time
-	blMutex    sync.RWMutex
+	dbManager      database.DatabaseManager
+	privateKey     *rsa.PrivateKey
+	publicKey      *rsa.PublicKey
+	blacklist      map[string]time.Time
+	blMutex        sync.RWMutex
+	// Rate limiting for failed validation attempts
+	failedAttempts map[string]int
+	rateLimitMutex  sync.RWMutex
+	// Security configuration
+	securityConfig *SecurityConfig
 }
 
 // NewAuthServiceServer creates a new auth service server
-func NewAuthServiceServer(dbManager database.DatabaseManager) (*AuthServiceServer, error) {
+func NewAuthServiceServer(dbManager database.DatabaseManager, securityConfig *SecurityConfig) (*AuthServiceServer, error) {
+	// Use default security config if none provided
+	if securityConfig == nil {
+		securityConfig = DefaultSecurityConfig()
+	}
+
 	// Generate RSA keys for JWT signing
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -39,10 +69,12 @@ func NewAuthServiceServer(dbManager database.DatabaseManager) (*AuthServiceServe
 	}
 
 	return &AuthServiceServer{
-		dbManager:  dbManager,
-		privateKey: privateKey,
-		publicKey:  &privateKey.PublicKey,
-		blacklist:  make(map[string]time.Time),
+		dbManager:      dbManager,
+		privateKey:     privateKey,
+		publicKey:      &privateKey.PublicKey,
+		blacklist:      make(map[string]time.Time),
+		failedAttempts: make(map[string]int),
+		securityConfig: securityConfig,
 	}, nil
 }
 
@@ -170,6 +202,18 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 		}
 	}
 
+	// Extract client identifier for rate limiting (use token prefix as client ID)
+	clientID := req.Token[:min(10, len(req.Token))]
+
+	// Check rate limit
+	if !s.checkRateLimit(clientID) {
+		log.Printf("Security Alert: Rate limit exceeded for client %s", clientID)
+		return &auth.ValidateTokenResponse{
+			Valid:   false,
+			Message: "rate limit exceeded",
+		}, nil
+	}
+
 	// Parse and validate token
 	token, err := jwt.Parse(req.Token, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
@@ -179,6 +223,7 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 	})
 
 	if err != nil {
+		s.recordFailedAttempt(clientID)
 		return &auth.ValidateTokenResponse{
 			Valid:   false,
 			Message: "invalid token",
@@ -186,17 +231,45 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		// Validate JTI is UUID v4
-		if jti, exists := claims["jti"].(string); exists {
-			parsedUUID, err := uuid.Parse(jti)
-			if err != nil || parsedUUID.Version() != 4 {
-				return nil, status.Error(codes.InvalidArgument, "invalid JTI format")
+		// Validate JTI is UUID v4 (if enabled in config)
+		if s.securityConfig.EnableUUIDValidation {
+			if jti, exists := claims["jti"].(string); exists {
+				parsedUUID, err := uuid.Parse(jti)
+				if err != nil || parsedUUID.Version() != 4 {
+					if s.securityConfig.LogSecurityEvents {
+						log.Printf("Security Alert: Invalid JTI format detected - JTI: %s, Error: %v", jti, err)
+					}
+					return nil, status.Error(codes.InvalidArgument, "invalid JTI format")
+				}
 			}
 		}
 
 		userID := claims["sub"].(string)
 		username := claims["username"].(string)
 		expiresAt := int64(claims["exp"].(float64))
+
+		// Validate token expiration with leeway
+		currentTime := time.Now().Unix()
+		leewaySeconds := int64(s.securityConfig.TokenExpiryLeeway.Seconds())
+		if expiresAt <= currentTime-leewaySeconds {
+			if s.securityConfig.LogSecurityEvents {
+				log.Printf("Security Alert: Token expired - User ID: %s, Expires: %d, Current: %d", userID, expiresAt, currentTime)
+			}
+			s.recordFailedAttempt(clientID)
+			return &auth.ValidateTokenResponse{
+				Valid:   false,
+				Message: "token expired",
+			}, nil
+		}
+
+		// Log successful validation with user info
+		if s.securityConfig.LogSecurityEvents {
+			if jti, exists := claims["jti"].(string); exists {
+				log.Printf("Token validation successful - User ID: %s, JTI: %s, Expires: %d", userID, jti, expiresAt)
+			} else {
+				log.Printf("Token validation successful - User ID: %s, No JTI present, Expires: %d", userID, expiresAt)
+			}
+		}
 
 		// Get user permissions
 		permissions, err := s.dbManager.GetUserPermissions(userID)
@@ -213,6 +286,9 @@ func (s *AuthServiceServer) ValidateToken(ctx context.Context, req *auth.Validat
 			ExpiresAt:   expiresAt,
 		}, nil
 	}
+
+	// Record failed attempt for rate limiting
+	s.recordFailedAttempt(clientID)
 
 	return &auth.ValidateTokenResponse{
 		Valid:   false,
@@ -245,8 +321,12 @@ func (s *AuthServiceServer) RefreshToken(ctx context.Context, req *auth.RefreshT
 	if jti, exists := claims["jti"].(string); exists {
 		parsedUUID, err := uuid.Parse(jti)
 		if err != nil || parsedUUID.Version() != 4 {
+			log.Printf("Security Alert: Invalid JTI format in refresh token - JTI: %s, Error: %v", jti, err)
 			return nil, status.Error(codes.Unauthenticated, "invalid JTI format")
 		}
+		log.Printf("Refresh token validation successful - User ID: %s, JTI: %s", claims["sub"], jti)
+	} else {
+		log.Printf("Refresh token validation successful - User ID: %s, No JTI present", claims["sub"])
 	}
 	userID := claims["sub"].(string)
 	
@@ -563,4 +643,39 @@ func contains(s, substr string) bool {
 
 func generateJTI() string {
 	return uuid.New().String()
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+// checkRateLimit checks if the client has exceeded the rate limit
+func (s *AuthServiceServer) checkRateLimit(clientID string) bool {
+	s.rateLimitMutex.RLock()
+	attempts, exists := s.failedAttempts[clientID]
+	s.rateLimitMutex.RUnlock()
+
+	if exists && attempts >= s.securityConfig.RateLimitMaxAttempts {
+		return false // Rate limited
+	}
+	return true // Not rate limited
+}
+
+// recordFailedAttempt records a failed validation attempt
+func (s *AuthServiceServer) recordFailedAttempt(clientID string) {
+	s.rateLimitMutex.Lock()
+	s.failedAttempts[clientID]++
+	s.rateLimitMutex.Unlock()
+
+	// Reset attempts after configured window
+	go func() {
+		time.Sleep(s.securityConfig.RateLimitWindow)
+		s.rateLimitMutex.Lock()
+		delete(s.failedAttempts, clientID)
+		s.rateLimitMutex.Unlock()
+	}()
 }

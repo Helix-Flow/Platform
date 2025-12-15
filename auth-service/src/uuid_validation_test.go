@@ -58,11 +58,14 @@ func init() {
 	dbManager := &MockDatabaseManager{}
 	
 	// Create test server
+	defaultConfig := DefaultSecurityConfig()
 	testServer = &AuthServiceServer{
-		dbManager:  dbManager,
-		privateKey: testPrivateKey,
-		publicKey:  testPublicKey,
-		blacklist:  make(map[string]time.Time),
+		dbManager:      dbManager,
+		privateKey:     testPrivateKey,
+		publicKey:      testPublicKey,
+		blacklist:      make(map[string]time.Time),
+		failedAttempts: make(map[string]int),
+		securityConfig: defaultConfig,
 	}
 }
 
