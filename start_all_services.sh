@@ -7,12 +7,15 @@ echo "🚀 Starting HelixFlow Platform Services..."
 
 # Set environment variables
 export DATABASE_TYPE=sqlite
-export DATABASE_PATH=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/data/helixflow.db
+export DB_PATH=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/data/helixflow.db
 export REDIS_HOST=localhost
 export REDIS_PORT=6379
 export HTTP_PORT=8082
+# Certificate paths (using absolute paths for reliability)
 export TLS_CERT=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/api-gateway.crt
 export TLS_KEY=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/api-gateway-key.pem
+export MONITORING_TLS_CERT=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/monitoring.crt
+export MONITORING_TLS_KEY=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/monitoring-key.pem
 export INFERENCE_POOL_URL=localhost:50051
 export AUTH_SERVICE_GRPC=localhost:8081
 export AUTH_SERVICE_URL=localhost:8081
@@ -23,18 +26,19 @@ mkdir -p /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs
 # Function to start a service
 start_service() {
     local service_name=$1
-    local service_binary=$2
-    local service_port=$3
-    
+    local service_dir=$2
+    local service_binary=$3
+    local service_port=$4
+
     echo "Starting $service_name on port $service_port..."
-    
-    # Start the service in background
-    $service_binary > /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/$service_name.log 2>&1 &
+
+    # Start the service in background from its directory
+    cd "$service_dir" && $service_binary > /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/$service_name.log 2>&1 &
     local pid=$!
-    
+
     # Wait a moment to check if it started successfully
-    sleep 2
-    
+    sleep 3
+
     if kill -0 $pid 2>/dev/null; then
         echo "✅ $service_name started successfully (PID: $pid)"
         echo $pid >> /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/service_pids.txt
@@ -53,10 +57,10 @@ pkill -f "api-gateway" 2>/dev/null
 sleep 2
 
 # Start services using pre-built binaries
-start_service "auth-service" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/auth-service/bin/auth-service" "8081"
-start_service "inference-pool" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/inference-pool/bin/inference-pool" "50051"
-start_service "monitoring" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/monitoring/bin/monitoring" "8083"
-start_service "api-gateway" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/api-gateway/bin/api-gateway" "8443"
+start_service "auth-service" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/auth-service" "./bin/auth-service" "8081"
+start_service "inference-pool" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/inference-pool" "./bin/inference-pool" "50051"
+start_service "monitoring" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/monitoring" "./bin/monitoring" "8083"
+start_service "api-gateway" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/api-gateway" "./bin/api-gateway" "8443"
 
 echo ""
 echo "🎯 All services started!"

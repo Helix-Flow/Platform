@@ -17,12 +17,12 @@ func main() {
 	// Initialize database based on configuration
 	dbType := database.GetDatabaseType()
 	redisConfig := database.GetDefaultRedisConfig()
-	
+
 	log.Printf("Using database type: %s", dbType)
-	
+
 	var dbManager database.DatabaseManager
 	var err error
-	
+
 	switch dbType {
 	case database.DatabaseTypePostgres:
 		// For now, use SQLite manager for PostgreSQL as well since LegacyDatabaseManager doesn't implement full interface
@@ -33,7 +33,7 @@ func main() {
 		}
 		defer sqliteManager.Close()
 		dbManager = sqliteManager
-		
+
 	case database.DatabaseTypeSQLite:
 		sqliteConfig := database.GetSQLiteConfig()
 		sqliteManager := database.NewSQLiteManager(sqliteConfig, redisConfig)
@@ -42,7 +42,7 @@ func main() {
 		}
 		defer sqliteManager.Close()
 		dbManager = sqliteManager
-		
+
 	default:
 		log.Fatalf("Unknown database type: %s", dbType)
 	}
@@ -70,8 +70,8 @@ func main() {
 	}
 
 	// Configure TLS if certificates are available
-	certFile := getEnv("TLS_CERT", "./certs/auth-service.crt")
-	keyFile := getEnv("TLS_KEY", "./certs/auth-service-key.pem")
+	certFile := getEnv("TLS_CERT", "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/auth-service.crt")
+	keyFile := getEnv("TLS_KEY", "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/auth-service-key.pem")
 
 	var serverOptions []grpc.ServerOption
 	_, certErr := os.Stat(certFile)

@@ -131,9 +131,9 @@ func (s *MonitoringServiceServer) GetGPUMetrics(ctx context.Context, req *monito
 	}
 
 	return &monitoring.GetGPUMetricsResponse{
-		Success:   true,
+		Success:    true,
 		GpuMetrics: gpuMetrics,
-		Message:   "GPU metrics retrieved successfully",
+		Message:    "GPU metrics retrieved successfully",
 	}, nil
 }
 
@@ -315,29 +315,29 @@ func (s *MonitoringServiceServer) GetScalingRecommendations(ctx context.Context,
 	// Mock scaling recommendations
 	recommendations := []*monitoring.ScalingRecommendation{
 		{
-			ServiceName:       "api-gateway",
-			Action:            monitoring.ScalingAction_SCALING_ACTION_SCALE_UP,
-			TargetReplicas:    3,
-			Reason:            "CPU usage trending upward",
-			ConfidenceScore:   0.85,
-			EstimatedTime:     "5 minutes",
-			Metrics:           map[string]string{"cpu_usage": "85%", "request_rate": "120rps"},
+			ServiceName:     "api-gateway",
+			Action:          monitoring.ScalingAction_SCALING_ACTION_SCALE_UP,
+			TargetReplicas:  3,
+			Reason:          "CPU usage trending upward",
+			ConfidenceScore: 0.85,
+			EstimatedTime:   "5 minutes",
+			Metrics:         map[string]string{"cpu_usage": "85%", "request_rate": "120rps"},
 		},
 		{
-			ServiceName:       "inference-pool",
-			Action:            monitoring.ScalingAction_SCALING_ACTION_SCALE_UP,
-			TargetReplicas:    2,
-			Reason:            "Increased inference requests",
-			ConfidenceScore:   0.72,
-			EstimatedTime:     "3 minutes",
-			Metrics:           map[string]string{"inference_rate": "45rps", "queue_depth": "15"},
+			ServiceName:     "inference-pool",
+			Action:          monitoring.ScalingAction_SCALING_ACTION_SCALE_UP,
+			TargetReplicas:  2,
+			Reason:          "Increased inference requests",
+			ConfidenceScore: 0.72,
+			EstimatedTime:   "3 minutes",
+			Metrics:         map[string]string{"inference_rate": "45rps", "queue_depth": "15"},
 		},
 	}
 
 	return &monitoring.GetScalingRecommendationsResponse{
-		Success:           true,
-		Recommendations:   recommendations,
-		Message:           "Scaling recommendations generated successfully",
+		Success:         true,
+		Recommendations: recommendations,
+		Message:         "Scaling recommendations generated successfully",
 	}, nil
 }
 
@@ -365,9 +365,9 @@ func (s *MonitoringServiceServer) StreamMetrics(req *monitoring.StreamMetricsReq
 // StartGRPCServer starts the gRPC monitoring service
 func StartGRPCServer() error {
 	// Load certificates
-	certFile := getEnv("MONITORING_TLS_CERT", "./certs/monitoring.crt")
-	keyFile := getEnv("MONITORING_TLS_KEY", "./certs/monitoring-key.pem")
-	
+	certFile := getEnv("MONITORING_TLS_CERT", "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/monitoring.crt")
+	keyFile := getEnv("MONITORING_TLS_KEY", "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/monitoring-key.pem")
+
 	creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
 	if err != nil {
 		return fmt.Errorf("failed to load certificates: %w", err)
@@ -399,7 +399,7 @@ func StartGRPCServer() error {
 	}
 
 	log.Printf("Monitoring gRPC service starting on port %s", port)
-	
+
 	// Start serving
 	if err := grpcServer.Serve(lis); err != nil {
 		return fmt.Errorf("failed to serve: %w", err)

@@ -222,7 +222,7 @@ func NewInferencePoolService() *InferencePoolService {
 	gpuManager := NewGPUManager()
 	modelCache := NewModelCache()
 	inferenceEngine := NewInferenceEngine(gpuManager)
-	
+
 	return &InferencePoolService{
 		gpuManager:      gpuManager,
 		modelCache:      modelCache,
@@ -257,6 +257,12 @@ func (s *InferencePoolService) GenerateCompletion(ctx context.Context, req *infe
 	case <-time.After(30 * time.Second):
 		return nil, fmt.Errorf("inference timeout")
 	}
+}
+
+// Inference method for backward compatibility with existing clients
+func (s *InferencePoolService) Inference(ctx context.Context, req *inference.InferenceRequest) (*inference.InferenceResponse, error) {
+	// Delegate to GenerateCompletion method
+	return s.GenerateCompletion(ctx, req)
 }
 
 func (s *InferencePoolService) GetModelStatus(ctx context.Context, req *inference.ModelStatusRequest) (*inference.ModelStatusResponse, error) {
@@ -506,14 +512,14 @@ func generateResponseContent(req *inference.InferenceRequest) string {
 	if len(req.Messages) == 0 {
 		return "I'm here to help! What would you like to know?"
 	}
-	
+
 	lastMessage := req.Messages[len(req.Messages)-1]
 	if lastMessage.Role != "user" {
 		return "I understand. How can I assist you further?"
 	}
-	
+
 	userContent := strings.ToLower(lastMessage.Content)
-	
+
 	// Generate contextually relevant responses based on common patterns
 	switch {
 	case strings.Contains(userContent, "hello") || strings.Contains(userContent, "hi"):
@@ -579,8 +585,8 @@ func main() {
 	}
 
 	// Configure TLS if certificates are available
-	certFile := getEnv("TLS_CERT", "./certs/inference-pool.crt")
-	keyFile := getEnv("TLS_KEY", "./certs/inference-pool-key.pem")
+	certFile := getEnv("TLS_CERT", "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/inference-pool.crt")
+	keyFile := getEnv("TLS_KEY", "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/inference-pool-key.pem")
 
 	var serverOptions []grpc.ServerOption
 	_, certErr := os.Stat(certFile)
