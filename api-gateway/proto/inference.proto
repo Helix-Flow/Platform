@@ -9,17 +9,23 @@ service InferenceService {
   // Generate completion for chat messages
   rpc GenerateCompletion(InferenceRequest) returns (InferenceResponse);
   
-  // Generate streaming completion
-  rpc GenerateStreamingCompletion(InferenceRequest) returns (stream InferenceResponse);
+  // Streaming inference for real-time responses
+  rpc StreamInference(InferenceRequest) returns (stream InferenceChunk);
   
-  // Get model information
-  rpc GetModelInfo(ModelInfoRequest) returns (ModelInfoResponse);
+  // Get model status and information
+  rpc GetModelStatus(ModelStatusRequest) returns (ModelStatusResponse);
   
   // List available models
   rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
   
-  // Health check
-  rpc Health(HealthRequest) returns (HealthResponse);
+  // Load a model into memory
+  rpc LoadModel(LoadModelRequest) returns (LoadModelResponse);
+  
+  // Unload a model into memory
+  rpc UnloadModel(UnloadModelRequest) returns (UnloadModelResponse);
+  
+  // Get system status
+  rpc GetSystemStatus(SystemStatusRequest) returns (SystemStatusResponse);
 }
 
 // Message structure
@@ -97,4 +103,141 @@ message HealthResponse {
   string version = 2;
   int64 timestamp = 3;
   map<string, string> details = 4;
+}
+
+// Model status enum
+enum ModelStatus {
+  MODEL_STATUS_UNKNOWN = 0;
+  MODEL_STATUS_LOADING = 1;
+  MODEL_STATUS_READY = 2;
+  MODEL_STATUS_ERROR = 3;
+  MODEL_STATUS_UNLOADED = 4;
+}
+
+// Model status request
+message ModelStatusRequest {
+  string model_id = 1;
+}
+
+// Model status response
+message ModelStatusResponse {
+  string model_id = 1;
+  ModelStatus status = 2;
+  string loaded_at = 3;
+  int64 memory_usage = 4;
+  int32 gpu_id = 5;
+  repeated string capabilities = 6;
+}
+
+// Model info (used in list models)
+message ModelInfo {
+  string id = 1;
+  string name = 2;
+  string provider = 3;
+  string version = 4;
+  repeated string capabilities = 5;
+  int64 size = 6;
+  string description = 7;
+}
+
+// Load model request
+message LoadModelRequest {
+  string model_id = 1;
+  int32 gpu_id = 2;
+  map<string, string> parameters = 3;
+}
+
+// Load model response
+message LoadModelResponse {
+  string model_id = 1;
+  bool success = 2;
+  string message = 3;
+  int64 load_time_ms = 4;
+}
+
+// Unload model request
+message UnloadModelRequest {
+  string model_id = 1;
+}
+
+// Unload model response
+message UnloadModelResponse {
+  string model_id = 1;
+  bool success = 2;
+  string message = 3;
+}
+
+// System status request
+message SystemStatusRequest {}
+
+// GPU info for system status
+message GPUInfo {
+  int32 id = 1;
+  string name = 2;
+  int64 memory_total = 3;
+  int64 memory_used = 4;
+  double utilization = 5;
+  double temperature = 6;
+  bool available = 7;
+}
+
+// System resources
+message SystemResources {
+  int64 memory_total = 1;
+  int64 memory_used = 2;
+  double cpu_utilization = 3;
+  int64 disk_total = 4;
+  int64 disk_used = 5;
+}
+
+// Loaded model info
+message LoadedModel {
+  string model_id = 1;
+  int32 gpu_id = 2;
+  int64 memory_usage = 3;
+  int64 load_time = 4;
+  int32 active_requests = 5;
+}
+
+// System status response
+message SystemStatusResponse {
+  repeated GPUInfo gpus = 1;
+  SystemResources resources = 2;
+  repeated LoadedModel loaded_models = 3;
+  int64 uptime_seconds = 4;
+}
+
+// Inference chunk for streaming
+message InferenceChunk {
+  string id = 1;
+  string object = 2;
+  int64 created = 3;
+  string model = 4;
+  repeated Choice choices = 5;
+}
+
+// Chat message
+message ChatMessage {
+  string role = 1;
+  string content = 2;
+}
+
+// Choice for inference response
+message Choice {
+  int32 index = 1;
+  ChatMessage message = 2;
+  string finish_reason = 3;
+  Delta delta = 4;
+}
+
+// Delta for streaming
+message Delta {
+  string content = 1;
+}
+
+// Usage information
+message Usage {
+  int32 prompt_tokens = 1;
+  int32 completion_tokens = 2;
+  int32 total_tokens = 3;
 }
