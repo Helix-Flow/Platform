@@ -43,7 +43,7 @@ cd ../../
 echo ""
 
 echo "3. Testing Certificate Validation..."
-if [ -f "./certs/helixflow-ca.pem" ] && [ -f "./certs/api-gateway.crt" ]; then
+if [ -f "./certs/helixflow-ca.pem" ] && [ -f "./certs/server-cert.pem" ] && [ -f "./certs/api-gateway.p12" ]; then
     echo -e "   ${GREEN}✅${NC} TLS certificates present"
     TEST_RESULTS+=("PASS")
     TEST_NAMES+=("TLS certificates")
@@ -57,18 +57,18 @@ echo ""
 echo "4. Testing Service Startup (Basic)..."
 echo "   Starting services in background..."
 
-# Start services
-./api-gateway/bin/api-gateway > /tmp/api-gateway.log 2>&1 &
+# Start services with proper environment
+TLS_CERT="./certs/api-gateway.crt" TLS_KEY="./certs/api-gateway-key.pem" PORT="8443" INFERENCE_POOL_URL="localhost:50051" AUTH_SERVICE_URL="http://localhost:8082" AUTH_SERVICE_GRPC="localhost:8081" ./api-gateway/bin/api-gateway > /tmp/api-gateway.log 2>&1 &
 API_GATEWAY_PID=$!
-./auth-service/bin/auth-service > /tmp/auth-service.log 2>&1 &
+PORT="8082" HTTP_PORT="8082" DATABASE_TYPE="sqlite" DATABASE_PATH="./data/helixflow.db" ./auth-service/bin/auth-service > /tmp/auth-service.log 2>&1 &
 AUTH_SERVICE_PID=$!
-./inference-pool/bin/inference-pool > /tmp/inference-pool.log 2>&1 &
+PORT="50051" ./inference-pool/bin/inference-pool > /tmp/inference-pool.log 2>&1 &
 INFERENCE_POOL_PID=$!
-./monitoring/bin/monitoring > /tmp/monitoring.log 2>&1 &
+PORT="8083" ./monitoring/bin/monitoring > /tmp/monitoring.log 2>&1 &
 MONITORING_PID=$!
 
 # Wait a moment for services to start
-sleep 3
+sleep 5
 
 echo "   Checking service health..."
 # Test service-specific health endpoints

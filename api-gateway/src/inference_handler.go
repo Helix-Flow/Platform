@@ -52,9 +52,9 @@ func NewInferenceHandler(inferencePoolURL string) (*InferenceHandler, error) {
 func (h *InferenceHandler) HandleChatCompletion(ctx context.Context, req ChatCompletionRequest, userID string) (*ChatCompletionResponse, error) {
 	// Convert request to inference service format
 	inferenceReq := &inference.InferenceRequest{
-		Model:       req.Model,
+		ModelId:     req.Model,
 		MaxTokens:   int32(req.MaxTokens),
-		Temperature: float32(req.Temperature),
+		Temperature: req.Temperature,
 		TopP:        0.9,
 		Stream:      req.Stream,
 		UserId:      userID,
@@ -66,7 +66,7 @@ func (h *InferenceHandler) HandleChatCompletion(ctx context.Context, req ChatCom
 	defer cancel()
 
 	// Call inference service
-	response, err := h.inferenceClient.GenerateCompletion(ctx, inferenceReq)
+	response, err := h.inferenceClient.Inference(ctx, inferenceReq)
 	if err != nil {
 		return nil, fmt.Errorf("inference failed: %w", err)
 	}
@@ -84,9 +84,9 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 
 	// Convert request to inference service format
 	inferenceReq := &inference.InferenceRequest{
-		Model:       req.Model,
+		ModelId:     req.Model,
 		MaxTokens:   int32(req.MaxTokens),
-		Temperature: float32(req.Temperature),
+		Temperature: req.Temperature,
 		TopP:        0.9,
 		Stream:      true,
 		UserId:      userID,
@@ -98,7 +98,7 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 	defer cancel()
 
 	// Call streaming inference service
-	stream, err := h.inferenceClient.GenerateStreamingCompletion(ctx, inferenceReq)
+	stream, err := h.inferenceClient.StreamInference(ctx, inferenceReq)
 	if err != nil {
 		return fmt.Errorf("streaming inference failed: %w", err)
 	}
@@ -183,10 +183,10 @@ func (h *InferenceHandler) HandleStreamingChatCompletion(ctx context.Context, re
 }
 
 // convertMessages converts OpenAI format messages to inference format
-func convertMessages(messages []ChatMessage) []*inference.Message {
-	inferenceMessages := make([]*inference.Message, len(messages))
+func convertMessages(messages []ChatMessage) []*inference.ChatMessage {
+	inferenceMessages := make([]*inference.ChatMessage, len(messages))
 	for i, msg := range messages {
-		inferenceMessages[i] = &inference.Message{
+		inferenceMessages[i] = &inference.ChatMessage{
 			Role:    msg.Role,
 			Content: msg.Content,
 		}

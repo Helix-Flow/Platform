@@ -1,14 +1,14 @@
-module helixflow/monitoring
+module helixflow/monitoring-service
 
 go 1.22.2
 
 require (
 	github.com/redis/go-redis/v9 v9.17.2
 	google.golang.org/grpc v1.64.0
-	helixflow/monitoring/monitoring v0.0.0-00010101000000-000000000000
+	helixflow/monitoring v0.0.0-00010101000000-000000000000
 )
 
-replace helixflow/monitoring/monitoring => ./monitoring
+replace helixflow/monitoring => ../../helixflow/monitoring
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect

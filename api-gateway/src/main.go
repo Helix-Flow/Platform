@@ -15,7 +15,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	pbAuth "helixflow/api-gateway/auth"
+	pbAuth "helixflow/auth"
 )
 
 type APIGateway struct {

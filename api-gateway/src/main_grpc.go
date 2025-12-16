@@ -19,8 +19,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	pbInference "helixflow/inference"
-	pbAuth "helixflow/api-gateway/auth"
-	pbMonitoring "helixflow/api-gateway/monitoring"
+	pbAuth "helixflow/auth"
+	pbMonitoring "helixflow/monitoring"
 )
 
 type APIGatewayGRPC struct {

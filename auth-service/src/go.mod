@@ -4,6 +4,7 @@ go 1.22.2
 
 require (
 	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/google/uuid v1.6.0
 	golang.org/x/crypto v0.21.0
 	google.golang.org/grpc v1.64.0
 	helixflow/auth v0.0.0-00010101000000-000000000000
@@ -13,7 +14,6 @@ require (
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-sqlite3 v1.14.32 // indirect
 	github.com/redis/go-redis/v9 v9.17.2 // indirect
