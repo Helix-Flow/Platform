@@ -11,7 +11,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	inference "helixflow/api-gateway/inference"
+	inference "helixflow/inference"
 )
 
 // InferenceHandler handles inference requests to the inference pool

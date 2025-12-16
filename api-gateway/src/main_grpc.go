@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	pbInference "helixflow/api-gateway/inference"
+	pbInference "helixflow/inference"
 	pbAuth "helixflow/api-gateway/auth"
 	pbMonitoring "helixflow/api-gateway/monitoring"
 )
