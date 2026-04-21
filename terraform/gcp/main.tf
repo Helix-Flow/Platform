@@ -152,6 +152,11 @@ module "cloud_sql" {
   }
 }
 
+output "network_name" {
+  description = "The name of the VPC network"
+  value       = module.vpc.network_name
+}
+
 module "memorystore" {
   source  = "terraform-google-modules/memorystore/google"
   version = "~> 8.0"

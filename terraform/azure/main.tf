@@ -156,6 +156,11 @@ module "redis" {
   tags = local.common_tags
 }
 
+output "virtual_network_name" {
+  description = "The name of the virtual network"
+  value       = module.vnet.name
+}
+
 locals {
   common_tags = {
     Environment = var.environment

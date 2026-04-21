@@ -24,7 +24,7 @@ cd "$CERT_DIR"
 
 # Generate CA private key and certificate
 echo "Generating Certificate Authority (CA)..."
-openssl genrsa -out "${CA_NAME}-key.pem" 4096
+openssl ecparam -name prime256v1 -genkey -noout -out "${CA_NAME}-key.pem"
 openssl req -new -x509 -days "$VALIDITY_DAYS" -key "${CA_NAME}-key.pem" -out "${CA_NAME}.pem" \
     -subj "/C=$COUNTRY/ST=$STATE/L=$LOCALITY/O=$ORGANIZATION/CN=$CA_NAME"
 
@@ -39,7 +39,7 @@ for service in "${SERVICES[@]}"; do
     echo "Generating certificate for $service..."
     
     # Generate private key
-    openssl genrsa -out "${service}-key.pem" 4096
+    openssl ecparam -name prime256v1 -genkey -noout -out "${service}-key.pem"
     
     # Generate certificate signing request (CSR)
     openssl req -new -key "${service}-key.pem" -out "${service}.csr" \
@@ -89,7 +89,7 @@ for service in "${SERVICES[@]}"; do
     echo "Generating client certificate for $service..."
     
     # Generate private key
-    openssl genrsa -out "${service}-client-key.pem" 4096
+    openssl ecparam -name prime256v1 -genkey -noout -out "${service}-client-key.pem"
     
     # Generate certificate signing request (CSR)
     openssl req -new -key "${service}-client-key.pem" -out "${service}-client.csr" \

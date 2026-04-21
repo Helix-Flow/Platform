@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: helixflow
+  labels:
+    app: auth-service
+    service: auth-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+        service: auth-service
+        istio-injection: enabled
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8082"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: auth-service
+        image: helixflow/auth-service:latest
+        ports:
+        - containerPort: 8081
+          name: grpc
+        - containerPort: 8082
+          name: http
+        env:
+        - name: REDIS_HOST
+          value: "redis-service.helixflow.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: POSTGRES_HOST
+          value: "postgres-service.helixflow.svc.cluster.local"
+        - name: PORT
+          value: "8081"
+        - name: HTTP_PORT
+          value: "8082"
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /certs
+          readOnly: true
+        - name: jwt-keys
+          mountPath: /secrets
+          readOnly: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: helixflow-tls
+      - name: jwt-keys
+        secret:
+          secretName: jwt-keys
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: helixflow
+  labels:
+    app: auth-service
+spec:
+  selector:
+    app: auth-service
+  ports:
+  - name: grpc
+    port: 8081
+    targetPort: 8081
+  - name: http
+    port: 8082
+    targetPort: 8082
+  type: ClusterIP

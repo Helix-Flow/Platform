@@ -1,0 +1,25 @@
+{{- $root := . }}
+{{- range $serviceKey, $service := .Values.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service.name }}
+  labels:
+    {{- include "helixflow.labels" $root | nindent 4 }}
+    app: {{ $service.name }}
+    service: {{ $service.name }}
+spec:
+  type: {{ $service.type }}
+  selector:
+    app: {{ $service.name }}
+  ports:
+  - name: http
+    port: {{ $service.port }}
+    targetPort: {{ $service.targetPort }}
+  {{- if eq $service.name "auth-service" }}
+  - name: http-mgmt
+    port: 8082
+    targetPort: 8082
+  {{- end }}
+{{- end }}

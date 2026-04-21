@@ -365,8 +365,8 @@ func (s *MonitoringServiceServer) StreamMetrics(req *monitoring.StreamMetricsReq
 // StartGRPCServer starts the gRPC monitoring service
 func StartGRPCServer() error {
 	// Load certificates
-	certFile := getEnv("MONITORING_TLS_CERT", "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/monitoring.crt")
-	keyFile := getEnv("MONITORING_TLS_KEY", "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/monitoring-key.pem")
+	certFile := getEnv("MONITORING_TLS_CERT", "./certs/monitoring.crt")
+	keyFile := getEnv("MONITORING_TLS_KEY", "./certs/monitoring-key.pem")
 
 	creds, err := credentials.NewServerTLSFromFile(certFile, keyFile)
 	if err != nil {
@@ -392,7 +392,7 @@ func StartGRPCServer() error {
 	monitoringServer.healthServer.SetServingStatus("monitoring.MonitoringService", grpc_health_v1.HealthCheckResponse_SERVING)
 
 	// Start listening
-	port := getEnv("MONITORING_GRPC_PORT", "50053")
+	port := getEnv("MONITORING_GRPC_PORT", "50055")
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		return fmt.Errorf("failed to listen: %w", err)

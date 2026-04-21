@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring
+  namespace: helixflow
+  labels:
+    app: monitoring
+    service: monitoring
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: monitoring
+  template:
+    metadata:
+      labels:
+        app: monitoring
+        service: monitoring
+        istio-injection: enabled
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8083"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: monitoring
+        image: helixflow/monitoring:latest
+        ports:
+        - containerPort: 8083
+          name: grpc
+        env:
+        - name: REDIS_HOST
+          value: "redis-service.helixflow.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: PORT
+          value: "8083"
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /certs
+          readOnly: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          tcpSocket:
+            port: 8083
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 8083
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: helixflow-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monitoring
+  namespace: helixflow
+  labels:
+    app: monitoring
+spec:
+  selector:
+    app: monitoring
+  ports:
+  - name: grpc
+    port: 8083
+    targetPort: 8083
+  type: ClusterIP

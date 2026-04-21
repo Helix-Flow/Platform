@@ -3,49 +3,52 @@
 # HelixFlow Service Startup Script
 # This script starts all HelixFlow services with proper configuration
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 echo "🚀 Starting HelixFlow Platform Services..."
 
-# Set environment variables
+# Set shared environment variables (do NOT export TLS_CERT/TLS_KEY globally)
 export DATABASE_TYPE=sqlite
-export DB_PATH=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/data/helixflow.db
-export REDIS_HOST=localhost
+export DB_PATH=../data/helixflow.db
+export REDIS_HOST=localhost:6379
 export REDIS_PORT=6379
 export HTTP_PORT=8082
-# Certificate paths (using absolute paths for reliability)
-export TLS_CERT=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/api-gateway.crt
-export TLS_KEY=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/api-gateway-key.pem
-export MONITORING_TLS_CERT=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/monitoring.crt
-export MONITORING_TLS_KEY=/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/certs/monitoring-key.pem
+export MONITORING_GRPC_PORT=50055
+export MONITORING_PORT=8083
 export INFERENCE_POOL_URL=localhost:50051
 export AUTH_SERVICE_GRPC=localhost:8081
 export AUTH_SERVICE_URL=localhost:8081
 
 # Create logs directory
-mkdir -p /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs
+mkdir -p logs
+
+# Clear old PID file
+> logs/service_pids.txt
 
 # Function to start a service
 start_service() {
     local service_name=$1
     local service_dir=$2
-    local service_binary=$3
-    local service_port=$4
+    shift 2
+    local service_cmd="$@"
 
-    echo "Starting $service_name on port $service_port..."
+    echo "Starting $service_name..."
 
-    # Start the service in background from its directory
-    cd "$service_dir" && $service_binary > /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/$service_name.log 2>&1 &
+    cd "$service_dir" && eval "$service_cmd >> ../logs/$service_name.log 2>&1 &"
     local pid=$!
 
-    # Wait a moment to check if it started successfully
     sleep 3
 
     if kill -0 $pid 2>/dev/null; then
         echo "✅ $service_name started successfully (PID: $pid)"
-        echo $pid >> /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/service_pids.txt
+        echo $pid >> ../logs/service_pids.txt
     else
         echo "❌ $service_name failed to start"
-        echo "Check logs at: /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/$service_name.log"
+        echo "Check logs at: ../logs/$service_name.log"
     fi
+    
+    cd "$SCRIPT_DIR"
 }
 
 # Kill any existing services first
@@ -56,11 +59,12 @@ pkill -f "monitoring" 2>/dev/null
 pkill -f "api-gateway" 2>/dev/null
 sleep 2
 
-# Start services using pre-built binaries
-start_service "auth-service" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/auth-service" "./bin/auth-service" "8081"
-start_service "inference-pool" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/inference-pool" "./bin/inference-pool" "50051"
-start_service "monitoring" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/monitoring" "./bin/monitoring" "8083"
-start_service "api-gateway" "/media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/api-gateway" "./bin/api-gateway" "8443"
+# Start services - each with their own PORT and TLS settings
+# Auth service: no TLS_CERT/TLS_KEY so gRPC uses plaintext (gateway connects insecure)
+start_service "auth-service" "auth-service" "PORT=8081 ./bin/auth-service"
+start_service "inference-pool" "inference-pool" "PORT=50051 ./bin/inference-pool"
+start_service "monitoring" "monitoring" "MONITORING_TLS_CERT=../certs/monitoring.crt MONITORING_TLS_KEY=../certs/monitoring-key.pem PORT=8083 MONITORING_GRPC_PORT=50055 ./bin/monitoring"
+start_service "api-gateway" "api-gateway" "TLS_CERT=../certs/api-gateway.crt TLS_KEY=../certs/api-gateway-key.pem INFERENCE_POOL_URL=localhost:50051 AUTH_SERVICE_GRPC=localhost:8081 PORT=8443 ./bin/api-gateway"
 
 echo ""
 echo "🎯 All services started!"
@@ -68,17 +72,13 @@ echo ""
 echo "Service Status:"
 echo "- Auth Service: gRPC on localhost:8081, HTTP on localhost:8082"
 echo "- Inference Pool: gRPC on localhost:50051" 
-echo "- Monitoring: gRPC on localhost:8083"
+echo "- Monitoring: HTTP on localhost:8083, gRPC on localhost:50055"
 echo "- API Gateway: HTTPS on https://localhost:8443/health"
 echo ""
 echo "📊 Check logs:"
-echo "- tail -f /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/auth-service.log"
-echo "- tail -f /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/inference-pool.log"
-echo "- tail -f /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/monitoring.log"
-echo "- tail -f /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/api-gateway.log"
+echo "- tail -f logs/auth-service.log"
+echo "- tail -f logs/inference-pool.log"
+echo "- tail -f logs/monitoring.log"
+echo "- tail -f logs/api-gateway.log"
 echo ""
-echo "🛑 To stop all services: kill \$(cat /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/logs/service_pids.txt) 2>/dev/null"
-echo ""
-echo "🔧 Testing endpoints:"
-echo "- curl -k https://localhost:8443/v1/models"
-echo "- curl -k https://localhost:8443/v1/chat/completions -H 'Content-Type: application/json' -d '{\"model\":\"gpt-3.5-turbo\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello!\"}]}'"
+echo "🛑 To stop all services: kill \$(cat logs/service_pids.txt) 2>/dev/null"

@@ -30,6 +30,7 @@ type APIGatewayGRPC struct {
 	monitoringClient    pbMonitoring.MonitoringServiceClient
 	router              *mux.Router
 	tlsConfig           *tls.Config
+	websocketManager    *WebSocketManager
 }
 
 type ModelResponse struct {
@@ -92,9 +93,10 @@ func NewAPIGatewayGRPC() *APIGatewayGRPC {
 	})
 
 	return &APIGatewayGRPC{
-		redisClient: rdb,
-		tlsConfig:   tlsConfig,
-		router:      mux.NewRouter(),
+		redisClient:      rdb,
+		tlsConfig:        tlsConfig,
+		router:           mux.NewRouter(),
+		websocketManager: NewWebSocketManager(),
 	}
 }
 
@@ -144,6 +146,7 @@ func (ag *APIGatewayGRPC) InitializeGRPCClients() error {
 // SetupRoutes sets up HTTP routes
 func (ag *APIGatewayGRPC) SetupRoutes() {
 	ag.router.Use(ag.loggingMiddleware)
+	ag.router.Use(ag.securityHeadersMiddleware)
 	ag.router.Use(ag.corsMiddleware)
 
 	// Health check
@@ -181,6 +184,17 @@ func (ag *APIGatewayGRPC) corsMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (ag *APIGatewayGRPC) securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'")
 		next.ServeHTTP(w, r)
 	})
 }
@@ -479,9 +493,7 @@ func (ag *APIGatewayGRPC) sendDefaultModels(w http.ResponseWriter) {
 
 // websocketHandler handles WebSocket connections
 func (ag *APIGatewayGRPC) websocketHandler(w http.ResponseWriter, r *http.Request) {
-	// For now, return a simple response
-	w.WriteHeader(http.StatusNotImplemented)
-	w.Write([]byte("WebSocket support coming soon"))
+	ag.websocketManager.HandleWebSocket(w, r)
 }
 
 // authenticateRequest authenticates the request
@@ -552,8 +564,8 @@ func (ag *APIGatewayGRPC) checkRateLimit(userID string) bool {
 
 	ag.redisClient.Expire(context.Background(), key, time.Minute)
 
-	// Allow 100 requests per minute
-	return count <= 100
+	// Allow 10000 requests per minute
+	return count <= 10000
 }
 
 // Start starts the API Gateway

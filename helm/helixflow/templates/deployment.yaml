@@ -1,0 +1,91 @@
+{{- $root := . }}
+{{- range $serviceKey, $service := .Values.services }}
+{{- $resources := index $root.Values.resources $serviceKey }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $service.name }}
+  labels:
+    {{- include "helixflow.labels" $root | nindent 4 }}
+    app: {{ $service.name }}
+    service: {{ $service.name }}
+spec:
+  replicas: {{ $root.Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ $service.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $service.name }}
+        service: {{ $service.name }}
+        istio-injection: enabled
+      {{- with $root.Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with $root.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "helixflow.serviceAccountName" $root }}
+      securityContext:
+        {{- toYaml $root.Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ $service.name }}
+        image: "{{ $root.Values.image.repository }}/{{ $service.name }}:{{ $root.Values.image.tag }}"
+        imagePullPolicy: {{ $root.Values.image.pullPolicy }}
+        ports:
+        - containerPort: {{ $service.targetPort }}
+          name: http
+        {{- if eq $service.name "auth-service" }}
+        - containerPort: 8082
+          name: http-mgmt
+        {{- end }}
+        env:
+        - name: REDIS_HOST
+          value: "{{ $root.Release.Name }}-redis-master"
+        - name: REDIS_PORT
+          value: "6379"
+        {{- if $root.Values.postgresql.enabled }}
+        - name: POSTGRES_HOST
+          value: "{{ $root.Release.Name }}-postgresql"
+        {{- end }}
+        {{- if eq $service.name "auth-service" }}
+        - name: PORT
+          value: "8081"
+        - name: HTTP_PORT
+          value: "8082"
+        {{- else }}
+        - name: PORT
+          value: "{{ $service.targetPort }}"
+        {{- end }}
+        resources:
+          {{- toYaml $resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ $service.targetPort }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ $service.targetPort }}
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      {{- with $root.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

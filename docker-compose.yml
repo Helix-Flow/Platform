@@ -41,36 +41,39 @@ services:
 
   # API Gateway
   api-gateway:
-    build: 
-      context: ./api-gateway
-      dockerfile: Dockerfile
-      target: final
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
     container_name: helixflow-api-gateway
     ports:
       - "8080:8080"
+      - "8443:8443"
     environment:
-      - DATABASE_URL=postgresql://helixflow:helixflow_secure_pass@postgres:5432/helixflow
-      - REDIS_URL=redis://redis:6379
-      - REDIS_PASSWORD=helixflow_redis_pass
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=helixflow
-      - DB_PASSWORD=helixflow_secure_pass
-      - DB_NAME=helixflow
+      - PORT=8080
+      - INFERENCE_POOL_URL=inference-pool:50051
+      - AUTH_SERVICE_GRPC=auth-service:8081
+      - AUTH_SERVICE_URL=http://auth-service:8082
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - API_GATEWAY_PORT=8080
-      - JWT_SECRET_FILE=/app/certs/jwt-private.pem
+      - REDIS_PASSWORD=helixflow_redis_pass
+      - DATABASE_TYPE=postgres
+      - DATABASE_URL=postgres://helixflow:helixflow_secure_pass@postgres:5432/helixflow
       - LOG_LEVEL=INFO
+    volumes:
+      - ./certs:/app/certs:ro
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      inference-pool:
+        condition: service_started
     networks:
       - helixflow-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -79,26 +82,25 @@ services:
   # Auth Service
   auth-service:
     build:
-      context: ./auth-service
-      dockerfile: Dockerfile
-      target: final
+      context: .
+      dockerfile: auth-service/Dockerfile
     container_name: helixflow-auth-service
     ports:
       - "8081:8081"
+      - "8082:8082"
     environment:
-      - DATABASE_URL=postgresql://helixflow:helixflow_secure_pass@postgres:5432/helixflow
-      - REDIS_URL=redis://redis:6379
-      - REDIS_PASSWORD=helixflow_redis_pass
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=helixflow
-      - DB_PASSWORD=helixflow_secure_pass
-      - DB_NAME=helixflow
+      - PORT=8081
+      - HTTP_PORT=8082
+      - DATABASE_TYPE=postgres
+      - DATABASE_URL=postgres://helixflow:helixflow_secure_pass@postgres:5432/helixflow
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - AUTH_SERVICE_PORT=8081
-      - JWT_SECRET_FILE=/app/secrets/jwt-private.pem
+      - REDIS_PASSWORD=helixflow_redis_pass
+      - TLS_CERT=/app/certs/server-cert.pem
+      - TLS_KEY=/app/certs/server-key.pem
       - LOG_LEVEL=INFO
+    volumes:
+      - ./certs:/app/certs:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,7 +109,7 @@ services:
     networks:
       - helixflow-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/health || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -116,25 +118,21 @@ services:
   # Inference Pool
   inference-pool:
     build:
-      context: ./inference-pool
-      dockerfile: Dockerfile
-      target: final
+      context: .
+      dockerfile: inference-pool/Dockerfile
     container_name: helixflow-inference-pool
     ports:
-      - "8082:8082"
+      - "50051:50051"
     environment:
-      - DATABASE_URL=postgresql://helixflow:helixflow_secure_pass@postgres:5432/helixflow
-      - REDIS_URL=redis://redis:6379
-      - REDIS_PASSWORD=helixflow_redis_pass
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=helixflow
-      - DB_PASSWORD=helixflow_secure_pass
-      - DB_NAME=helixflow
+      - PORT=50051
+      - TLS_CERT=/app/certs/server-cert.pem
+      - TLS_KEY=/app/certs/server-key.pem
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - INFERENCE_POOL_PORT=8082
+      - REDIS_PASSWORD=helixflow_redis_pass
       - LOG_LEVEL=INFO
+    volumes:
+      - ./certs:/app/certs:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -143,7 +141,7 @@ services:
     networks:
       - helixflow-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      test: ["CMD-SHELL", "/bin/sh -c 'echo > /dev/tcp/localhost/50051' || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -152,27 +150,25 @@ services:
   # Monitoring Service
   monitoring:
     build:
-      context: ./monitoring
-      dockerfile: Dockerfile
-      target: final
+      context: .
+      dockerfile: monitoring/Dockerfile
     container_name: helixflow-monitoring
     ports:
       - "8083:8083"
-      - "9090:9090"  # Prometheus metrics
+      - "50053:50053"
     environment:
-      - DATABASE_URL=postgresql://helixflow:helixflow_secure_pass@postgres:5432/helixflow
-      - REDIS_URL=redis://redis:6379
-      - REDIS_PASSWORD=helixflow_redis_pass
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=helixflow
-      - DB_PASSWORD=helixflow_secure_pass
-      - DB_NAME=helixflow
+      - MONITORING_PORT=8083
+      - MONITORING_GRPC_PORT=50053
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - MONITORING_PORT=8083
-      - PROMETHEUS_PORT=9090
+      - REDIS_PASSWORD=helixflow_redis_pass
+      - DATABASE_TYPE=postgres
+      - DATABASE_URL=postgres://helixflow:helixflow_secure_pass@postgres:5432/helixflow
+      - TLS_CERT=/app/certs/server-cert.pem
+      - TLS_KEY=/app/certs/server-key.pem
       - LOG_LEVEL=INFO
+    volumes:
+      - ./certs:/app/certs:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -181,7 +177,7 @@ services:
     networks:
       - helixflow-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/health || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -240,6 +236,7 @@ services:
       - api-gateway
       - auth-service
       - inference-pool
+      - monitoring
     networks:
       - helixflow-network
     healthcheck:

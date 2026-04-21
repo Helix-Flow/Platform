@@ -58,7 +58,7 @@ fi
 # 3. API Contract Validation
 echo "📋 Validating API contracts..."
 if [ -f "tests/contract/test_chat_api.py" ]; then
-    python -m pytest tests/contract/test_chat_api.py -v --tb=short > api-test-results.txt 2>&1
+    python3 -m pytest tests/contract/test_chat_api.py -v --tb=short > api-test-results.txt 2>&1
     if [ $? -eq 0 ]; then
         print_status "PASS" "API contract tests"
     else
@@ -89,7 +89,7 @@ fi
 # 5. Security Validation
 echo "🔒 Running security validation..."
 if [ -f "tests/security/test_penetration.py" ]; then
-    python -m pytest tests/security/test_penetration.py -v --tb=line > security-test-results.txt 2>&1
+    python3 -m pytest tests/security/test_penetration.py -v --tb=line > security-test-results.txt 2>&1
     if [ $? -eq 0 ]; then
         print_status "PASS" "Security penetration tests"
     else
@@ -102,7 +102,7 @@ fi
 # 6. Compliance Checks
 echo "📜 Running compliance checks..."
 if [ -f "tests/integration/test_compliance.py" ]; then
-    python -m pytest tests/integration/test_compliance.py -v --tb=line > compliance-test-results.txt 2>&1
+    python3 -m pytest tests/integration/test_compliance.py -v --tb=line > compliance-test-results.txt 2>&1
     if [ $? -eq 0 ]; then
         print_status "PASS" "Compliance tests"
     else
@@ -130,7 +130,7 @@ fi
 
 # 8. SDK Validation
 echo "📦 Validating SDKs..."
-if [ -d "sdks/python" ] && [ -f "sdks/python/setup.py" ]; then
+if [ -d "sdks/python3" ] && [ -f "sdks/python3/setup.py" ]; then
     print_status "PASS" "Python SDK structure"
 else
     print_status "FAIL" "Python SDK incomplete"

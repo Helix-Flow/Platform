@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference-pool
+  namespace: helixflow
+  labels:
+    app: inference-pool
+    service: inference-pool
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: inference-pool
+  template:
+    metadata:
+      labels:
+        app: inference-pool
+        service: inference-pool
+        istio-injection: enabled
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "50051"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: inference-pool
+        image: helixflow/inference-pool:latest
+        ports:
+        - containerPort: 50051
+          name: grpc
+        env:
+        - name: REDIS_HOST
+          value: "redis-service.helixflow.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: PORT
+          value: "50051"
+        volumeMounts:
+        - name: tls-certs
+          mountPath: /certs
+          readOnly: true
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          tcpSocket:
+            port: 50051
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 50051
+          initialDelaySeconds: 5
+          periodSeconds: 5
+      volumes:
+      - name: tls-certs
+        secret:
+          secretName: helixflow-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inference-pool
+  namespace: helixflow
+  labels:
+    app: inference-pool
+spec:
+  selector:
+    app: inference-pool
+  ports:
+  - name: grpc
+    port: 50051
+    targetPort: 50051
+  type: ClusterIP

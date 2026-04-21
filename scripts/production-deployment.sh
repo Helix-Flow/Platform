@@ -294,7 +294,7 @@ run_performance_tests() {
     # Custom performance test
     if [[ -f "tests/performance/load_test.py" ]]; then
         log_info "Running custom performance tests..."
-        python tests/performance/load_test.py > "logs/performance-test-$(date +%Y%m%d-%H%M%S).txt" || true
+        python3 tests/performance/load_test.py > "logs/performance-test-$(date +%Y%m%d-%H%M%S).txt" || true
     fi
     
     log_success "Performance tests completed"

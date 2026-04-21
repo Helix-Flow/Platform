@@ -154,6 +154,22 @@ func (engine *InferenceEngine) loadModel(modelName string) *ModelInfo {
 			Description:  "Llama 2 70B model",
 			Capabilities: []string{"text-generation", "question-answering"},
 		},
+		"claude-3-sonnet": {
+			Name:         "claude-3-sonnet",
+			Type:         "transformer",
+			MaxTokens:    200000,
+			Parameters:   "70B",
+			Description:  "Claude 3 Sonnet model",
+			Capabilities: []string{"text-generation", "reasoning", "code-generation"},
+		},
+		"deepseek-chat": {
+			Name:         "deepseek-chat",
+			Type:         "transformer",
+			MaxTokens:    32768,
+			Parameters:   "67B",
+			Description:  "DeepSeek Chat model",
+			Capabilities: []string{"text-generation", "reasoning", "code-generation"},
+		},
 	}
 
 	return models[modelName]
@@ -166,10 +182,12 @@ func (engine *InferenceEngine) generateResponse(ctx context.Context, req *Infere
 		return engine.generateGPT35Response(req), nil
 	case "gpt-4":
 		return engine.generateGPT4Response(req), nil
-	case "claude-v1":
+	case "claude-v1", "claude-3-sonnet":
 		return engine.generateClaudeResponse(req), nil
 	case "llama-2-70b":
 		return engine.generateLlamaResponse(req), nil
+	case "deepseek-chat":
+		return engine.generateGPT4Response(req), nil // Use GPT-4 style response for deepseek
 	default:
 		return nil, fmt.Errorf("unsupported model: %s", model.Name)
 	}

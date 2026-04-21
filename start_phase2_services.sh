@@ -161,7 +161,7 @@ print_phase "PHASE 3: Service Compilation"
 # Compile services with advanced features
 print_status "Compiling services with Phase 2 enhancements..."
 
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform
+cd ./Platform
 
 # Auth Service with advanced database features
 cd auth-service/src || exit 1
@@ -172,7 +172,7 @@ go build -o bin/auth-service-advanced main.go auth_service.go || {
 }
 
 # Inference Pool with GPU optimization
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/inference-pool/src || exit 1
+cd ../inference-pool/src || exit 1
 print_status "Building Inference Pool with GPU optimization..."
 go build -o bin/inference-pool-advanced main.go inference_engine.go gpu_optimizer.go || {
     print_error "Failed to build advanced inference pool"
@@ -180,7 +180,7 @@ go build -o bin/inference-pool-advanced main.go inference_engine.go gpu_optimize
 }
 
 # Monitoring Service with enhanced features
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/monitoring/src || exit 1
+cd ../monitoring/src || exit 1
 print_status "Building Monitoring Service with Grafana integration..."
 go build -o bin/monitoring-advanced main.go main_grpc.go monitoring_service.go || {
     print_error "Failed to build advanced monitoring service"
@@ -188,7 +188,7 @@ go build -o bin/monitoring-advanced main.go main_grpc.go monitoring_service.go |
 }
 
 # API Gateway with WebSocket and advanced rate limiting
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/api-gateway/src || exit 1
+cd ../api-gateway/src || exit 1
 print_status "Building API Gateway with WebSocket and advanced features..."
 go build -o bin/api-gateway-advanced main.go inference_handler.go websocket_handler.go rate_limiter_advanced.go || {
     print_error "Failed to build advanced API gateway"
@@ -224,7 +224,7 @@ export ENABLE_CACHING=true
 
 # 1. Start Auth Service with PostgreSQL
 print_status "Starting Auth Service with advanced database features..."
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/auth-service/src
+cd ../auth-service/src
 nohup ./bin/auth-service-advanced > auth-service-advanced.log 2>&1 &
 AUTH_PID=$!
 echo $AUTH_PID > /tmp/auth_service_advanced_pid
@@ -232,7 +232,7 @@ sleep 5
 
 # 2. Start Inference Pool with GPU optimization
 print_status "Starting Inference Pool with GPU optimization..."
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/inference-pool/src
+cd ../inference-pool/src
 nohup ./bin/inference-pool-advanced > inference-pool-advanced.log 2>&1 &
 INFERENCE_PID=$!
 echo $INFERENCE_PID > /tmp/inference_pool_advanced_pid
@@ -240,7 +240,7 @@ sleep 5
 
 # 3. Start Monitoring Service with Grafana
 print_status "Starting Monitoring Service with enhanced features..."
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/monitoring/src
+cd ../monitoring/src
 nohup ./bin/monitoring-advanced > monitoring-advanced.log 2>&1 &
 MONITORING_PID=$!
 echo $MONITORING_PID > /tmp/monitoring_advanced_pid
@@ -252,14 +252,14 @@ docker run -d \
     -p 3000:3000 \
     -e GF_SECURITY_ADMIN_PASSWORD=helixflow_admin_2024 \
     -e GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel \
-    -v /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards \
-    -v /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/monitoring/grafana/datasources:/etc/grafana/provisioning/datasources \
+    -v ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards \
+    -v ../monitoring/grafana/datasources:/etc/grafana/provisioning/datasources \
     --link helixflow-postgres:postgres \
     grafana/grafana:latest || print_warning "Grafana container failed"
 
 # 4. Start API Gateway with WebSocket and advanced features
 print_status "Starting API Gateway with WebSocket and advanced features..."
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/api-gateway/src
+cd ../api-gateway/src
 nohup ./bin/api-gateway-advanced > api-gateway-advanced.log 2>&1 &
 API_PID=$!
 echo $API_PID > /tmp/api_gateway_advanced_pid
@@ -294,7 +294,7 @@ fi
 
 # Run advanced validation tests
 print_status "Running advanced validation tests..."
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform
+cd ./Platform
 
 # Test WebSocket functionality
 print_status "Testing WebSocket functionality..."

@@ -8,13 +8,16 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	pbAuth "helixflow/auth"
 )
 
@@ -22,9 +25,12 @@ type APIGateway struct {
 	redisClient         *redis.Client
 	inferencePoolURL    string
 	authServiceURL      string
+	auditLogFile        *os.File
+	auditLogMutex       sync.Mutex
 	authClient          pbAuth.AuthServiceClient
 	router              *mux.Router
 	inferenceHandler    *InferenceHandler
+	websocketManager    *WebSocketManager
 }
 
 type ChatCompletionRequest struct {
@@ -81,16 +87,33 @@ func NewAPIGateway() *APIGateway {
 		DB:       0,
 	})
 
+	// Initialize audit log file
+	logPath := getEnv("AUDIT_LOG_PATH", "")
+	if logPath == "" {
+		if exe, err := os.Executable(); err == nil {
+			exeDir := filepath.Dir(exe)
+			logPath = filepath.Join(exeDir, "..", "..", "logs", "audit.log")
+		} else {
+			logPath = "logs/audit.log"
+		}
+	}
+	logDir := filepath.Dir(logPath)
+	os.MkdirAll(logDir, 0755)
+	auditFile, _ := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+
 	return &APIGateway{
 		redisClient:      rdb,
 		inferencePoolURL: getEnv("INFERENCE_POOL_URL", "http://inference-pool:8001"),
 		authServiceURL:   getEnv("AUTH_SERVICE_URL", "http://auth-service:8080"),
+		auditLogFile:     auditFile,
 		router:           mux.NewRouter(),
+		websocketManager: NewWebSocketManager(),
 	}
 }
 
 func (ag *APIGateway) SetupRoutes() {
 	ag.router.Use(ag.loggingMiddleware)
+	ag.router.Use(ag.securityHeadersMiddleware)
 	ag.router.Use(ag.corsMiddleware)
 
 	// Health check
@@ -100,8 +123,8 @@ func (ag *APIGateway) SetupRoutes() {
 	ag.router.HandleFunc("/v1/chat/completions", ag.chatCompletionsHandler).Methods("POST")
 	ag.router.HandleFunc("/v1/models", ag.modelsHandler).Methods("GET")
 
-	// WebSocket endpoint (placeholder)
-	ag.router.HandleFunc("/ws", ag.websocketHandler)
+	// WebSocket endpoint
+	ag.router.HandleFunc("/ws", ag.websocketManager.HandleWebSocket)
 }
 
 func (ag *APIGateway) loggingMiddleware(next http.Handler) http.Handler {
@@ -127,6 +150,17 @@ func (ag *APIGateway) corsMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func (ag *APIGateway) securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("X-XSS-Protection", "1; mode=block")
+		w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func (ag *APIGateway) healthHandler(w http.ResponseWriter, r *http.Request) {
 	authConnected := ag.authClient != nil
 	response := map[string]interface{}{
@@ -147,6 +181,9 @@ func (ag *APIGateway) chatCompletionsHandler(w http.ResponseWriter, r *http.Requ
 		http.Error(w, "Authentication failed", http.StatusUnauthorized)
 		return
 	}
+
+	// Audit log
+	ag.logAudit(userID, "chat_completion", r.URL.Path, r.RemoteAddr)
 
 	// Parse request
 	var req ChatCompletionRequest
@@ -374,10 +411,7 @@ func (ag *APIGateway) modelsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func (ag *APIGateway) websocketHandler(w http.ResponseWriter, r *http.Request) {
-	// For now, just redirect to chat completion handler
-	ag.chatCompletionsHandler(w, r)
-}
+
 
 func (ag *APIGateway) authenticateRequest(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
@@ -433,8 +467,8 @@ func (ag *APIGateway) checkRateLimit(userID string) bool {
 
 	ag.redisClient.Expire(context.Background(), key, time.Minute)
 
-	// Allow 100 requests per minute
-	return count <= 100
+	// Allow 10000 requests per minute
+	return count <= 10000
 }
 
 func sendSSE(w http.ResponseWriter, data interface{}) {
@@ -506,6 +540,18 @@ func estimateCompletionTokens(content string) int {
 
 
 
+func (ag *APIGateway) logAudit(userID, action, resource, ipAddress string) {
+	logEntry := fmt.Sprintf("%s | user_id=%s | action=%s | resource=%s | ip=%s\n",
+		time.Now().Format(time.RFC3339), userID, action, resource, ipAddress)
+	
+	ag.auditLogMutex.Lock()
+	defer ag.auditLogMutex.Unlock()
+	
+	if ag.auditLogFile != nil {
+		ag.auditLogFile.WriteString(logEntry)
+	}
+}
+
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
@@ -535,8 +581,7 @@ func main() {
 	authGRPCAddr := getEnv("AUTH_SERVICE_GRPC", "auth-service:8081")
 	var authOpt grpc.DialOption
 	if strings.Contains(authGRPCAddr, "localhost") || strings.Contains(authGRPCAddr, "127.0.0.1") {
-		creds := credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})
-		authOpt = grpc.WithTransportCredentials(creds)
+		authOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
 	} else {
 		creds := credentials.NewTLS(&tls.Config{})
 		authOpt = grpc.WithTransportCredentials(creds)

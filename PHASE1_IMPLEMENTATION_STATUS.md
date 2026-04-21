@@ -231,7 +231,7 @@ curl http://localhost:8443/health
 🟢 API Gateway:    http://localhost:8443 (TLS 1.3, Real AI)
 🟢 gRPC Gateway:   localhost:9443 (gRPC with mTLS)
 🟢 Auth Service:   gRPC:50051 (JWT + Real Authentication)
-🟢 Inference Pool: gRPC:50052 (Real AI Models)
+🟢 Inference Pool: gRPC:50051 (Real AI Models)
 🟢 Monitoring:     http://localhost:8083 (Full gRPC + HTTP)
 ```
 

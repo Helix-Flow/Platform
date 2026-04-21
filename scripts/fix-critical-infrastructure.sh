@@ -118,8 +118,8 @@ psycopg2-binary==2.9.9
 prometheus-client==0.19.0
 structlog==23.2.0
 pydantic==2.5.2
-python-jose[cryptography]==3.3.0
-python-multipart==0.0.6
+python3-jose[cryptography]==3.3.0
+python3-multipart==0.0.6
 httpx==0.25.2
 asyncpg==0.29.0
 aioredis==2.0.1
@@ -143,9 +143,9 @@ psycopg2-binary==2.9.9
 prometheus-client==0.19.0
 structlog==23.2.0
 pydantic==2.5.2
-python-jose[cryptography]==3.3.0
+python3-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
+python3-multipart==0.0.6
 asyncpg==0.29.0
 aioredis==2.0.1
 sqlalchemy==2.0.23
@@ -528,7 +528,7 @@ print_status "Step 6: Creating Docker configurations..."
 
 # API Gateway Dockerfile
 cat > api-gateway/Dockerfile << 'EOF'
-FROM python:3.11-slim
+FROM python3:3.11-slim
 
 WORKDIR /app
 
@@ -551,11 +551,11 @@ USER appuser
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8080/health', timeout=5)"
+    CMD python3 -c "import requests; requests.get('http://localhost:8080/health', timeout=5)"
 
 EXPOSE 8080
 
-CMD ["python", "main.py"]
+CMD ["python3", "main.py"]
 EOF
 
 print_success "Docker configurations created"
@@ -593,28 +593,28 @@ mkdir -p test-results
 
 # Run unit tests
 log_info "Running unit tests..."
-python -m pytest tests/unit/ -v --cov=. --cov-report=html --cov-report=term --html=test-results/unit-report.html || {
+python3 -m pytest tests/unit/ -v --cov=. --cov-report=html --cov-report=term --html=test-results/unit-report.html || {
     log_error "Unit tests failed"
     exit 1
 }
 
 # Run integration tests
 log_info "Running integration tests..."
-python -m pytest tests/integration/ -v --html=test-results/integration-report.html || {
+python3 -m pytest tests/integration/ -v --html=test-results/integration-report.html || {
     log_error "Integration tests failed"
     exit 1
 }
 
 # Run contract tests
 log_info "Running contract tests..."
-python -m pytest tests/contract/ -v --html=test-results/contract-report.html || {
+python3 -m pytest tests/contract/ -v --html=test-results/contract-report.html || {
     log_error "Contract tests failed"
     exit 1
 }
 
 # Run security tests
 log_info "Running security tests..."
-python -m pytest tests/security/ -v --html=test-results/security-report.html || {
+python3 -m pytest tests/security/ -v --html=test-results/security-report.html || {
     log_error "Security tests failed"
     exit 1
 }
@@ -642,7 +642,7 @@ print_status "Step 8: Validating fixes..."
 
 # Test database connectivity
 print_status "Testing database connectivity..."
-python -c "
+python3 -c "
 import psycopg2
 import redis
 import os

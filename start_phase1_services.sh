@@ -117,7 +117,7 @@ else
 fi
 
 # 2. Start Auth Service
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/auth-service/src || exit 1
+cd ../auth-service/src || exit 1
 print_status "Starting Auth Service..."
 go build -o bin/auth-service main.go auth_service.go || {
     print_error "Failed to build auth service"
@@ -130,7 +130,7 @@ echo $AUTH_PID > /tmp/auth_service_pid
 sleep 5
 
 # 3. Start Inference Pool Service
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/inference-pool/src || exit 1
+cd ../inference-pool/src || exit 1
 print_status "Starting Inference Pool Service..."
 go build -o bin/inference-pool main.go inference_engine.go || {
     print_error "Failed to build inference pool service"
@@ -143,7 +143,7 @@ echo $INFERENCE_PID > /tmp/inference_pool_pid
 sleep 5
 
 # 4. Start API Gateway
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform/api-gateway/src || exit 1
+cd ../api-gateway/src || exit 1
 print_status "Starting API Gateway..."
 go build -o bin/api-gateway main.go inference_handler.go || {
     print_error "Failed to build API gateway"
@@ -183,7 +183,7 @@ print_status "Service Status Summary:"
 echo "  API Gateway: http://localhost:8443 (TLS)"
 echo "  Monitoring Service: http://localhost:8083"
 echo "  Auth Service: gRPC on port 50051"
-echo "  Inference Pool: gRPC on port 50052"
+echo "  Inference Pool: gRPC on port 50051"
 echo ""
 echo "  Health Check: http://localhost:8443/health"
 echo "  Models: http://localhost:8443/v1/models"
@@ -191,7 +191,7 @@ echo "  Chat Completions: http://localhost:8443/v1/chat/completions"
 
 # Run validation test
 print_status "Running validation test..."
-cd /media/milosvasic/DATA4TB/Projects/HelixFlow/Platform
+cd ./Platform
 if python3 test_implementation.py; then
     print_status "✅ All validation tests passed!"
     echo ""

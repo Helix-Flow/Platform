@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	inference "helixflow/inference"
 )
 
@@ -22,9 +22,9 @@ type InferenceHandler struct {
 
 // NewInferenceHandler creates a new inference handler
 func NewInferenceHandler(inferencePoolURL string) (*InferenceHandler, error) {
-	var creds credentials.TransportCredentials
+	var dialOpts []grpc.DialOption
 	if strings.Contains(inferencePoolURL, "localhost") || strings.Contains(inferencePoolURL, "127.0.0.1") {
-		creds = credentials.NewTLS(&tls.Config{InsecureSkipVerify: true})
+		dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
 		// Try to load TLS certificates for secure connections
 		certPath := "./certs/inference-pool.crt"
@@ -32,10 +32,10 @@ func NewInferenceHandler(inferencePoolURL string) (*InferenceHandler, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to load certificates: %w", err)
 		}
-		creds = loadedCreds
+		dialOpts = append(dialOpts, grpc.WithTransportCredentials(loadedCreds))
 	}
 
-	conn, err := grpc.Dial(inferencePoolURL, grpc.WithTransportCredentials(creds))
+	conn, err := grpc.Dial(inferencePoolURL, dialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to inference pool: %w", err)
 	}
@@ -69,6 +69,9 @@ func (h *InferenceHandler) HandleChatCompletion(ctx context.Context, req ChatCom
 	response, err := h.inferenceClient.Inference(ctx, inferenceReq)
 	if err != nil {
 		return nil, fmt.Errorf("inference failed: %w", err)
+	}
+	if response == nil {
+		return nil, fmt.Errorf("inference returned nil response")
 	}
 
 	// Convert response to OpenAI format
@@ -195,6 +198,43 @@ func convertMessages(messages []ChatMessage) []*inference.ChatMessage {
 }
 // convertToOpenAIFormat converts inference response to OpenAI format
 func (h *InferenceHandler) convertToOpenAIFormat(resp *inference.InferenceResponse, req ChatCompletionRequest) *ChatCompletionResponse {
+	// Handle empty choices gracefully
+	if len(resp.Choices) == 0 {
+		promptTokens := 0
+		completionTokens := 0
+		totalTokens := 0
+		if resp.Usage != nil {
+			promptTokens = int(resp.Usage.PromptTokens)
+			completionTokens = int(resp.Usage.CompletionTokens)
+			totalTokens = int(resp.Usage.TotalTokens)
+		}
+		return &ChatCompletionResponse{
+			ID:      fmt.Sprintf("chatcmpl-%d", time.Now().UnixNano()),
+			Object:  "chat.completion",
+			Created: time.Now().Unix(),
+			Model:   req.Model,
+			Choices: []ChatCompletionChoice{},
+			Usage: Usage{
+				PromptTokens:     promptTokens,
+				CompletionTokens: completionTokens,
+				TotalTokens:      totalTokens,
+			},
+		}
+	}
+	promptTokens := 0
+	completionTokens := 0
+	totalTokens := 0
+	if resp.Usage != nil {
+		promptTokens = int(resp.Usage.PromptTokens)
+		completionTokens = int(resp.Usage.CompletionTokens)
+		totalTokens = int(resp.Usage.TotalTokens)
+	}
+	content := ""
+	finishReason := ""
+	if len(resp.Choices) > 0 && resp.Choices[0].Message != nil {
+		content = resp.Choices[0].Message.Content
+		finishReason = resp.Choices[0].FinishReason
+	}
 	return &ChatCompletionResponse{
 		ID:      fmt.Sprintf("chatcmpl-%d", time.Now().UnixNano()),
 		Object:  "chat.completion",
@@ -203,14 +243,14 @@ func (h *InferenceHandler) convertToOpenAIFormat(resp *inference.InferenceRespon
 		Choices: []ChatCompletionChoice{
 			{
 				Index:        0,
-				Message:      ChatMessage{Role: "assistant", Content: resp.Choices[0].Message.Content},
-				FinishReason: resp.Choices[0].FinishReason,
+				Message:      ChatMessage{Role: "assistant", Content: content},
+				FinishReason: finishReason,
 			},
 		},
 		Usage: Usage{
-			PromptTokens:     int(resp.Usage.PromptTokens),
-			CompletionTokens: int(resp.Usage.CompletionTokens),
-			TotalTokens:      int(resp.Usage.TotalTokens),
+			PromptTokens:     promptTokens,
+			CompletionTokens: completionTokens,
+			TotalTokens:      totalTokens,
 		},
 	}
 }

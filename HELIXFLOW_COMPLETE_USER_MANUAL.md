@@ -216,7 +216,7 @@ jwt:
 ```yaml
 # config/inference-pool.yaml
 server:
-  grpc_port: 50052
+  grpc_port: 50051
   tls:
     enabled: true
     cert_file: "/certs/inference-pool.crt"
@@ -252,7 +252,7 @@ monitoring:
 # config/monitoring.yaml
 server:
   http_port: 8083
-  grpc_port: 50053
+  grpc_port: 50055
   tls:
     enabled: true
     cert_file: "/certs/monitoring.crt"
@@ -1007,7 +1007,7 @@ docker logs -f helixflow-auth-service
 API Gateway HTTP:     8443
 API Gateway gRPC:     9443
 Auth Service gRPC:    50051
-Inference Pool gRPC:  50052
+Inference Pool gRPC:  50051
 Monitoring HTTP:      8083
 Prometheus:          9090
 Grafana:             3000
