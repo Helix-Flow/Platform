@@ -116,3 +116,26 @@ Dockerfile*
 
 links.txt
 
+
+# Build artifacts — service binaries built in src/ directories
+api-gateway/src/api-gateway
+auth-service/src/auth-service
+auth-service/src/main
+inference-pool/src/inference-pool
+monitoring/src/monitoring-service
+cmd/challenges/challenge-runner
+cmd/challenges/challenges
+
+# Runtime files
+logs/*.pid
+logs/service_pids.txt
+
+# Challenge / test results
+results/
+cmd/challenges/results/
+
+# SQLite databases (seeded via scripts/)
+data/helixflow.db
+auth-service/data/helixflow.db
+auth-service/src/data/helixflow.db
+test/db_test/data/helixflow.db
